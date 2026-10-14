@@ -5,13 +5,14 @@ import { fileURLToPath } from 'node:url';
 import { createHash, randomUUID } from 'node:crypto';
 import { Api } from '../worker/client.mjs';
 import { workOnce } from '../worker/run.mjs';
+import { runTrial } from '../worker/trial.mjs';
 import { consume, startBroker } from '../consumer/run.mjs';
 
 const project = fileURLToPath(new URL('../', import.meta.url));
 const digest = value => createHash('sha256').update(value).digest('hex');
 const emit = value => console.log(JSON.stringify(value));
 const help = `AI Work Company — local CLI (JSON output, no interactive prompts)
-  npm run -s awc -- work --accept-trial [--model gpt-6-astra] [--wait-seconds 300]
+  npm run -s awc -- work --accept-trial [--model gpt-6-astra] [--wait-seconds 300] [--trial-tasks 100]
   npm run -s awc -- hire --request REPORT-1 --input ./input --task "Write output/report.txt" --budget 100
   npm run -s awc -- status
   npm run -s awc -- accept --id TASK_ID --rating 5
@@ -22,7 +23,7 @@ Local state: AWC_CLIENT_DIR or repository data/client; never commit this directo
 Budget: integer minor units; 100 = 1 internal credit. No recharge/withdrawal.
 Trial: --accept-trial explicitly authorizes ~$20 unpaid reference-token service,
 commercial use by company, zero trial wages. Operator qualification is still required.
-Work handles at most one task per invocation; waiting defaults to zero seconds.
+Work handles up to 100 unpaid trials then at most one paid task per invocation; waiting defaults to zero seconds.
 Hire stays foreground serving files until submission; Ctrl-C stops local execution,
 not the funded order. Reuse --request with identical arguments to recover publication.
 Acceptance is explicit and still requires operator evidence review.`;
@@ -30,7 +31,7 @@ Acceptance is explicit and still requires operator evidence review.`;
 export function parse(argv) {
   const [command = 'help', ...rest] = argv;
   if (!['help', 'work', 'hire', 'status', 'accept', 'cancel'].includes(command)) throw new Error('unknown_command');
-  const allowed = { help: [], work: ['server','model','name','accept-trial','wait-seconds'], hire: ['server','model','name','request','input','task','budget'], status: ['server'], accept: ['server','id','rating'], cancel: ['server','id'] }[command];
+  const allowed = { help: [], work: ['server','model','name','accept-trial','wait-seconds','trial-tasks'], hire: ['server','model','name','request','input','task','budget'], status: ['server'], accept: ['server','id','rating'], cancel: ['server','id'] }[command];
   const options = {};
   for (let i=0; i<rest.length; i++) {
     const key = rest[i].slice(2);
@@ -63,7 +64,7 @@ async function load(path) {
   } catch (e) { if (e.code === 'ENOENT') return { jobs: {} }; throw e; }
 }
 
-export async function main(argv, { env = process.env, output = emit, runWorker = workOnce, runConsumer = consume } = {}) {
+export async function main(argv, { env = process.env, output = emit, runWorker = workOnce, trialRunner = runTrial, runConsumer = consume } = {}) {
   const { command, options: o } = parse(argv);
   if (command === 'help') { output({ help }); return; }
   const base = new Api(o.server || env.AWC_BASE_URL || 'http://127.0.0.1:8787', 'validation').base;
@@ -75,6 +76,7 @@ export async function main(argv, { env = process.env, output = emit, runWorker =
   }
   if (['accept','cancel'].includes(command) && !/^task_[a-f0-9-]{36}$/.test(o.id || '')) throw new Error('invalid_task_id');
   const rating = command === 'accept' ? integer(o.rating, 5) : undefined;
+  const trialLimit = o['trial-tasks'] === undefined ? 100 : integer(o['trial-tasks'], 1000);
   const wait = o['wait-seconds'] === undefined || o['wait-seconds'] === '0' ? 0 : integer(o['wait-seconds'], 3600);
   const clientRoot = resolve(env.AWC_CLIENT_DIR || resolve(project, 'data/client'));
   await secureDirectory(clientRoot);
@@ -108,7 +110,9 @@ export async function main(argv, { env = process.env, output = emit, runWorker =
     }
     const api = new Api(base, state.token);
     if (command === 'status') {
-      output({ state: 'connected', wallet: await api.request('/v1/me'), workers: (await api.request('/v1/workers')).workers, tasks: (await api.request('/v1/tasks')).tasks }); return;
+      const workers=(await api.request('/v1/workers')).workers;
+      const trial_progress=[]; for(const w of workers.slice(0,20)) { const {runs,...progress}=await api.request(`/v1/trials?worker_id=${w.id}`); trial_progress.push(progress); }
+      output({ state: 'connected', wallet: await api.request('/v1/me'), workers, trial_progress, trial_progress_truncated: workers.length>20, tasks: (await api.request('/v1/tasks')).tasks }); return;
     }
     if (command === 'accept' || command === 'cancel') {
       output(await api.request(`/v1/tasks/${o.id}/${command}`, command === 'accept' ? { rating } : {}, `cli:${command}:${o.id}`)); return;
@@ -120,7 +124,25 @@ export async function main(argv, { env = process.env, output = emit, runWorker =
         const body = { name: 'AWC Worker', model, accept_trial: true };
         worker = await api.request('/v1/workers', body, `cli:worker:${digest(model)}`);
       }
-      if (!worker.qualified || worker.suspended) { output({ state: worker.suspended ? 'suspended' : 'qualification_required', worker_id: worker.id, next_action: 'Operator must review actual trial/model evidence. Do not self-qualify or invent evidence.' }); return; }
+      if (worker.suspended) { output({state:'suspended',worker_id:worker.id}); return; }
+      if (!worker.qualified) {
+        await unlock();
+        const reviewDeadline=Date.now()+wait*1000; let completedTrials=0;
+        while(completedTrials<trialLimit && !abort.signal.aborted) {
+          const result=await trialRunner({api,workerId:worker.id,runDir:await mkdtemp(resolve(home,'trial-')),signal:abort.signal,onEvent:output});
+          output({...result, state:result.state==='price_required'?'qualification_required':result.state,trial_state:result.state,worker_id:worker.id,next_action:result.state==='price_required'?'Operator must configure model pricing and trial tasks.':'Only independently reviewed usage counts; trial wages are zero.'});
+          worker=(await api.request('/v1/workers')).workers.find(w=>w.id===worker.id);
+          if(worker.qualified) break;
+          if(result.state==='submitted') completedTrials++;
+          else {
+            if(Date.now()>=reviewDeadline || !['review_required','trial_idle','price_required'].includes(result.state)) return;
+            await new Promise(done=>{ const timer=setTimeout(finish,Math.min(5000,reviewDeadline-Date.now())); function finish(){clearTimeout(timer);abort.signal.removeEventListener('abort',finish);done();} abort.signal.addEventListener('abort',finish,{once:true}); });
+            worker=(await api.request('/v1/workers')).workers.find(w=>w.id===worker.id);
+            if(worker.qualified) break;
+          }
+        }
+        if(!worker.qualified) { output({state:'trial_run_limit',worker_id:worker.id,next_action:'Review progress before another bounded work invocation.'}); return; }
+      }
       await unlock();
       const end = Date.now() + wait * 1000;
       do {

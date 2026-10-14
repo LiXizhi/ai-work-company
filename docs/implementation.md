@@ -102,9 +102,9 @@ The operator must verify underlying evidence independently. Never feed Worker JS
 straight to these commands. The backend checks model match, result binding, unique
 reference and state, **not provider authenticity**. Evidence references should be
 opaque case identifiers, not private file paths, credentials or raw personal records.
-Reviewed trial records do not create wage or wallet entries. All actual per-call
-trial budgets and reference price snapshots remain external until a trusted adapter
-implements them. The program cannot enforce a remote Worker's model quota.
+Reviewed trial records do not create wage or wallet entries. Automated text trials
+now reserve reference budget and snapshot prices; see [trial/pricing administration](trials-and-pricing.md).
+The program cannot enforce a remote provider's physical token quota.
 
 ## Deployment
 
@@ -112,7 +112,8 @@ GitHub Actions tests the project and builds the static `dist/` site. Pages publi
 that directory on main. The self-hosted API runs separately with `npm start`.
 
 Defaults: `AWC_HOST=127.0.0.1`, `AWC_PORT=8787`, `AWC_DB=data/company.sqlite`.
-`AWC_MODELS` is a comma-separated allowlist of **logical** model identifiers.
+`AWC_MODELS` seeds a new database with a comma-separated allowlist of **logical**
+model identifiers. Once initialized, the persisted operator model catalog is authoritative.
 `AWC_ALLOWED_HOSTS` is an explicit comma-separated HTTP Host allowlist.
 Use the same model configuration for operator and server processes. No model-provider
 credentials are collected by this release. The Codex adapter requests the exact configured name without fallback; local CLI
@@ -132,7 +133,7 @@ Maintain a durable database volume; never put the database inside a published ar
 
 1. One actually authorized provider/agent adapter with independently checkable
    model/usage evidence and owner quota limits; no unverified certification badge.
-2. Trial task execution with immutable pricing and hard reservations.
+2. Independent provider metering and physically enforced per-call trial token caps.
 3. Extend the shipped text file broker with OS-isolated media parsing and execution;
    independently validate each new tool boundary.
 4. Payment provider confirmed callbacks, cash ledger, refunds and reconciliation.

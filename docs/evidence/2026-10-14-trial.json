@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-10-14T10:13:11.934Z",
+  "fixture": "Real Codex call, synthetic prompt and fictional price; local test observation only, not provider-certified usage or completion of $20 trial.",
+  "model": "gpt-6-astra",
+  "raw_usage": {
+    "input_tokens": 12166,
+    "cached_input_tokens": 0,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 17,
+    "reasoning_output_tokens": 0
+  },
+  "normalized_usage": {
+    "input_tokens": 12166,
+    "cached_input_tokens": 0,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 17
+  },
+  "result": "TRIAL_READY",
+  "price": {
+    "model": "gpt-6-astra",
+    "version": "synthetic-smoke-v1",
+    "source": "FICTIONAL test rates; not actual provider prices",
+    "effective_at": "2026-01-01T00:00:00Z",
+    "rates": {
+      "input_tokens": 1000000,
+      "cached_input_tokens": 1000000,
+      "cache_write_input_tokens": 1000000,
+      "output_tokens": 1000000
+    },
+    "credit_minor_per_usd": 100
+  },
+  "progress": {
+    "qualified": false,
+    "suspended": false,
+    "approved_usd_micro": 12183,
+    "reserved_usd_micro": 0,
+    "rejected_usd_micro": 0,
+    "target_usd_micro": 20000000,
+    "pass_usd_micro": 19750000,
+    "remaining_usd_micro": 19987817,
+    "trial_income_minor": 0
+  },
+  "trial_income_minor": 0
+}

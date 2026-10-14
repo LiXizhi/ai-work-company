@@ -13,6 +13,12 @@ const securityHeaders = {
   'X-Frame-Options': 'DENY',
 };
 const definitions = [
+  ['GET', '/v1/models', [], []],
+  ['POST', '/v1/quote', ['model','usage'], ['model','usage']],
+  ['GET', '/v1/trials', [], []],
+  ['POST', '/v1/trials/claim', ['worker_id'], ['worker_id']],
+  ['POST', '/v1/trials/{id}/heartbeat', ['epoch'], ['epoch']],
+  ['POST', '/v1/trials/{id}/submit', ['epoch','result','usage'], ['epoch','result','usage']],
   ['GET', '/v1/me', [], []],
   ['GET', '/v1/ledger', [], []],
   ['GET', '/v1/workers', [], []],
@@ -41,6 +47,7 @@ const props = {
   deadline: { type: 'string', format: 'date-time' },
   worker_id: { type: 'string' }, epoch: { type: 'integer', minimum: 1 },
   result: { type: 'string', minLength: 1, maxLength: 30000 }, rating: { type: 'integer', minimum: 1, maximum: 5 },
+  usage: { type: 'object', additionalProperties: false, required: ['input_tokens','cached_input_tokens','cache_write_input_tokens','output_tokens'], properties: Object.fromEntries(['input_tokens','cached_input_tokens','cache_write_input_tokens','output_tokens'].map(k=>[k,{type:'integer',minimum:0,maximum:1000000000}])) },
   workspace_required: { type: 'boolean', default: false }, seal_id: { type: 'string' }, arguments: { type: 'object' },
 };
 export function openapi() {
@@ -59,7 +66,7 @@ export function openapi() {
     };
     if (path.includes('{id}')) operation.parameters.push({ name: 'id', in: 'path', required: true, schema: { type: 'string' } });
     if (path.includes('{call}')) operation.parameters.push({ name: 'call', in: 'path', required: true, schema: { type: 'string' } });
-    if (path === '/v1/queue') operation.parameters.push({ name: 'worker_id', in: 'query', required: true, schema: { type: 'string' } });
+    if (['/v1/queue','/v1/trials'].includes(path)) operation.parameters.push({ name: 'worker_id', in: 'query', required: true, schema: { type: 'string' } });
     if (method === 'POST') {
       if (!publicRoute) operation.parameters.push({ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string', minLength: 1, maxLength: 128 } });
       operation.requestBody = { required: true, content: { 'application/json': { schema: {
@@ -133,8 +140,8 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       if (method === 'GET' && path === '/v1/capabilities') {
         send(200, { version: '0.2.0', models: store.models, unit: 'work_credit_minor', minor_per_credit: 100,
           defaults: { deadline_hours: 72, daily_limit_minor: 1000, consumer_concurrency: 1, max_attempts: 3, lease_seconds: 60 },
-          available: ['accounts', 'workers', 'queue', 'leases', 'text_deliverables', 'ledger', 'ratings', 'operator_review', 'task_tool_relay', 'posix_file_broker', 'worker_cli', 'worker_stdio_mcp'],
-          unavailable: ['recharge', 'cashout', 'automatic_model_attestation', 'trial_execution', 'arbitrary_code_sandbox', 'image_generation', 'alive_tasks'],
+          available: ['accounts', 'workers', 'queue', 'leases', 'text_deliverables', 'ledger', 'ratings', 'operator_review', 'task_tool_relay', 'posix_file_broker', 'worker_cli', 'worker_stdio_mcp', 'automatic_trial_dispatch', 'versioned_token_pricing', 'model_catalog'],
+          unavailable: ['recharge', 'cashout', 'automatic_model_attestation', 'arbitrary_code_sandbox', 'image_generation', 'alive_tasks'],
           evidence: 'operator_reviewed; not cryptographic model attestation' }); return;
       }
       if (!path.startsWith('/v1/')) throw new Fault(404, 'not_found', 'Route not found.');
@@ -165,6 +172,23 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       }
       const account = store.authenticate(secret);
       store.sweep();
+      if (method === 'GET' && path === '/v1/models') { send(200, {models:store.trials.catalog()}); return; }
+      if (method === 'GET' && path === '/v1/trials') {
+        const worker = url.searchParams.get('worker_id');
+        const progress = store.trials.progress(account.id, worker);
+        send(200, {...progress, runs:store.all('SELECT id,state,model,price,max_tokens,reserved,reported_usage,reviewed_usage,value,evidence_ref,result FROM trial_runs WHERE worker=? ORDER BY created_at DESC LIMIT 100',worker)}); return;
+      }
+      const trialRoute = path.match(/^\/v1\/trials\/([^/]+)\/(heartbeat|submit)$/);
+      if (method === 'POST' && (path === '/v1/quote' || path === '/v1/trials/claim' || trialRoute)) {
+        const definition = definitions.find(([m,p])=>m==='POST' && p===(trialRoute ? `/v1/trials/{id}/${trialRoute[2]}` : path));
+        const body = await readBody(req); validate(body, definition[2], definition[3]);
+        send(200,store.mutation(account.id,path,req.headers['idempotency-key'],body,()=> {
+          if(path==='/v1/quote') return store.trials.quote(body.model,body.usage);
+          if(path==='/v1/trials/claim') return store.trials.claim(account.id,body.worker_id);
+          if(trialRoute[2]==='heartbeat') return store.trials.heartbeat(account.id,trialRoute[1],body.epoch);
+          return store.trials.submit(account.id,trialRoute[1],body);
+        })); return;
+      }
       const executionRoute = path.match(/^\/v1\/tasks\/([^/]+)\/execution$/);
       if (method === 'GET' && executionRoute) { send(200, pendingTools(store, account.id, executionRoute[1])); return; }
       if (method === 'POST' && toolRoute && toolRoute[3]) {

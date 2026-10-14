@@ -18,6 +18,7 @@
     "consumer": "node consumer/run.mjs",
     "worker": "node worker/run.mjs",
     "demo:live": "node scripts/live-e2e.mjs",
-    "awc": "node cli/awc.mjs"
+    "awc": "node cli/awc.mjs",
+    "demo:trial": "node scripts/trial-live.mjs"
   }
 }

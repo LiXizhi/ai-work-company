@@ -124,7 +124,7 @@ outside canary non-disclosure/non-modification, capability privilege boundaries,
 artifact submission gating and revocation after submission. Real MCP execution is
 covered by the explicit live check, not charged in CI.
 
-Provider attestation, token-based pricing, automatic trial execution, durable adapter
+Provider attestation, usage-based paid settlement, durable adapter
 resume, binary artifacts, OS isolation for arbitrary code and public API hosting
 remain separate implementation work.
 

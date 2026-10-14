@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, chmodSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { Trials } from './trials.mjs';
 
 export const DAY = 86_400_000;
 export const LEASE = 60_000;
@@ -28,7 +29,7 @@ export function integer(value, name, min = 1, max = 1_000_000) {
 export class Store {
   constructor(path = ':memory:', { now = Date.now, models = ['claude-opus-5.5', 'gpt-6-astra'] } = {}) {
     this.now = now;
-    this.models = models;
+
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
     this.db = new DatabaseSync(path, { timeout: 5000 });
     if (path !== ':memory:') chmodSync(path, 0o600);
@@ -70,7 +71,9 @@ export class Store {
       CREATE TRIGGER IF NOT EXISTS ledger_no_update BEFORE UPDATE ON ledger BEGIN SELECT RAISE(ABORT,'append-only ledger'); END;
       CREATE TRIGGER IF NOT EXISTS ledger_no_delete BEFORE DELETE ON ledger BEGIN SELECT RAISE(ABORT,'append-only ledger'); END;
     `);
+    this.trials = new Trials(this, models);
   }
+  get models() { return this.all('SELECT model FROM model_catalog WHERE enabled=1').map(row=>row.model); }
   one(sql, ...args) { return this.db.prepare(sql).get(...args); }
   all(sql, ...args) { return this.db.prepare(sql).all(...args); }
   run(sql, ...args) { return this.db.prepare(sql).run(...args); }
@@ -157,11 +160,13 @@ export class Store {
   }
   queue(owner, workerId) {
     const w = this.worker(owner, workerId);
+    requireThat(this.models.includes(w.model), 'model_not_allowed', 'Model is disabled.');
     requireThat(w.qualified && !w.suspended, 'worker_not_qualified', 'Trial and model review must be completed before claiming.');
     return this.all("SELECT id,title,model,amount,deadline FROM tasks WHERE state='queued' AND model=? AND owner<>? AND deadline>? ORDER BY deadline,created_at LIMIT 100", w.model, owner, this.now());
   }
   claim(owner, taskId, workerId) {
     const w = this.worker(owner, workerId);
+    requireThat(this.models.includes(w.model), 'model_not_allowed', 'Model is disabled.');
     requireThat(w.qualified && !w.suspended, 'worker_not_qualified', 'Worker has not passed operator review.');
     const t = this.one('SELECT * FROM tasks WHERE id=?', taskId);
     requireThat(t && t.state === 'queued' && t.owner !== owner, 'not_claimable', 'Task is unavailable.');
@@ -182,6 +187,7 @@ export class Store {
     const t = this.task(owner, taskId);
     requireThat(t.worker && this.one('SELECT id FROM workers WHERE id=? AND owner=? AND suspended=0', t.worker, owner),
       'not_worker', 'Only the assigned active Worker may execute.', 403);
+    requireThat(this.models.includes(t.model), 'model_not_allowed', 'Model is disabled.');
     requireThat(t.state === 'running' && t.epoch === epoch && t.lease_until > this.now() && t.deadline > this.now(),
       'lease_expired', 'Lease is stale, revoked or expired.');
     return t;
@@ -225,6 +231,7 @@ export class Store {
   }
   sweep() {
     return this.tx(() => {
+      this.trials.expire();
       for (const t of this.all("SELECT * FROM tasks WHERE state IN ('queued','running') AND deadline<=?", this.now())) this.release(t, 'expired');
       for (const t of this.all("SELECT * FROM tasks WHERE state='running' AND lease_until<=?", this.now())) {
         if (t.attempts >= 3) this.release(t, 'failed');
@@ -248,6 +255,7 @@ export class Store {
       const w = this.one('SELECT * FROM workers WHERE id=?', workerId);
       requireThat(w && !w.qualified, 'invalid_worker', 'Worker not found or already qualified.');
       requireThat(evidence.model === w.model, 'model_mismatch', 'Evidence model must match declared model.');
+      requireThat(!this.one('SELECT id FROM trial_runs WHERE worker=?', workerId), 'use_trial_graduation', 'Use reviewed automatic trial graduation.');
       const trial = integer(evidence.trial_reference_minor, 'trial_reference_minor', 1975, 2000);
       const ref = string(evidence.evidence_ref, 'evidence_ref', 500);
       requireThat(!this.one('SELECT reference FROM receipts WHERE reference=?', ref), 'duplicate_evidence', 'Evidence has already been used.');
@@ -274,6 +282,7 @@ export class Store {
     return this.tx(() => {
       requireThat(this.one('SELECT id FROM workers WHERE id=?', workerId), 'not_found', 'Worker not found.', 404);
       this.run('UPDATE workers SET suspended=1 WHERE id=?', workerId);
+      this.run("UPDATE trial_runs SET state='revoked',epoch=epoch+1,lease_until=NULL WHERE worker=? AND state='running'", workerId);
       for (const t of this.all("SELECT * FROM tasks WHERE worker=? AND state='running'", workerId)) this.release(t, 'security_stopped');
       return { worker_id: workerId, suspended: true };
     });
