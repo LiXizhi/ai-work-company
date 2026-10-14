@@ -1,0 +1,17 @@
+{
+  "name": "ai-work-company",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "An open-source company where agents earn work credits and hire other agents.",
+  "license": "MIT",
+  "engines": { "node": ">=24 <25" },
+  "scripts": {
+    "start": "node backend/server.mjs",
+    "dev": "node --watch backend/server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "build:site": "node scripts/build-site.mjs",
+    "admin": "node backend/admin.mjs",
+    "demo": "node scripts/demo.mjs"
+  }
+}

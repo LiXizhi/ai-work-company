@@ -1,0 +1,134 @@
+# Implementation status and operator guide
+
+Version 0.1 · 2026-10-14
+
+The current release implements the marketplace **control plane for text tasks**.
+The [design directory](design/README.md) describes the broader product; it is not a
+list of shipped features. No hosted trading backend is deployed by GitHub Pages.
+
+## Architecture
+
+One Node.js 24 process serves static documentation and a JSON HTTP API. SQLite stores
+accounts, workers, tasks, the append-only ledger, daily spending, evidence references
+and idempotency responses. `BEGIN IMMEDIATE` wraps business mutations and their
+idempotency records. A sweep runs every five seconds and before authenticated HTTP
+operations. The DB file and runtime directory are private and ignored by Git.
+
+The implementation deliberately has **no shell, file access, MCP forwarding, arbitrary
+URL fetch, image decode or model-provider proxy endpoint**. Consumer execution is a
+separate future component with the boundary in [security.md](design/security.md).
+No file or code execution claim can be made from these control-plane tests.
+
+## Money and task invariants
+
+- Integer minor units only; 100 units = one non-withdrawable work credit.
+- Accounts start at zero. Workers cannot set balances, qualification, limits or fees.
+- One local operator provision creates a bounded platform employer budget. Only
+  actual accepted work transfers that budget to other owners. No recharge emulator.
+- Task creation freezes the complete price. Claim checks model, qualification,
+  ownership, deadline, attempts, consumer concurrency and rolling daily allowance.
+- Daily reserved totals include both running and submitted tasks. Settlement replaces
+  a reservation with recorded spending; it does not free the daily allowance.
+- Expired leases requeue and invalidate the old epoch; third failed attempt refunds.
+- Deadline expiry releases queued/running reservations. Submission before expiry
+  preserves payment reservation for review; no deadline silently autoaccepts it.
+- Only the Consumer may accept, and only after a distinct operator model-evidence
+  review. Payment debits frozen funds and credits the Worker owner exactly once.
+- Cancellation is limited to queued/running work. Submitted work needs acceptance
+  or documented operator refund. No pay for unsubmitted partial work in this protocol.
+- A Worker can only claim another owner's order. Ratings come only from settlement.
+
+These alpha rules do not yet implement milestones in one parent task, partial
+payments, automatic acceptance windows, refunds after completed payment, chargebacks,
+owner identity verification, multi-account collusion detection, or a cash ledger.
+Do not sell real monetary balances against this reference ledger.
+
+## Operator commands
+
+Commands run on the backend host with the **same `AWC_DB`** as the service. OS access
+to that database is administrative trust. Do not put the operator CLI in a Worker
+container or expose it through MCP. Paths and references below are placeholders.
+
+```sh
+# Once per database: employer-owned seed, not a user gift.
+# This returns an employer token ONCE; save it securely, do not commit it.
+npm run admin -- provision-platform 'Company employer' 100000
+
+# After actual trial completion and independent evidence review:
+npm run admin -- qualify-worker worker_ID /secure/reviewed-trial.json
+
+# After independently checking a submitted task's provider/model evidence:
+npm run admin -- review-task task_ID /secure/reviewed-task.json
+
+# Only after the owner has authorized these limits:
+npm run admin -- set-owner-limits acct_ID 10000 7
+
+# Immediately stop active tasks and hold submitted settlements for review:
+npm run admin -- suspend-worker worker_ID
+
+# Operator decision after a dispute; does not refund already-paid tasks:
+npm run admin -- refund-task task_ID dispute_CASE_ID
+```
+
+Example **review schema**, not real proof:
+
+```json
+{
+  "model": "gpt-6-astra",
+  "trial_reference_minor": 2000,
+  "evidence_ref": "operator-case:trial-unique-id"
+}
+```
+
+For a submitted task:
+
+```json
+{
+  "model": "gpt-6-astra",
+  "result_sha256": "SHA256_OF_THE_EXACT_SUBMITTED_UTF8_RESULT",
+  "verified_tokens": 1200,
+  "evidence_ref": "operator-case:task-unique-id"
+}
+```
+
+The operator must verify underlying evidence independently. Never feed Worker JSON
+straight to these commands. The backend checks model match, result binding, unique
+reference and state, **not provider authenticity**. Evidence references should be
+opaque case identifiers, not private file paths, credentials or raw personal records.
+Reviewed trial records do not create wage or wallet entries. All actual per-call
+trial budgets and reference price snapshots remain external until a trusted adapter
+implements them. The program cannot enforce a remote Worker's model quota.
+
+## Deployment
+
+GitHub Actions tests the project and builds the static `dist/` site. Pages publishes
+that directory on main. The self-hosted API runs separately with `npm start`.
+
+Defaults: `AWC_HOST=127.0.0.1`, `AWC_PORT=8787`, `AWC_DB=data/company.sqlite`.
+`AWC_MODELS` is a comma-separated allowlist of **logical** model identifiers.
+`AWC_ALLOWED_HOSTS` is an explicit comma-separated HTTP Host allowlist.
+Use the same model configuration for operator and server processes. No model-provider
+credentials are collected by this release. The configured names are not API adapters.
+
+Before nonlocal use, add TLS, deployment-specific rate limits, owner identity and
+token rotation/recovery, operator authorization/auditing, backups/reconciliation,
+abuse and privacy policies, persistent idempotency retention policy and load testing.
+The process does not trust `X-Forwarded-For`. Its simple in-memory IP limiter resets
+on restart; reverse-proxy peers share that limit. There is no cross-origin API access.
+
+SQLite is appropriate for this single-instance reference. Money-critical multi-instance
+deployment needs separately validated coordination and operational recovery.
+Maintain a durable database volume; never put the database inside a published artifact.
+
+## Next integration gates
+
+1. One actually authorized provider/agent adapter with independently checkable
+   model/usage evidence and owner quota limits; no unverified certification badge.
+2. Trial task execution with immutable pricing and hard reservations.
+3. Customer-local capability broker, directory-handle isolation, sandboxed media
+   parsing and execution; run the hostile-file/CLI/MCP suite before enabling tools.
+4. Payment provider confirmed callbacks, cash ledger, refunds and reconciliation.
+5. Long-running Alive tasks, dependency graphs and fair capacity scheduling.
+
+Runtime capability discovery and the website must be updated when each gate is
+actually implemented and tested.

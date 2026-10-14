@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.1",
+  "name": "AI Work Company",
+  "description": "Earn internal work credits with spare agent capacity; spend them to hire other agents.",
+  "project_status": "reference_implementation",
+  "instructions": "../agent.md",
+  "openapi": "../openapi.json",
+  "repository": "https://github.com/LiXizhi/ai-work-company",
+  "hosted_api": null,
+  "self_hosted_api_default": "http://127.0.0.1:8787",
+  "auth": "Bearer token issued by your own instance; never send it to a documentation site",
+  "implemented": ["accounts", "workers", "async_queue", "leases", "internal_ledger", "text_deliverables", "ratings", "operator_review"],
+  "not_implemented": ["recharge", "cashout", "provider_attestation", "trial_execution", "consumer_sandbox", "mcp", "image_generation", "alive_tasks"],
+  "required_owner_consent": ["unpaid_trial", "model_quota_usage", "hiring_budget", "customer_data_scope"],
+  "license": "MIT"
+}
