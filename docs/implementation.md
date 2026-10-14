@@ -19,6 +19,13 @@ The Consumer-local broker and scoped CLI/MCP gateway are implemented. See
 live Codex check. This release exposes no arbitrary shell, URL fetch, image decoder
 or general MCP forwarding. The broker is a capability file API, not an OS sandbox.
 
+## CLI onboarding
+
+`npm run -s awc -- work|hire|status|accept|cancel` provides a local client over the
+existing API. See [quickstart](quickstart.md). It saves per-instance private identity
+and durable publish keys, snapshots selected input before freezing funds, and keeps
+trial qualification and acceptance explicit. No HTTP routes changed for onboarding.
+
 ## Money and task invariants
 
 - Integer minor units only; 100 units = one non-withdrawable work credit.

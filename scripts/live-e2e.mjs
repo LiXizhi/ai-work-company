@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { Store, hash } from '../backend/store.mjs';
 import { createServer } from '../backend/server.mjs';
 import { Api } from '../worker/client.mjs';
-import { workOnce } from '../worker/run.mjs';
+import { main } from '../cli/awc.mjs';
 import { consume } from '../consumer/run.mjs';
 
 await mkdir('data', { recursive: true });
@@ -22,20 +22,32 @@ try {
   store.qualifyWorker(worker.id, { model: worker.model, trial_reference_minor: 2000, evidence_ref: `TEST-FIXTURE-NOT-REAL-TRIAL:${worker.id}` });
   const input = resolve(root, 'input'); await mkdir(input);
   await writeFile(resolve(input, 'orders.csv'), 'item,quantity,unit_price\nPencil,3,2\nBook,2,12\n');
-  const job = await payer.request('/v1/tasks', { title: 'Summarize orders', description: 'Read input/orders.csv. Write output/report.txt with each item subtotal and total 30. Explain the arithmetic. Use only sandbox MCP tools.', model: worker.model, amount_minor: 100, workspace_required: true });
   const events = [];
   const onEvent = event => { events.push(event); console.log(JSON.stringify(event)); };
-  consumer = consume({ api: payer, taskId: job.id, input, root: resolve(root, 'workspace'), signal: abort.signal, onEvent });
-  consumer.catch(() => {});
-  const result = await workOnce({ api: workerApi, workerId: worker.id, taskId: job.id, runDir: resolve(root, 'agent'), onEvent });
+  let published;
+  const publication = new Promise(done => { published = done; });
+  const hire = main(['hire', '--request', 'orders-1', '--input', input, '--task', 'Read input/orders.csv. Write output/report.txt with each item subtotal and total 30. Explain the arithmetic. Use only sandbox MCP tools.', '--budget', '100'], {
+    env: { AWC_BASE_URL: base, AWC_TOKEN: employer.token, AWC_CLIENT_DIR: resolve(root, 'consumer-client') },
+    runConsumer: options => consume({ ...options, signal: abort.signal }),
+    output: event => { onEvent(event); if (event.state === 'published') published(event); },
+  });
+  consumer = hire; hire.catch(() => {});
+  const publicationResult = await Promise.race([publication, hire.then(() => { throw new Error('publication_failed'); })]);
+  const job = { id: publicationResult.task_id };
+  let result;
+  await main(['work'], {
+    env: { AWC_BASE_URL: base, AWC_TOKEN: owner.token, AWC_CLIENT_DIR: resolve(root, 'worker-client') },
+    output: event => { onEvent(event); if (event.state === 'submitted') result = event; },
+  });
+  if (!result) throw new Error('worker_did_not_submit');
   await consumer;
-  const output = await readFile(resolve(root, `workspace/attempt-${result.epoch}/output/report.txt`), 'utf8');
+  const output = await readFile(resolve(publicationResult.workspace, `attempt-${result.epoch}/output/report.txt`), 'utf8');
   const seal = JSON.parse(store.one('SELECT result FROM tool_calls WHERE id=?', result.seal_id).result);
   assert.equal(seal.manifest.files.find(file => file.path === 'output/report.txt').sha256, hash(output));
   assert.match(output, /30/); assert.match(output, /6/); assert.match(output, /24/);
   store.reviewTask(job.id, { model: worker.model, result_sha256: hash(result.result), verified_tokens: result.usage.input_tokens + result.usage.output_tokens, evidence_ref: `LOCAL-CLI-OBSERVATION:${job.id}` });
-  await payer.request(`/v1/tasks/${job.id}/accept`, { rating: 5 }, 'live-accept');
-  await payer.request(`/v1/tasks/${job.id}/accept`, { rating: 5 }, 'live-accept');
+  await main(['accept', '--id', job.id, '--rating', '5'], { env: { AWC_BASE_URL: base, AWC_CLIENT_DIR: resolve(root, 'consumer-client') }, output: () => {} });
+  await main(['accept', '--id', job.id, '--rating', '5'], { env: { AWC_BASE_URL: base, AWC_CLIENT_DIR: resolve(root, 'consumer-client') }, output: () => {} });
   assert.equal(store.wallet(owner.account_id).available, 100);
   assert.equal(store.wallet(employer.account_id).available, 9900);
   assert.equal(store.wallet(employer.account_id).frozen, 0);
