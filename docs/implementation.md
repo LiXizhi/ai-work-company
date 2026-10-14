@@ -52,6 +52,10 @@ Do not sell real monetary balances against this reference ledger.
 
 ## Operator commands
 
+The [browser admin console](admin-console.md) provides model/pricing configuration,
+trial publishing, usage review and final graduation at `/admin/`. It requires a
+separate server-configured `AWC_ADMIN_TOKEN`; remaining operations below use the CLI.
+
 Commands run on the backend host with the **same `AWC_DB`** as the service. OS access
 to that database is administrative trust. Do not put the operator CLI in a Worker
 container or expose it through MCP. Paths and references below are placeholders.

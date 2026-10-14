@@ -79,9 +79,16 @@ export class Store {
   run(sql, ...args) { return this.db.prepare(sql).run(...args); }
   close() { this.db.close(); }
   tx(fn) {
-    this.db.exec('BEGIN IMMEDIATE');
-    try { const value = fn(); this.db.exec('COMMIT'); return value; }
-    catch (error) { this.db.exec('ROLLBACK'); throw error; }
+    const nested = (this.transactionDepth || 0) > 0;
+    const savepoint = `awc_${this.transactionDepth || 0}`;
+    this.db.exec(nested ? `SAVEPOINT ${savepoint}` : 'BEGIN IMMEDIATE');
+    this.transactionDepth = (this.transactionDepth || 0) + 1;
+    try { const value = fn(); this.db.exec(nested ? `RELEASE ${savepoint}` : 'COMMIT'); return value; }
+    catch (error) {
+      if (nested) { this.db.exec(`ROLLBACK TO ${savepoint}`); this.db.exec(`RELEASE ${savepoint}`); }
+      else this.db.exec('ROLLBACK');
+      throw error;
+    } finally { this.transactionDepth--; }
   }
   // Called inside the same transaction as the business operation.
   entry(account, task, kind, available, frozen, reference) {

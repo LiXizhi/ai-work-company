@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { initAdmin, authenticateAdmin, adminGet, adminPost, adminOpenapiPaths } from './admin-web.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
@@ -77,9 +78,9 @@ export function openapi() {
   }
   return {
     openapi: '3.1.0', info: { title: 'AI Work Company', version: '0.2.0', description: 'Self-hosted reference API. No hosted marketplace API is advertised by the documentation site.' },
-    servers: [{ url: 'http://127.0.0.1:8787', description: 'Your local reference server' }], paths,
+    servers: [{ url: 'http://127.0.0.1:8787', description: 'Your local reference server' }], paths: {...paths,...adminOpenapiPaths()},
     components: {
-      securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' }, taskCapability: { type: 'http', scheme: 'bearer', description: 'Claim tool_token, scoped to task and lease epoch; cannot access account APIs.' } },
+      securitySchemes: { adminBearer: {type:'http',scheme:'bearer',description:'Separate operator credential; account and task tokens are not accepted.'}, bearerAuth: { type: 'http', scheme: 'bearer' }, taskCapability: { type: 'http', scheme: 'bearer', description: 'Claim tool_token, scoped to task and lease epoch; cannot access account APIs.' } },
       schemas: { Error: { type: 'object', required: ['error'], properties: { error: { type: 'object', properties: { code: { type: 'string' }, message: { type: 'string' } } } } } },
     },
   };
@@ -107,8 +108,8 @@ async function readBody(req) {
   });
 }
 
-export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', '[::1]'] } = {}) {
-  initRelay(store);
+export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', '[::1]'], adminToken = process.env.AWC_ADMIN_TOKEN } = {}) {
+  initRelay(store); initAdmin(store);
   const staticFiles = new Map();
   for (const [url, name, mime] of [
     ['/', 'index.html', 'text/html'], ['/style.css', 'style.css', 'text/css'], ['/app.js', 'app.js', 'text/javascript'],
@@ -118,6 +119,9 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
   ]) {
     const path = resolve(root, 'site', name);
     if (existsSync(path)) staticFiles.set(url, { body: readFileSync(path), mime });
+  }
+  for (const [url,name,mime] of [['/admin/','index.html','text/html'],['/admin','index.html','text/html'],['/admin/app.js','app.js','text/javascript'],['/admin/style.css','style.css','text/css']]) {
+    const path=resolve(root,'admin',name); if(existsSync(path)) staticFiles.set(url,{body:readFileSync(path),mime});
   }
   const buckets = new Map();
   const server = http.createServer(async (req, res) => {
@@ -133,18 +137,18 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       const path = url.pathname, method = req.method;
       if (method === 'GET' && staticFiles.has(path)) {
         const file = staticFiles.get(path);
-        res.writeHead(200, { ...securityHeaders, 'Content-Type': `${file.mime}; charset=utf-8` }); res.end(file.body); return;
+        res.writeHead(200, { ...securityHeaders, 'Cache-Control':'no-store', 'Content-Type': `${file.mime}; charset=utf-8` }); res.end(file.body); return;
       }
       if (method === 'GET' && path === '/openapi.json') { send(200, openapi()); return; }
       if (method === 'GET' && path === '/health') { send(200, { status: 'ok', version: '0.2.0' }); return; }
       if (method === 'GET' && path === '/v1/capabilities') {
         send(200, { version: '0.2.0', models: store.models, unit: 'work_credit_minor', minor_per_credit: 100,
           defaults: { deadline_hours: 72, daily_limit_minor: 1000, consumer_concurrency: 1, max_attempts: 3, lease_seconds: 60 },
-          available: ['accounts', 'workers', 'queue', 'leases', 'text_deliverables', 'ledger', 'ratings', 'operator_review', 'task_tool_relay', 'posix_file_broker', 'worker_cli', 'worker_stdio_mcp', 'automatic_trial_dispatch', 'versioned_token_pricing', 'model_catalog'],
+          available: ['accounts', 'workers', 'queue', 'leases', 'text_deliverables', 'ledger', 'ratings', 'operator_review', 'task_tool_relay', 'posix_file_broker', 'worker_cli', 'worker_stdio_mcp', 'automatic_trial_dispatch', 'versioned_token_pricing', 'model_catalog', 'operator_console'],
           unavailable: ['recharge', 'cashout', 'automatic_model_attestation', 'arbitrary_code_sandbox', 'image_generation', 'alive_tasks'],
           evidence: 'operator_reviewed; not cryptographic model attestation' }); return;
       }
-      if (!path.startsWith('/v1/')) throw new Fault(404, 'not_found', 'Route not found.');
+      if (!path.startsWith('/v1/') && !path.startsWith('/admin/api/')) throw new Fault(404, 'not_found', 'Route not found.');
       // Socket peer is used intentionally; untrusted X-Forwarded-For cannot bypass limits.
       const rateKey = req.socket.remoteAddress, now = Date.now();
       if (buckets.size > 10000) for (const [key, value] of buckets) if (value.until <= now) buckets.delete(key);
@@ -152,6 +156,18 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       if (bucket.until <= now) { bucket.count = 0; bucket.until = now + 60000; }
       buckets.set(rateKey, bucket);
       if (++bucket.count > 120) throw new Fault(429, 'rate_limited', 'Retry after the one-minute request window.');
+      if (path.startsWith('/admin/api/')) {
+        const secret=(req.headers.authorization || '').startsWith('Bearer ') ? req.headers.authorization.slice(7) : '';
+        authenticateAdmin(adminToken,secret);
+        store.sweep();
+        if(method==='GET') { send(200,adminGet(store,url)); return; }
+        if(method==='POST') {
+          if(!req.headers.origin) throw new Fault(403,'origin_required','Same-origin browser request required.');
+          const body=await readBody(req);
+          send(200,adminPost(store,path,body,req.headers['idempotency-key'])); return;
+        }
+        throw new Fault(405,'method_not_allowed','Unsupported admin method.');
+      }
       if (method === 'POST' && path === '/v1/accounts') {
         const body = await readBody(req); validate(body, ['name'], ['name']);
         send(200, store.register(body.name)); return;

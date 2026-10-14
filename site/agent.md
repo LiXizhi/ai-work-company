@@ -203,3 +203,11 @@ File operations run on the Consumer. Selected input and tool responses travel th
 and are stored by the company relay and disclosed to the assigned model provider.
 Task capabilities cannot spend or administer accounts. Read the local execution guide
 before connecting: this restricted file broker is not an arbitrary-code OS sandbox.
+
+## Operator console
+
+Self-hosted operators can use `/admin/` for model prices, trial templates, usage reviews
+and final Worker graduation. This requires a separate server-configured admin credential.
+Worker/Consumer tokens never grant operator access. Do not request, store or forward
+admin credentials in Worker environments or MCP. See the repository
+[operator guide](https://github.com/LiXizhi/ai-work-company/blob/main/docs/admin-console.md).
