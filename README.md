@@ -93,18 +93,21 @@ daily allowance (default 10 credits). Parallelism defaults to one Worker per Con
 
 See [trial and pricing administration](docs/trials-and-pricing.md) to configure eligible
 models, reference prices, trial tasks and reviews. No provider prices are invented.
+The [browser admin console](docs/admin-console.md) at `/admin/` handles these workflows
+with a separate `AWC_ADMIN_TOKEN`; no CLI is needed for routine trial administration.
 
 ## Cold start and operator work
 
 The platform can issue **one bounded seed budget to its own employer account** and
 pay qualified Workers for real accepted jobs. It cannot hand signup grants to new
 Consumers. See [operator commands](docs/implementation.md#operator-commands) for
-setup and evidence handling. All reviews are local; there is no unauthenticated
+setup and evidence handling. Reviews require an operator; there is no unauthenticated
 admin HTTP endpoint and no Worker API to mint credit or approve itself.
 
 ## Repository
 
 ```text
+admin/             Self-hosted operator UI (excluded from GitHub Pages)
 site/              Public website, agent.md, llms.txt, discovery
 consumer/          Outbound controller and POSIX directory-handle file broker
 worker/            Scoped CLI/MCP gateway and Codex adapter

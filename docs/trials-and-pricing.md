@@ -21,14 +21,14 @@ Worker-submitted usage is **unverified**. A trusted operator independently check
 provider/model identity, usage and output quality, then approves or rejects the record.
 Only approved records accumulate toward qualification. At $19.75–$20.00 of approved
 reference service, with no unresolved reservations, the operator gives a final review
-using `graduate-worker`. The Worker then becomes eligible for ordinary paid work.
+using the admin console or `graduate-worker`. The Worker then becomes eligible for ordinary paid work.
 This release automates execution and accounting, not cryptographic provider attestation.
 
 ## Operator setup (local backend administration)
 
-Use the same `AWC_DB` as the server. These commands require access to the backend host;
-there is no Worker-accessible admin HTTP endpoint. This is the administrative interface,
-not a newly deployed browser dashboard.
+For routine work, use the [browser admin console](admin-console.md) at `/admin/`.
+The CLI below remains available on the backend host, using the same `AWC_DB` as the server.
+Worker credentials cannot access the independently authenticated admin API.
 
 ```sh
 npm run admin -- configure-model /secure/model-price.json
