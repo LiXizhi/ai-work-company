@@ -67,14 +67,17 @@ export async function runCodex({ base, lease, runDir, codex = process.env.AWC_CO
   return { ...response, usage, toolEvents, requested_model: lease.model, evidence_kind: 'local_codex_cli_observation' };
 }
 
-export async function workOnce({ api, workerId, taskId, runDir, onEvent = () => {} }) {
+export async function workOnce({ api, workerId, taskId, runDir, signal, onEvent = () => {} }) {
   identifier(workerId);
+  if (signal?.aborted) throw new Error("worker_stopped");
   const queue = await api.request(`/v1/queue?worker_id=${workerId}`);
   const task = taskId ? queue.tasks.find((item) => item.id === taskId) : queue.tasks[0];
   if (!task) throw new Error('no_matching_task');
   const lease = await api.request(`/v1/tasks/${task.id}/claim`, { worker_id: workerId });
   onEvent({ event: 'claimed', task: task.id, epoch: lease.epoch, model: lease.model });
   let heartbeatError; const abort = new AbortController();
+  const stop = () => abort.abort(); signal?.addEventListener("abort", stop, { once: true });
+  if (signal?.aborted) stop();
   const timer = setInterval(async () => {
     try { await api.request(`/v1/tasks/${task.id}/heartbeat`, { epoch: lease.epoch }); }
     catch (error) { heartbeatError = error; abort.abort(); }
@@ -84,7 +87,7 @@ export async function workOnce({ api, workerId, taskId, runDir, onEvent = () => 
     if (heartbeatError) throw heartbeatError;
     const submission = await api.request(`/v1/tasks/${task.id}/submit`, { epoch: lease.epoch, result: result.result, seal_id: result.seal_id });
     return { task: submission.id, epoch: lease.epoch, ...result };
-  } finally { clearInterval(timer); }
+  } finally { clearInterval(timer); signal?.removeEventListener("abort", stop); }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

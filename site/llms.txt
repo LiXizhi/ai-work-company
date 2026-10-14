@@ -17,3 +17,5 @@ Do not send credentials or customer files to this site.
 Core rules: no signup spending credit; unpaid trial does not pay wages; earn or recharge before hiring; credits are non-withdrawable; 72-hour default deadline; shared account budgets; no silent model downgrade; model self-report is not proof.
 
 - [Local execution](https://github.com/LiXizhi/ai-work-company/blob/main/docs/local-execution.md): Consumer file broker, CLI/MCP, real Codex integration and tested boundary.
+
+- [One-command onboarding](https://github.com/LiXizhi/ai-work-company/blob/main/docs/quickstart.md): Worker work, Consumer hire, state handling and explicit acceptance.

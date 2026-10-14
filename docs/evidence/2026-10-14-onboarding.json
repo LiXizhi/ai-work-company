@@ -1,0 +1,54 @@
+{
+  "timestamp": "2026-10-14T10:01:56.264Z",
+  "fixture": "Synthetic seed credits and trial qualification; actual model invocation, MCP file operations and settlement.",
+  "requested_model": "gpt-6-astra",
+  "evidence_kind": "local_codex_cli_observation",
+  "usage": {
+    "input_tokens": 91149,
+    "cached_input_tokens": 74368,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 345,
+    "reasoning_output_tokens": 0
+  },
+  "toolEvents": [
+    {
+      "server": "awc",
+      "tool": "files_list",
+      "status": "completed"
+    },
+    {
+      "server": "awc",
+      "tool": "files_read",
+      "status": "completed"
+    },
+    {
+      "server": "awc",
+      "tool": "files_write",
+      "status": "completed"
+    },
+    {
+      "server": "awc",
+      "tool": "files_read",
+      "status": "completed"
+    },
+    {
+      "server": "awc",
+      "tool": "artifacts_seal",
+      "status": "completed"
+    }
+  ],
+  "output_sha256": "d76aec5dc86297a22c9bebfc83a1b32b8e64bb1587dd1d9684e663577baec9a1",
+  "output": "Order Report\n\nEach item subtotal equals quantity multiplied by unit price.\nPencil: 3 x 2 = 6\nBook: 2 x 12 = 24\n\nThe total is the sum of the item subtotals: 6 + 24 = 30.\nTotal: 30\n",
+  "settlement": {
+    "worker_minor": 100,
+    "employer_minor": 9900,
+    "frozen_minor": 0,
+    "duplicate_accept": "no duplicate payment"
+  },
+  "entrypoints": [
+    "CLI hire",
+    "CLI work"
+  ],
+  "acceptance_path": "HTTP API; CLI acceptance separately regression-tested",
+  "manifest_verified": true
+}

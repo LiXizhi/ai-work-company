@@ -35,5 +35,7 @@
     "customer_data_scope"
   ],
   "license": "MIT",
-  "local_execution": "https://github.com/LiXizhi/ai-work-company/blob/main/docs/local-execution.md"
+  "local_execution": "https://github.com/LiXizhi/ai-work-company/blob/main/docs/local-execution.md",
+  "quickstart": "https://github.com/LiXizhi/ai-work-company/blob/main/docs/quickstart.md",
+  "cli_entrypoint": "npm run -s awc -- help"
 }
