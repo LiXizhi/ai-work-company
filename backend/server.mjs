@@ -3,6 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { Store, Fault } from './store.mjs';
+import { initRelay, mintToolCap, authorizeTool, enqueueTool, pendingTools, completeTool, bindSubmission } from './relay.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const jsonHeaders = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
@@ -18,13 +19,17 @@ const definitions = [
   ['POST', '/v1/workers', ['name', 'model', 'accept_trial'], ['name', 'model', 'accept_trial']],
   ['GET', '/v1/queue', [], []],
   ['GET', '/v1/tasks', [], []],
-  ['POST', '/v1/tasks', ['title', 'description', 'model', 'amount_minor', 'deadline'], ['title', 'description', 'model', 'amount_minor']],
+  ['POST', '/v1/tasks', ['title', 'description', 'model', 'amount_minor', 'deadline', 'workspace_required'], ['title', 'description', 'model', 'amount_minor']],
   ['GET', '/v1/tasks/{id}', [], []],
   ['POST', '/v1/tasks/{id}/claim', ['worker_id'], ['worker_id']],
   ['POST', '/v1/tasks/{id}/heartbeat', ['epoch'], ['epoch']],
-  ['POST', '/v1/tasks/{id}/submit', ['epoch', 'result'], ['epoch', 'result']],
+  ['POST', '/v1/tasks/{id}/submit', ['epoch', 'result', 'seal_id'], ['epoch', 'result']],
   ['POST', '/v1/tasks/{id}/accept', ['rating'], ['rating']],
   ['POST', '/v1/tasks/{id}/cancel', [], []],
+  ['POST', '/v1/tasks/{id}/tools', ['name', 'arguments'], ['name', 'arguments']],
+  ['GET', '/v1/tasks/{id}/tool-results/{call}', [], []],
+  ['POST', '/v1/tasks/{id}/tool-results/{call}', ['result'], ['result']],
+  ['GET', '/v1/tasks/{id}/execution', [], []],
 ];
 const props = {
   name: { type: 'string', minLength: 1, maxLength: 80 },
@@ -36,6 +41,7 @@ const props = {
   deadline: { type: 'string', format: 'date-time' },
   worker_id: { type: 'string' }, epoch: { type: 'integer', minimum: 1 },
   result: { type: 'string', minLength: 1, maxLength: 30000 }, rating: { type: 'integer', minimum: 1, maximum: 5 },
+  workspace_required: { type: 'boolean', default: false }, seal_id: { type: 'string' }, arguments: { type: 'object' },
 };
 export function openapi() {
   const paths = {};
@@ -44,7 +50,7 @@ export function openapi() {
     const publicRoute = ['/health', '/v1/capabilities', '/v1/accounts'].includes(path);
     const operation = {
       operationId: `${method.toLowerCase()}_${path.replace(/[^a-z0-9]+/gi, '_')}`,
-      security: publicRoute ? [] : [{ bearerAuth: [] }],
+      security: publicRoute ? [] : [{ [(path.endsWith('/tools') || (method === 'GET' && path.includes('tool-results'))) ? 'taskCapability' : 'bearerAuth']: [] }],
       parameters: [],
       responses: {
         200: { description: 'Successful JSON response; see agent.md for the response fields.', content: { 'application/json': { schema: { type: 'object' } } } },
@@ -52,20 +58,21 @@ export function openapi() {
       },
     };
     if (path.includes('{id}')) operation.parameters.push({ name: 'id', in: 'path', required: true, schema: { type: 'string' } });
+    if (path.includes('{call}')) operation.parameters.push({ name: 'call', in: 'path', required: true, schema: { type: 'string' } });
     if (path === '/v1/queue') operation.parameters.push({ name: 'worker_id', in: 'query', required: true, schema: { type: 'string' } });
     if (method === 'POST') {
       if (!publicRoute) operation.parameters.push({ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string', minLength: 1, maxLength: 128 } });
       operation.requestBody = { required: true, content: { 'application/json': { schema: {
-        type: 'object', additionalProperties: false, required, properties: Object.fromEntries(fields.map((f) => [f, props[f]])),
+        type: 'object', additionalProperties: false, required, properties: Object.fromEntries(fields.map((f) => [f, path.includes('tool-results') && f === 'result' ? { type: 'object' } : props[f]])),
       } } } };
     }
     paths[path] ??= {}; paths[path][method.toLowerCase()] = operation;
   }
   return {
-    openapi: '3.1.0', info: { title: 'AI Work Company', version: '0.1.0', description: 'Self-hosted reference API. No hosted marketplace API is advertised by the documentation site.' },
+    openapi: '3.1.0', info: { title: 'AI Work Company', version: '0.2.0', description: 'Self-hosted reference API. No hosted marketplace API is advertised by the documentation site.' },
     servers: [{ url: 'http://127.0.0.1:8787', description: 'Your local reference server' }], paths,
     components: {
-      securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' } },
+      securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' }, taskCapability: { type: 'http', scheme: 'bearer', description: 'Claim tool_token, scoped to task and lease epoch; cannot access account APIs.' } },
       schemas: { Error: { type: 'object', required: ['error'], properties: { error: { type: 'object', properties: { code: { type: 'string' }, message: { type: 'string' } } } } } },
     },
   };
@@ -94,6 +101,7 @@ async function readBody(req) {
 }
 
 export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', '[::1]'] } = {}) {
+  initRelay(store);
   const staticFiles = new Map();
   for (const [url, name, mime] of [
     ['/', 'index.html', 'text/html'], ['/style.css', 'style.css', 'text/css'], ['/app.js', 'app.js', 'text/javascript'],
@@ -121,12 +129,12 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
         res.writeHead(200, { ...securityHeaders, 'Content-Type': `${file.mime}; charset=utf-8` }); res.end(file.body); return;
       }
       if (method === 'GET' && path === '/openapi.json') { send(200, openapi()); return; }
-      if (method === 'GET' && path === '/health') { send(200, { status: 'ok', version: '0.1.0' }); return; }
+      if (method === 'GET' && path === '/health') { send(200, { status: 'ok', version: '0.2.0' }); return; }
       if (method === 'GET' && path === '/v1/capabilities') {
-        send(200, { version: '0.1.0', models: store.models, unit: 'work_credit_minor', minor_per_credit: 100,
+        send(200, { version: '0.2.0', models: store.models, unit: 'work_credit_minor', minor_per_credit: 100,
           defaults: { deadline_hours: 72, daily_limit_minor: 1000, consumer_concurrency: 1, max_attempts: 3, lease_seconds: 60 },
-          available: ['accounts', 'workers', 'queue', 'leases', 'text_deliverables', 'ledger', 'ratings', 'operator_review'],
-          unavailable: ['recharge', 'cashout', 'automatic_model_attestation', 'trial_execution', 'consumer_sandbox', 'mcp', 'image_generation', 'alive_tasks'],
+          available: ['accounts', 'workers', 'queue', 'leases', 'text_deliverables', 'ledger', 'ratings', 'operator_review', 'task_tool_relay', 'posix_file_broker', 'worker_cli', 'worker_stdio_mcp'],
+          unavailable: ['recharge', 'cashout', 'automatic_model_attestation', 'trial_execution', 'arbitrary_code_sandbox', 'image_generation', 'alive_tasks'],
           evidence: 'operator_reviewed; not cryptographic model attestation' }); return;
       }
       if (!path.startsWith('/v1/')) throw new Fault(404, 'not_found', 'Route not found.');
@@ -142,8 +150,27 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
         send(200, store.register(body.name)); return;
       }
       const authorization = req.headers.authorization || '';
-      const account = store.authenticate(authorization.startsWith('Bearer ') ? authorization.slice(7) : '');
+      const secret = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
+      const toolRoute = path.match(/^\/v1\/tasks\/([^/]+)\/(tools|tool-results\/([^/]+))$/);
+      if (toolRoute && ((method === 'POST' && toolRoute[2] === 'tools') || method === 'GET')) {
+        store.sweep();
+        const { cap } = authorizeTool(store, secret, toolRoute[1]);
+        if (method === 'GET') {
+          const call = store.one('SELECT id,state,result FROM tool_calls WHERE id=? AND task=? AND epoch=? AND worker=?', toolRoute[3] || '', cap.task, cap.epoch, cap.worker);
+          if (!call) throw new Fault(404, 'not_found', 'Tool call not found.');
+          send(200, { ...call, result: call.result ? JSON.parse(call.result) : null }); return;
+        }
+        const body = await readBody(req); validate(body, ['name', 'arguments'], ['name', 'arguments']);
+        send(200, store.mutation(`${cap.worker}:${cap.task}:${cap.epoch}`, path, req.headers['idempotency-key'], body, () => { authorizeTool(store, secret, cap.task); return enqueueTool(store, cap, body.name, body.arguments); })); return;
+      }
+      const account = store.authenticate(secret);
       store.sweep();
+      const executionRoute = path.match(/^\/v1\/tasks\/([^/]+)\/execution$/);
+      if (method === 'GET' && executionRoute) { send(200, pendingTools(store, account.id, executionRoute[1])); return; }
+      if (method === 'POST' && toolRoute && toolRoute[3]) {
+        const body = await readBody(req); validate(body, ['result'], ['result']);
+        send(200, store.mutation(account.id, path, req.headers['idempotency-key'], body, () => completeTool(store, account.id, toolRoute[1], toolRoute[3], body.result))); return;
+      }
       if (method === 'GET') {
         if (path === '/v1/me') { send(200, store.wallet(account.id)); return; }
         if (path === '/v1/ledger') { send(200, { entries: store.all('SELECT * FROM ledger WHERE account=? ORDER BY seq DESC LIMIT 100', account.id) }); return; }
@@ -159,11 +186,16 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       const body = await readBody(req); validate(body, definition[2], definition[3]);
       const result = store.mutation(account.id, path, req.headers['idempotency-key'], body, () => {
         if (path === '/v1/workers') return store.registerWorker(account.id, body);
-        if (path === '/v1/tasks') return store.createTask(account.id, body);
+        if (path === '/v1/tasks') {
+          if (body.workspace_required !== undefined && typeof body.workspace_required !== 'boolean') throw new Fault(400, 'invalid_input', 'workspace_required must be boolean.');
+          const task = store.createTask(account.id, body);
+          store.run('INSERT INTO task_workspaces(task,required) VALUES(?,?)', task.id, body.workspace_required ? 1 : 0);
+          return task;
+        }
         const [, taskId, action] = match;
-        if (action === 'claim') return store.claim(account.id, taskId, body.worker_id);
+        if (action === 'claim') { const task = store.claim(account.id, taskId, body.worker_id); return { ...task, tool_token: mintToolCap(store, task) }; }
         if (action === 'heartbeat') return store.heartbeat(account.id, taskId, body.epoch);
-        if (action === 'submit') return store.submit(account.id, taskId, body);
+        if (action === 'submit') { const task = store.submit(account.id, taskId, body); bindSubmission(store, taskId, body); return task; }
         if (action === 'accept') return store.accept(account.id, taskId, body);
         return store.cancel(account.id, taskId);
       });

@@ -90,7 +90,8 @@ test('concurrent HTTP claims produce exactly one assignee and one daily reservat
 test('static discovery is honest, subpath-safe, with matching OpenAPI routes', async (t) => {
   const { request, url } = await serverFixture(t);
   const capability = (await request('/v1/capabilities')).value;
-  assert.ok(capability.unavailable.includes('consumer_sandbox'));
+  assert.ok(capability.available.includes('posix_file_broker'));
+  assert.ok(capability.unavailable.includes('arbitrary_code_sandbox'));
   const discovery = (await request('/.well-known/agent.json')).value;
   assert.equal(discovery.hosted_api, null);
   const base = 'https://lixizhi.github.io/ai-work-company/.well-known/agent.json';

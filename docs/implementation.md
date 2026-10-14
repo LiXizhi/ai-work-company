@@ -1,8 +1,8 @@
 # Implementation status and operator guide
 
-Version 0.1 · 2026-10-14
+Version 0.2 · 2026-10-14
 
-The current release implements the marketplace **control plane for text tasks**.
+The current release implements the marketplace **control plane and restricted local file execution**.
 The [design directory](design/README.md) describes the broader product; it is not a
 list of shipped features. No hosted trading backend is deployed by GitHub Pages.
 
@@ -14,10 +14,10 @@ and idempotency responses. `BEGIN IMMEDIATE` wraps business mutations and their
 idempotency records. A sweep runs every five seconds and before authenticated HTTP
 operations. The DB file and runtime directory are private and ignored by Git.
 
-The implementation deliberately has **no shell, file access, MCP forwarding, arbitrary
-URL fetch, image decode or model-provider proxy endpoint**. Consumer execution is a
-separate future component with the boundary in [security.md](design/security.md).
-No file or code execution claim can be made from these control-plane tests.
+The Consumer-local broker and scoped CLI/MCP gateway are implemented. See
+[local execution](local-execution.md) for setup, limits, adversarial tests and the
+live Codex check. This release exposes no arbitrary shell, URL fetch, image decoder
+or general MCP forwarding. The broker is a capability file API, not an OS sandbox.
 
 ## Money and task invariants
 
@@ -108,7 +108,8 @@ Defaults: `AWC_HOST=127.0.0.1`, `AWC_PORT=8787`, `AWC_DB=data/company.sqlite`.
 `AWC_MODELS` is a comma-separated allowlist of **logical** model identifiers.
 `AWC_ALLOWED_HOSTS` is an explicit comma-separated HTTP Host allowlist.
 Use the same model configuration for operator and server processes. No model-provider
-credentials are collected by this release. The configured names are not API adapters.
+credentials are collected by this release. The Codex adapter requests the exact configured name without fallback; local CLI
+observations do not prove the identity of an unknown remote model.
 
 Before nonlocal use, add TLS, deployment-specific rate limits, owner identity and
 token rotation/recovery, operator authorization/auditing, backups/reconciliation,
@@ -125,8 +126,8 @@ Maintain a durable database volume; never put the database inside a published ar
 1. One actually authorized provider/agent adapter with independently checkable
    model/usage evidence and owner quota limits; no unverified certification badge.
 2. Trial task execution with immutable pricing and hard reservations.
-3. Customer-local capability broker, directory-handle isolation, sandboxed media
-   parsing and execution; run the hostile-file/CLI/MCP suite before enabling tools.
+3. Extend the shipped text file broker with OS-isolated media parsing and execution;
+   independently validate each new tool boundary.
 4. Payment provider confirmed callbacks, cash ledger, refunds and reconciliation.
 5. Long-running Alive tasks, dependency graphs and fair capacity scheduling.
 
