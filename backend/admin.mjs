@@ -4,6 +4,15 @@ import { Store } from './store.mjs';
 process.umask(0o077);
 const [command, target, argument, extra] = process.argv.slice(2);
 const usage = `Local operator commands (same AWC_DB as the server):
+  configure-model <price.json>
+  disable-model <model-id>
+  models
+  trial-reviews
+  trial-status <worker-id>
+  disable-trial <template-id>
+  add-trial <task-template.json>
+  review-trial <trial-id> <reviewed-evidence.json>
+  graduate-worker <worker-id> <decision-reference>
   provision-platform <name> <seed-budget-minor>
   qualify-worker <worker-id> <reviewed-evidence.json>
   review-task <task-id> <reviewed-evidence.json>
@@ -17,7 +26,16 @@ if (!command || command === '--help') { console.log(usage); process.exit(0); }
 const store = new Store(process.env.AWC_DB || 'data/company.sqlite');
 try {
   let value;
-  if (command === 'provision-platform') value = store.provisionPlatform(target, Number(argument));
+  if (command === 'configure-model') value = store.trials.configure(JSON.parse(readFileSync(target, 'utf8')));
+  else if (command === 'disable-model') value = store.trials.disable(target);
+  else if (command === 'models') value = store.trials.catalog();
+  else if (command === 'trial-reviews') value = store.all("SELECT * FROM trial_runs WHERE state IN ('submitted','expired','revoked') ORDER BY created_at LIMIT 100");
+  else if (command === 'trial-status') { const w = store.one('SELECT * FROM workers WHERE id=?', target); if(!w) throw new Error('worker_not_found'); value = store.trials.progress(w.owner, target); }
+  else if (command === 'disable-trial') { store.run('UPDATE trial_templates SET enabled=0 WHERE id=?', target); value = {id:target,enabled:false}; }
+  else if (command === 'add-trial') value = store.trials.template(JSON.parse(readFileSync(target, 'utf8')));
+  else if (command === 'review-trial') value = store.trials.review(target, JSON.parse(readFileSync(argument, 'utf8')));
+  else if (command === 'graduate-worker') value = store.trials.graduate(target, argument);
+  else if (command === 'provision-platform') value = store.provisionPlatform(target, Number(argument));
   else if (command === 'qualify-worker') value = store.qualifyWorker(target, JSON.parse(readFileSync(argument, 'utf8')));
   else if (command === 'review-task') value = store.reviewTask(target, JSON.parse(readFileSync(argument, 'utf8')));
   else if (command === 'suspend-worker') value = store.suspend(target);

@@ -30,7 +30,7 @@ export function authorizeTool(store, secret, taskId) {
   demand(cap, 'invalid_capability', 'Task tool capability required.', 401);
   const task = store.one('SELECT * FROM tasks WHERE id=?', cap.task);
   const worker = store.one('SELECT * FROM workers WHERE id=?', cap.worker);
-  demand(task.state === 'running' && task.epoch === cap.epoch && task.worker === cap.worker && !worker.suspended && task.lease_until > store.now() && task.deadline > store.now(), 'lease_expired', 'Task capability is stale or revoked.');
+  demand(store.models.includes(task.model) && task.state === 'running' && task.epoch === cap.epoch && task.worker === cap.worker && !worker.suspended && task.lease_until > store.now() && task.deadline > store.now(), 'lease_expired', 'Task capability is stale or revoked.');
   return { cap, task };
 }
 export function enqueueTool(store, cap, name, args) {
@@ -53,7 +53,7 @@ export function enqueueTool(store, cap, name, args) {
 export function pendingTools(store, owner, taskId) {
   const task = store.task(owner, taskId);
   demand(task.owner === owner, 'forbidden', 'Only the Consumer may retrieve execution requests.', 403);
-  const calls = task.state === 'running' && task.lease_until > store.now()
+  const calls = store.models.includes(task.model) && task.state === 'running' && task.lease_until > store.now()
     ? store.all("SELECT * FROM tool_calls WHERE task=? AND epoch=? AND worker=? AND state='pending' ORDER BY created_at", taskId, task.epoch, task.worker) : [];
   return { task, server_time: store.now(), calls: calls.map((call) => ({ ...call, args: JSON.parse(call.args) })) };
 }

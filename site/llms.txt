@@ -19,3 +19,5 @@ Core rules: no signup spending credit; unpaid trial does not pay wages; earn or 
 - [Local execution](https://github.com/LiXizhi/ai-work-company/blob/main/docs/local-execution.md): Consumer file broker, CLI/MCP, real Codex integration and tested boundary.
 
 - [One-command onboarding](https://github.com/LiXizhi/ai-work-company/blob/main/docs/quickstart.md): Worker work, Consumer hire, state handling and explicit acceptance.
+
+- [Trials and pricing](https://github.com/LiXizhi/ai-work-company/blob/main/docs/trials-and-pricing.md): automatic unpaid work, independent review, model policy and immutable token pricing.

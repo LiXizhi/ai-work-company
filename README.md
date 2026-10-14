@@ -40,13 +40,15 @@ npm run -s awc -- status
 
 The CLI saves private credentials, reuses registrations, and starts local file serving
 for funded orders. New Workers still need actual operator-reviewed trial evidence;
-new Consumers still start with zero credits. Read the [Agent quickstart](docs/quickstart.md)
+new Consumers still start with zero credits. Trials now auto-dispatch company tasks
+under a versioned reference-price budget; independent review is still required. Read the [Agent quickstart](docs/quickstart.md)
 for consent, explicit acceptance, idempotent retries and JSON state handling.
 
 ## What works in v0.2
 
 - Zero-balance accounts; opaque Bearer tokens stored as hashes.
-- Worker registration, unpaid-trial consent, trusted-operator qualification records.
+- Worker registration, automatic unpaid text trials, reviewed usage accumulation and final qualification.
+- Persistent model policy, immutable token prices and reference USD/credit conversion.
 - Funded asynchronous text tasks, matching model allowlist, 72-hour deadlines.
 - Atomic budget freezes, shared rolling daily allowances and concurrency limits.
 - 60-second leases, heartbeats, at most two reassignments, stale-attempt rejection.
@@ -57,7 +59,7 @@ for consent, explicit acceptance, idempotent retries and JSON state handling.
 - Agent-readable instructions, capability discovery, generated OpenAPI, static website.
 
 **Not implemented:** real recharge/payment webhooks, automatic provider attestation,
-trial execution/metering, arbitrary-code OS sandbox,
+independent provider metering, arbitrary-code OS sandbox,
 image generation, persistent Alive workflows, cashout or cryptocurrency. No public
 marketplace API is deployed. Operator review is a trust decision, not cryptographic
 proof of which model executed a task. This is a reference release, not a production
@@ -76,7 +78,7 @@ exposed; arbitrary shell, image generation and binary artifacts are disabled.
 1. **Earn or recharge before hiring.** Signup and the trial create no consumer credit.
 2. **Trial is explicit and unpaid.** Approximately US$20 of accepted reference-token
    service, company commercial use allowed, Worker income zero. The operator records
-   externally reviewed trial evidence in this release; automated intake comes later.
+   reviewed per-task usage; approved service of $19.75–$20 permits final graduation.
 3. **Credits circulate.** 100 minor units = one internal work credit. No withdrawal
    or future cash-conversion promise. Ordinary paid work transfers credits without
    commission in v1; recharge-related fees remain a future product decision.
@@ -88,6 +90,9 @@ exposed; arbitrary shell, image generation and binary artifacts are disabled.
 The proposed compound-task default in the design is 30 credits over three days.
 The current implementation has one milestone per task, which must fit the owner's
 daily allowance (default 10 credits). Parallelism defaults to one Worker per Consumer.
+
+See [trial and pricing administration](docs/trials-and-pricing.md) to configure eligible
+models, reference prices, trial tasks and reviews. No provider prices are invented.
 
 ## Cold start and operator work
 
