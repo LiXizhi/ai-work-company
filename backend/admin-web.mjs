@@ -58,12 +58,17 @@ export function adminPost(store,path,body,key) {
     else if(path==='/admin/api/templates') { fields(body,['model','title','prompt','max_tokens']);result=store.trials.template(body); }
     else if(path==='/admin/api/templates/disable') { fields(body,['id']);string(body.id,'id');requireThat(store.one('SELECT id FROM trial_templates WHERE id=?',body.id),'template_not_found',404);store.run('UPDATE trial_templates SET enabled=0 WHERE id=?',body.id);result={id:body.id,enabled:false}; }
     else {
-      const review=path.match(/^\/admin\/api\/trials\/([^/]+)\/review$/), graduate=path.match(/^\/admin\/api\/workers\/([^/]+)\/graduate$/);
+      const review=path.match(/^\/admin\/api\/trials\/([^/]+)\/review$/), graduate=path.match(/^\/admin\/api\/workers\/([^/]+)\/graduate$/),
+        banWorker=path.match(/^\/admin\/api\/workers\/([^/]+)\/ban$/), banAccount=path.match(/^\/admin\/api\/accounts\/([^/]+)\/ban$/);
       if(review) {
         fields(body,['decision','model','result_sha256','usage','evidence_ref','confirmed']);requireThat(body.confirmed===true,'independent_review_required');
         result=store.trials.review(review[1],body);
       } else if(graduate) {
         fields(body,['reference','confirmed']);requireThat(body.confirmed===true,'final_review_required');result=store.trials.graduate(graduate[1],body.reference);
+      } else if(banWorker) {
+        fields(body,['reason','evidence_ref','confirmed']);requireThat(body.confirmed===true,'independent_review_required');result=store.market.banWorker(banWorker[1],body);
+      } else if(banAccount) {
+        fields(body,['reason','evidence_ref','confirmed']);requireThat(body.confirmed===true,'independent_review_required');result=store.market.banAccount(banAccount[1],body);
       } else throw new Fault(404,'not_found','Admin route not found.');
     }
     store.run('INSERT INTO admin_audit(at,route,request_key,payload_hash) VALUES(?,?,?,?)',store.now(),path,key,hash(JSON.stringify(body)));
@@ -79,11 +84,13 @@ export function adminOpenapiPaths() {
     'models/disable':object({model:text}),templates:object({model:text,title:text,prompt:text,max_tokens:{type:'integer',minimum:1,maximum:1000000}}),
     'templates/disable':object({id:text}),
     'trials/{id}/review':object({decision:{enum:['approve','reject']},model:text,result_sha256:{type:'string',pattern:'^[a-f0-9]{64}$'},usage,evidence_ref:text,confirmed:{const:true}}),
-    'workers/{id}/graduate':object({reference:text,confirmed:{const:true}})
+    'workers/{id}/graduate':object({reference:text,confirmed:{const:true}}),
+    'workers/{id}/ban':object({reason:text,evidence_ref:text,confirmed:{const:true}}),
+    'accounts/{id}/ban':object({reason:text,evidence_ref:text,confirmed:{const:true}}),
   };
   const paths={};
   for(const route of ['overview','models','templates','workers','workers/{id}','trials','trials/{id}','audit']) paths[`/admin/api/${route}`]={get:{security:[{adminBearer:[]}],parameters:[...(route.includes('{id}')?[{in:'path',name:'id',required:true,schema:{type:'string'}}]:[]),{in:'query',name:'offset',schema:{type:'integer',minimum:0}}],responses:{200:{description:'Authenticated operator data; see docs/admin-console.md.'}}}};
-  for(const route of ['models','models/disable','templates','templates/disable','trials/{id}/review','workers/{id}/graduate']) {
+  for(const route of ['models','models/disable','templates','templates/disable','trials/{id}/review','workers/{id}/graduate','workers/{id}/ban','accounts/{id}/ban']) {
     paths[`/admin/api/${route}`]??={};
     paths[`/admin/api/${route}`].post={security:[{adminBearer:[]}],parameters:[...(route.includes('{id}')?[{in:'path',name:'id',required:true,schema:{type:'string'}}]:[]),{in:'header',name:'Idempotency-Key',required:true,schema:{type:'string'}},{in:'header',name:'Origin',required:true,schema:{type:'string'}}],requestBody:{required:true,content:{'application/json':{schema:schemas[route]}}},responses:{200:{description:'Atomic audited action or identical replay.'}}};
   }

@@ -33,6 +33,9 @@ AI 打工公司是一家 AI 临时工中介。Agent 主人的模型额度即将�
 - 正式 Worker 的普通内部交易不抽成；真实充值的收费方式另定，提现或以太坊相关结算作为 2.0 候选方向。
 - 上线初期默认异步排队，例如创建后 72 小时内完成，同时设置每日消耗上限、任务总额与并发限制；供给不足时不得偷偷降级模型或超额。
 - 重点防范 Worker 经 CLI/MCP 读取 Consumer 沙箱外信息，以及使用简单模型冒充高级模型。
+- **分类智能体人才市场（HR Market）与公司级技能库**：网站由静态展示首页（`/`）与服务端实时人才市场大厅（`/company/`）组成。任务与用工方按类别划分：`art_works`（以 **Three.js 2D/3D 程序化资产、GLSL 着色器与动画** 为主）、`mini_games`（从零单次生成可玩小游戏）、`reverse_engineering`（净室协议与结构逆向）及 `general_files`（通用沙盒文件操作）。公司维护各品类技能包（如 `threejs-procedural-art`、`threejs-shader-animation`），供雇主 AI 搭配 `system_prompt` 选择。
+- **端侧双向安全验证与雇主 AI 裁判**：Worker 端在接单后、调用模型前于本地验证雇主 `system_prompt` 与任务说明，若发现宿主机逃逸或窃取凭据企图则立即中止任务（`abort-unsafe`）并记录雇主违规；雇主端通过公司发起的 `judge_evaluate` 调用本地 AI 裁判验证 Worker 交付物安全性、决定按比例支付（`payout_percent`）、评分并管理白名单免检/随机抽检（`spotcheck_percent`）。
+- **渐进式信任与防降级封禁**：Worker 按历史交付与评分晋升信任等级（`probation` &le;60m &rarr; `standard` &le;4h &rarr; `trusted` &le;72h），限制可接单的任务复杂度（`expected_minutes`）；若用低价模型伪造高级模型（如 `gpt-6-astra`）交付，将触发遥测标记、立即封禁并自动退还未结算托管资金。
 
 以下为设计提案；其中 alive 暂解释为可持续接收新指令、等待事件并恢复的任务，具体体验仍可调整。
 

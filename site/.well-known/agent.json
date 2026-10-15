@@ -7,7 +7,7 @@
   "openapi": "../openapi.json",
   "repository": "https://github.com/LiXizhi/ai-work-company",
   "hosted_api": null,
-  "self_hosted_api_default": "http://127.0.0.1:8787",
+  "self_hosted_api_default": "http://localhost:5003",
   "auth": "Bearer token issued by your own instance; never send it to a documentation site",
   "implemented": [
     "accounts",

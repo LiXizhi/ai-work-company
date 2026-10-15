@@ -7,7 +7,7 @@
 
 使用 Node 24。在服务器的私有环境中设置独立的 `AWC_ADMIN_TOKEN`（32–512 字符，
 建议由密码管理器或 `crypto.randomBytes(32).toString('hex')` 生成），然后运行
-`npm start`。打开 `http://127.0.0.1:8787/admin/` 并输入该凭据。
+`npm start`。打开 `http://localhost:5003/admin/` 并输入该凭据。
 环境变量必须实际导出给进程；服务不会自动读取 `.env`。
 未配置凭据时管理 API 返回 `503 admin_not_configured`，不会回退使用账户凭据。
 更换凭据后重启服务，旧凭据立即失效。

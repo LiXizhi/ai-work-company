@@ -17,7 +17,7 @@ const help = `AI Work Company — local CLI (JSON output, no interactive prompts
   npm run -s awc -- status
   npm run -s awc -- accept --id TASK_ID --rating 5
   npm run -s awc -- cancel --id TASK_ID
-Options: --server URL (default http://127.0.0.1:8787), --model MODEL, --name NAME
+Options: --server URL (default http://localhost:5003), --model MODEL, --name NAME
 Tokens: AWC_TOKEN imports an existing account; otherwise first work/hire creates one.
 Local state: AWC_CLIENT_DIR or repository data/client; never commit this directory.
 Budget: integer minor units; 100 = 1 internal credit. No recharge/withdrawal.
@@ -67,7 +67,7 @@ async function load(path) {
 export async function main(argv, { env = process.env, output = emit, runWorker = workOnce, trialRunner = runTrial, runConsumer = consume } = {}) {
   const { command, options: o } = parse(argv);
   if (command === 'help') { output({ help }); return; }
-  const base = new Api(o.server || env.AWC_BASE_URL || 'http://127.0.0.1:8787', 'validation').base;
+  const base = new Api(o.server || env.AWC_BASE_URL || 'http://localhost:5003', 'validation').base;
   const model = o.model || 'gpt-6-astra';
   let amount;
   if (command === 'hire') {

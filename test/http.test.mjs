@@ -107,3 +107,89 @@ test('static discovery is honest, subpath-safe, with matching OpenAPI routes', a
     assert.ok(existsSync(new URL(`../site/${target}`, import.meta.url)), `Missing local asset ${target}`);
   }
 });
+
+test('HTTP serves /company/ portal, skills catalog, market board, Consumer AI Judger relay, and edge safety abort', async (t) => {
+  const { store, url, request } = await serverFixture(t);
+  const companyPage = await fetch(url + '/company/');
+  assert.equal(companyPage.status, 200);
+  assert.match(await companyPage.text(), /LIVE AGENT RESOURCE &amp; HR MARKET/);
+
+  const skillsRes = await request('/v1/skills?category=art_works');
+  assert.equal(skillsRes.status, 200);
+  assert.ok(skillsRes.value.skills.some((s) => s.id === 'threejs-procedural-art'));
+
+  const p = store.provisionPlatform('Synthetic Market Employer', 10000);
+  store.limits(p.account_id, 5000, 3);
+  const a = (await request('/v1/accounts', { body: { name: 'Three.js Artist Owner' } })).value;
+  const w = (await request('/v1/workers', { token: a.token, body: { name: 'ThreeJS-Worker-1', model: 'gpt-6-astra', accept_trial: true } })).value;
+  store.qualifyWorker(w.id, { model: w.model, trial_reference_minor: 2000, evidence_ref: 'synthetic:http-market-trial' });
+
+  // Publish a Three.js art_works job with Consumer AI Judger enabled
+  const job = (await request('/v1/tasks', {
+    token: p.token,
+    body: {
+      title: 'Three.js animated torus knot',
+      description: 'Create a Three.js scene with TorusKnotGeometry and custom shader.',
+      category: 'art_works',
+      skill_id: 'threejs-procedural-art',
+      system_prompt: 'Ensure 60fps requestAnimationFrame loop.',
+      expected_minutes: 30,
+      judge_mode: 'consumer_ai',
+      min_payout_percent: 70,
+      model: 'gpt-6-astra',
+      amount_minor: 400,
+    },
+  })).value;
+  assert.equal(job.category, 'art_works');
+  assert.equal(job.skill_id, 'threejs-procedural-art');
+
+  const marketBefore = await request('/v1/market');
+  assert.equal(marketBefore.status, 200);
+  assert.equal(marketBefore.value.stats.open_jobs, 1);
+
+  const claimed = (await request(`/v1/tasks/${job.id}/claim`, { token: a.token, body: { worker_id: w.id } })).value;
+  await request(`/v1/tasks/${job.id}/submit`, {
+    token: a.token,
+    body: { epoch: claimed.epoch, result: 'import * as THREE from "three"; const scene = new THREE.Scene(); requestAnimationFrame(() => {});' },
+  });
+
+  // Company dispatches judge_evaluate tool call to Consumer execution polling
+  const execPoll = await request(`/v1/tasks/${job.id}/execution`, { token: p.token });
+  assert.equal(execPoll.status, 200);
+  const judgeCall = execPoll.value.calls.find((c) => c.name === 'judge_evaluate');
+  assert.ok(judgeCall);
+
+  // Consumer runner returns AI Judger verdict via tool-results
+  const toolDone = await request(`/v1/tasks/${job.id}/tool-results/${judgeCall.id}`, {
+    token: p.token,
+    body: {
+      result: {
+        ok: true,
+        payout_percent: 90,
+        rating: 5,
+        reason: 'Verified Three.js scene.',
+        recommend_whitelist: true,
+        suspect_model_spoofing: false,
+      },
+    },
+  });
+  assert.equal(toolDone.status, 200);
+
+  // Operator reviews model evidence, then Consumer accepts with Judger's 90% payout
+  store.reviewTask(job.id, {
+    model: w.model,
+    result_sha256: hash('import * as THREE from "three"; const scene = new THREE.Scene(); requestAnimationFrame(() => {});'),
+    verified_tokens: 150,
+    evidence_ref: 'synthetic:http-threejs-task',
+  });
+  const accepted = await request(`/v1/tasks/${job.id}/accept`, { token: p.token, body: { rating: 5, payout_percent: 90 } });
+  assert.equal(accepted.status, 200);
+  assert.equal(accepted.value.payout_percent, 90);
+  assert.equal((await request('/v1/me', { token: a.token })).value.available, 360);
+
+  // Worker rates Consumer
+  const rateRes = await request(`/v1/tasks/${job.id}/rate-consumer`, { token: a.token, body: { rating: 5 } });
+  assert.equal(rateRes.status, 200);
+  assert.equal(rateRes.value.consumer_rating, 5);
+});
+

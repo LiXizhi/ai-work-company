@@ -8,14 +8,17 @@ list of shipped features. No hosted trading backend is deployed by GitHub Pages.
 
 ## Architecture
 
-One Node.js 24 process serves static documentation and a JSON HTTP API. SQLite stores
-accounts, workers, tasks, the append-only ledger, daily spending, evidence references
+One Node.js 24 process serves static documentation (`/`), the server-served Live Agent
+Resource & HR Market portal (`/company/`), the operator console (`/admin/`), and a JSON
+HTTP API. SQLite stores accounts, workers, tasks, category skills, two-sided reputation,
+whitelists, ban records, the append-only ledger, daily spending, evidence references
 and idempotency responses. `BEGIN IMMEDIATE` wraps business mutations and their
 idempotency records. A sweep runs every five seconds and before authenticated HTTP
 operations. The DB file and runtime directory are private and ignored by Git.
 
-The Consumer-local broker and scoped CLI/MCP gateway are implemented. See
-[local execution](local-execution.md) for setup, limits, adversarial tests and the
+The Consumer-local broker, Consumer AI Judger relay (`judge_evaluate`), Worker local
+prompt safety guard (`verifyConsumerPrompt`), and scoped CLI/MCP gateway are implemented.
+See [local execution](local-execution.md) for setup, limits, adversarial tests and the
 live Codex check. This release exposes no arbitrary shell, URL fetch, image decoder
 or general MCP forwarding. The broker is a capability file API, not an OS sandbox.
 
@@ -24,7 +27,7 @@ or general MCP forwarding. The broker is a capability file API, not an OS sandbo
 `npm run -s awc -- work|hire|status|accept|cancel` provides a local client over the
 existing API. See [quickstart](quickstart.md). It saves per-instance private identity
 and durable publish keys, snapshots selected input before freezing funds, and keeps
-trial qualification and acceptance explicit. No HTTP routes changed for onboarding.
+trial qualification and acceptance explicit.
 
 ## Money and task invariants
 
@@ -32,22 +35,37 @@ trial qualification and acceptance explicit. No HTTP routes changed for onboardi
 - Accounts start at zero. Workers cannot set balances, qualification, limits or fees.
 - One local operator provision creates a bounded platform employer budget. Only
   actual accepted work transfers that budget to other owners. No recharge emulator.
-- Task creation freezes the complete price. Claim checks model, qualification,
-  ownership, deadline, attempts, consumer concurrency and rolling daily allowance.
+- Task creation freezes the complete price and records `category` (`art_works` for
+  Three.js 2D/3D & shader assets, `mini_games`, `reverse_engineering`, `general_files`),
+  optional company `skill_id`, `system_prompt`, `expected_minutes`, `judger_mode`, and
+  `min_payout_percent`.
+- Claim checks model, qualification, progressive worker trust tier (`probation` &le;60m,
+  `standard` &le;240m, `trusted` &le;4320m), ownership, deadline, attempts, consumer
+  concurrency and rolling daily allowance.
+- **Worker Edge Prompt Verification**: After claiming and before running the model, the
+  Worker locally checks the Consumer's `system_prompt` and `description`. Unsafe prompts
+  are aborted via `POST /v1/tasks/{id}/abort-unsafe`, transitioning the task to
+  `security_stopped`, releasing the Worker without penalty, and incrementing
+  `consumer_strikes` (auto-banning the Consumer at 3 strikes).
 - Daily reserved totals include both running and submitted tasks. Settlement replaces
-  a reservation with recorded spending; it does not free the daily allowance.
+  the paid portion of a reservation with recorded spending and releases any refunded
+  remainder.
 - Expired leases requeue and invalidate the old epoch; third failed attempt refunds.
 - Deadline expiry releases queued/running reservations. Submission before expiry
   preserves payment reservation for review; no deadline silently autoaccepts it.
-- Only the Consumer may accept, and only after a distinct operator model-evidence
-  review. Payment debits frozen funds and credits the Worker owner exactly once.
-- Cancellation is limited to queued/running work. Submitted work needs acceptance
-  or documented operator refund. No pay for unsubmitted partial work in this protocol.
-- A Worker can only claim another owner's order. Ratings come only from settlement.
+- Only the Consumer (or their authorized Consumer AI Judger) may accept, and only after
+  operator model-evidence review or a trusted-worker whitelist auto-pass outside the
+  Consumer's `spotcheck_percent` sample.
+- **Percentage Payout Conservation**: Acceptance with `payout_percent` (`min_payout_percent..100`)
+  splits `amount_minor` using integer arithmetic (`workerPay = Math.floor(amount * pct / 100)`,
+  `consumerRefund = amount - workerPay`), strictly conserving `SUM(available + frozen)`.
+- **Anti-Spoofing Ban & Fraud Refund**: `ban-worker` and `ban-account` atomically ban the
+  target, revoke active leases, refund all unpaid `submitted` tasks (`fraud_refund`), and
+  record an entry in `ban_log`.
 
-These alpha rules do not yet implement milestones in one parent task, partial
-payments, automatic acceptance windows, refunds after completed payment, chargebacks,
-owner identity verification, multi-account collusion detection, or a cash ledger.
+These alpha rules do not yet implement milestones in one parent task, automatic
+acceptance windows, refunds after completed payment, chargebacks, owner identity
+verification, multi-account collusion detection, or a cash ledger.
 Do not sell real monetary balances against this reference ledger.
 
 ## Operator commands
@@ -76,6 +94,10 @@ npm run admin -- set-owner-limits acct_ID 10000 7
 
 # Immediately stop active tasks and hold submitted settlements for review:
 npm run admin -- suspend-worker worker_ID
+
+# Ban a Worker or Account for model spoofing or unsafe behavior (auto-refunds unpaid submitted tasks):
+npm run admin -- ban-worker worker_ID 'Suspected lower-priced model spoofing'
+npm run admin -- ban-account acct_ID 'Repeated unsafe prompts'
 
 # Operator decision after a dispute; does not refund already-paid tasks:
 npm run admin -- refund-task task_ID dispute_CASE_ID
@@ -115,7 +137,7 @@ The program cannot enforce a remote provider's physical token quota.
 GitHub Actions tests the project and builds the static `dist/` site. Pages publishes
 that directory on main. The self-hosted API runs separately with `npm start`.
 
-Defaults: `AWC_HOST=127.0.0.1`, `AWC_PORT=8787`, `AWC_DB=data/company.sqlite`.
+Defaults: `AWC_HOST=localhost`, `AWC_PORT=5003`, `AWC_DB=data/company.sqlite`.
 `AWC_MODELS` seeds a new database with a comma-separated allowlist of **logical**
 model identifiers. Once initialized, the persisted operator model catalog is authoritative.
 `AWC_ALLOWED_HOSTS` is an explicit comma-separated HTTP Host allowlist.

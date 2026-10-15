@@ -1,0 +1,39 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Start server",
+			"detail": "Start AI Work Company on http://localhost:5003 and print all front-end URLs (/, /company/, /admin/)",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"start"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}",
+				"env": {
+					"AWC_HOST": "localhost",
+					"AWC_PORT": "5003"
+				}
+			},
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"focus": false,
+				"clear": true
+			},
+			"problemMatcher": {
+				"owner": "awc-server",
+				"pattern": {
+					"regexp": "^$"
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^AI Work Company reference server:",
+					"endsPattern": "^OpenAPI spec:"
+				}
+			}
+		}
+	]
+}

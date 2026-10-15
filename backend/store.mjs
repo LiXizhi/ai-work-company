@@ -3,6 +3,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, chmodSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { Trials } from './trials.mjs';
+import { Market, workerTrustTier } from './market.mjs';
 
 export const DAY = 86_400_000;
 export const LEASE = 60_000;
@@ -40,14 +41,20 @@ export class Store {
         id TEXT PRIMARY KEY, name TEXT NOT NULL, token_hash TEXT NOT NULL UNIQUE,
         role TEXT NOT NULL DEFAULT 'user', available INTEGER NOT NULL DEFAULT 0 CHECK(available>=0),
         frozen INTEGER NOT NULL DEFAULT 0 CHECK(frozen>=0),
-        daily_limit INTEGER NOT NULL DEFAULT 1000, concurrency INTEGER NOT NULL DEFAULT 1);
+        daily_limit INTEGER NOT NULL DEFAULT 1000, concurrency INTEGER NOT NULL DEFAULT 1,
+        banned INTEGER NOT NULL DEFAULT 0, ban_reason TEXT, last_seen_at INTEGER,
+        primary_category TEXT NOT NULL DEFAULT 'general_files',
+        consumer_rating_sum INTEGER NOT NULL DEFAULT 0, consumer_rating_count INTEGER NOT NULL DEFAULT 0,
+        payout_pct_sum INTEGER NOT NULL DEFAULT 0, settled_tasks_count INTEGER NOT NULL DEFAULT 0,
+        consumer_strikes INTEGER NOT NULL DEFAULT 0);
       CREATE UNIQUE INDEX IF NOT EXISTS one_platform ON accounts(role) WHERE role='platform';
       CREATE TABLE IF NOT EXISTS workers (
         id TEXT PRIMARY KEY, owner TEXT NOT NULL REFERENCES accounts(id), name TEXT NOT NULL,
         model TEXT NOT NULL, consent_at INTEGER NOT NULL, qualified INTEGER NOT NULL DEFAULT 0,
         suspended INTEGER NOT NULL DEFAULT 0, trial_minor INTEGER NOT NULL DEFAULT 0,
         evidence_ref TEXT, rating_sum INTEGER NOT NULL DEFAULT 0, rating_count INTEGER NOT NULL DEFAULT 0,
-        verified_tokens INTEGER NOT NULL DEFAULT 0);
+        verified_tokens INTEGER NOT NULL DEFAULT 0, completed_count INTEGER NOT NULL DEFAULT 0,
+        strikes INTEGER NOT NULL DEFAULT 0, last_seen_at INTEGER, ban_reason TEXT);
       CREATE TABLE IF NOT EXISTS tasks (
         id TEXT PRIMARY KEY, owner TEXT NOT NULL REFERENCES accounts(id), title TEXT NOT NULL,
         description TEXT NOT NULL, model TEXT NOT NULL, amount INTEGER NOT NULL CHECK(amount>0),
@@ -55,7 +62,20 @@ export class Store {
         worker TEXT REFERENCES workers(id), attempts INTEGER NOT NULL DEFAULT 0,
         epoch INTEGER NOT NULL DEFAULT 0, lease_until INTEGER, result TEXT,
         evidence_ref TEXT, verified_tokens INTEGER NOT NULL DEFAULT 0, submitted_at INTEGER,
-        settled_at INTEGER, rating INTEGER);
+        settled_at INTEGER, rating INTEGER,
+        category TEXT NOT NULL DEFAULT 'general_files',
+        skill_id TEXT NOT NULL DEFAULT 'sandbox-file-ops',
+        system_prompt TEXT,
+        expected_minutes INTEGER NOT NULL DEFAULT 30,
+        min_trust_tier TEXT NOT NULL DEFAULT 'probation',
+        judge_mode TEXT NOT NULL DEFAULT 'human',
+        judge_rubric TEXT,
+        min_payout_percent INTEGER NOT NULL DEFAULT 100,
+        payout_percent INTEGER,
+        judge_verdict TEXT,
+        telemetry_flags TEXT,
+        claimed_at INTEGER,
+        consumer_rating INTEGER);
       CREATE TABLE IF NOT EXISTS ledger (
         seq INTEGER PRIMARY KEY AUTOINCREMENT, account TEXT NOT NULL REFERENCES accounts(id),
         task TEXT REFERENCES tasks(id), kind TEXT NOT NULL, available_delta INTEGER NOT NULL,
@@ -71,7 +91,34 @@ export class Store {
       CREATE TRIGGER IF NOT EXISTS ledger_no_update BEFORE UPDATE ON ledger BEGIN SELECT RAISE(ABORT,'append-only ledger'); END;
       CREATE TRIGGER IF NOT EXISTS ledger_no_delete BEFORE DELETE ON ledger BEGIN SELECT RAISE(ABORT,'append-only ledger'); END;
     `);
+    this.ensureColumns();
     this.trials = new Trials(this, models);
+    this.market = new Market(this);
+  }
+  ensureColumns() {
+    const alterIfMissing = (table, col, def) => {
+      const cols = this.all(`PRAGMA table_info(${table})`).map((r) => r.name);
+      if (!cols.includes(col)) this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
+    };
+    for (const [col, def] of [
+      ['banned', 'INTEGER NOT NULL DEFAULT 0'], ['ban_reason', 'TEXT'], ['last_seen_at', 'INTEGER'],
+      ['primary_category', "TEXT NOT NULL DEFAULT 'general_files'"],
+      ['consumer_rating_sum', 'INTEGER NOT NULL DEFAULT 0'], ['consumer_rating_count', 'INTEGER NOT NULL DEFAULT 0'],
+      ['payout_pct_sum', 'INTEGER NOT NULL DEFAULT 0'], ['settled_tasks_count', 'INTEGER NOT NULL DEFAULT 0'],
+      ['consumer_strikes', 'INTEGER NOT NULL DEFAULT 0'],
+    ]) alterIfMissing('accounts', col, def);
+    for (const [col, def] of [
+      ['completed_count', 'INTEGER NOT NULL DEFAULT 0'], ['strikes', 'INTEGER NOT NULL DEFAULT 0'],
+      ['last_seen_at', 'INTEGER'], ['ban_reason', 'TEXT'],
+    ]) alterIfMissing('workers', col, def);
+    for (const [col, def] of [
+      ['category', "TEXT NOT NULL DEFAULT 'general_files'"], ['skill_id', "TEXT NOT NULL DEFAULT 'sandbox-file-ops'"],
+      ['system_prompt', 'TEXT'], ['expected_minutes', 'INTEGER NOT NULL DEFAULT 30'],
+      ['min_trust_tier', "TEXT NOT NULL DEFAULT 'probation'"], ['judge_mode', "TEXT NOT NULL DEFAULT 'human'"],
+      ['judge_rubric', 'TEXT'], ['min_payout_percent', 'INTEGER NOT NULL DEFAULT 100'],
+      ['payout_percent', 'INTEGER'], ['judge_verdict', 'TEXT'], ['telemetry_flags', 'TEXT'],
+      ['claimed_at', 'INTEGER'], ['consumer_rating', 'INTEGER'],
+    ]) alterIfMissing('tasks', col, def);
   }
   get models() { return this.all('SELECT model FROM model_catalog WHERE enabled=1').map(row=>row.model); }
   one(sql, ...args) { return this.db.prepare(sql).get(...args); }
@@ -113,16 +160,17 @@ export class Store {
   register(name) {
     name = string(name, 'name', 80);
     const account = id('acct'), secret = token();
-    this.run('INSERT INTO accounts(id,name,token_hash) VALUES(?,?,?)', account, name, hash(secret));
+    this.run('INSERT INTO accounts(id,name,token_hash,last_seen_at) VALUES(?,?,?,?)', account, name, hash(secret), this.now());
     return { account_id: account, token: secret, available_minor: 0, unit: 'work_credit_minor' };
   }
   authenticate(secret) {
     const account = this.one('SELECT * FROM accounts WHERE token_hash=?', hash(secret || ''));
     requireThat(account, 'unauthorized', 'A valid Bearer token is required.', 401);
+    requireThat(!account.banned, 'account_banned', 'Account has been banned for policy or model-spoofing violations.', 403);
     return account;
   }
   wallet(owner) {
-    const a = this.one('SELECT id,name,available,frozen,daily_limit,concurrency FROM accounts WHERE id=?', owner);
+    const a = this.one('SELECT id,name,available,frozen,daily_limit,concurrency,banned,ban_reason,primary_category,settled_tasks_count,payout_pct_sum,consumer_rating_sum,consumer_rating_count,consumer_strikes FROM accounts WHERE id=?', owner);
     const spent = this.one('SELECT COALESCE(SUM(amount),0) AS n FROM daily_spend WHERE account=? AND settled_at>?', owner, this.now() - DAY).n;
     const reserved = this.one("SELECT COALESCE(SUM(amount),0) AS n FROM tasks WHERE owner=? AND state IN ('running','submitted')", owner).n;
     return { ...a, spent_24h: spent, reserved_daily: reserved, unit: 'work_credit_minor', withdrawable: false };
@@ -132,7 +180,7 @@ export class Store {
     const name = string(body.name, 'name', 80), model = string(body.model, 'model');
     requireThat(this.models.includes(model), 'model_not_allowed', 'Model is not on the configured allowlist.', 400);
     const worker = id('worker');
-    this.run('INSERT INTO workers(id,owner,name,model,consent_at) VALUES(?,?,?,?,?)', worker, owner, name, model, this.now());
+    this.run('INSERT INTO workers(id,owner,name,model,consent_at,last_seen_at) VALUES(?,?,?,?,?,?)', worker, owner, name, model, this.now(), this.now());
     return this.one('SELECT * FROM workers WHERE id=?', worker);
   }
   worker(owner, workerId) {
@@ -141,6 +189,8 @@ export class Store {
     return w;
   }
   createTask(owner, body) {
+    const ownerAcct = this.one('SELECT banned FROM accounts WHERE id=?', owner);
+    requireThat(ownerAcct && !ownerAcct.banned, 'account_banned', 'Banned accounts cannot create tasks.', 403);
     const title = string(body.title, 'title', 160), description = string(body.description, 'description', 20_000);
     const model = string(body.model, 'model');
     requireThat(this.models.includes(model), 'model_not_allowed', 'Choose an allowed model.', 400);
@@ -150,13 +200,21 @@ export class Store {
     const deadline = body.deadline === undefined ? this.now() + 3 * DAY : Date.parse(body.deadline);
     requireThat(Number.isFinite(deadline) && deadline > this.now() && deadline <= this.now() + 30 * DAY,
       'invalid_deadline', 'Deadline must be in the next 30 days.', 400);
+    const meta = this.market.validateTaskMetadata(body);
     const a = this.wallet(owner);
     requireThat(a.available >= amount, 'insufficient_balance', 'Earn settled work credits or recharge before hiring.', 402);
     requireThat(amount <= a.daily_limit, 'milestone_too_large', 'This release supports one milestone per task. Split the job or change the owner budget locally.', 400);
     const task = id('task');
-    this.run("INSERT INTO tasks(id,owner,title,description,model,amount,created_at,deadline,state) VALUES(?,?,?,?,?,?,?,?,'queued')",
-      task, owner, title, description, model, amount, this.now(), deadline);
+    this.run(
+      `INSERT INTO tasks(
+        id,owner,title,description,model,amount,created_at,deadline,state,
+        category,skill_id,system_prompt,expected_minutes,min_trust_tier,judge_mode,judge_rubric,min_payout_percent
+      ) VALUES(?,?,?,?,?,?,?,?,'queued',?,?,?,?,?,?,?,?)`,
+      task, owner, title, description, model, amount, this.now(), deadline,
+      meta.category, meta.skill_id, meta.system_prompt, meta.expected_minutes, meta.min_trust_tier, meta.judge_mode, meta.judge_rubric, meta.min_payout_percent,
+    );
     this.entry(owner, task, 'reserve', -amount, amount, task);
+    this.market.recordTaskCreated(owner, meta.category);
     return this.task(owner, task);
   }
   task(actor, taskId) {
@@ -169,7 +227,13 @@ export class Store {
     const w = this.worker(owner, workerId);
     requireThat(this.models.includes(w.model), 'model_not_allowed', 'Model is disabled.');
     requireThat(w.qualified && !w.suspended, 'worker_not_qualified', 'Trial and model review must be completed before claiming.');
-    return this.all("SELECT id,title,model,amount,deadline FROM tasks WHERE state='queued' AND model=? AND owner<>? AND deadline>? ORDER BY deadline,created_at LIMIT 100", w.model, owner, this.now());
+    this.run('UPDATE workers SET last_seen_at=? WHERE id=?', this.now(), workerId);
+    this.run('UPDATE accounts SET last_seen_at=? WHERE id=?', this.now(), owner);
+    const tier = workerTrustTier(w);
+    return this.all(
+      "SELECT id,title,model,amount,deadline,category,skill_id,expected_minutes,min_trust_tier,judge_mode,min_payout_percent FROM tasks WHERE state='queued' AND model=? AND owner<>? AND deadline>? AND expected_minutes<=? ORDER BY deadline,created_at LIMIT 100",
+      w.model, owner, this.now(), tier.max_expected_minutes,
+    );
   }
   claim(owner, taskId, workerId) {
     const w = this.worker(owner, workerId);
@@ -181,12 +245,15 @@ export class Store {
     requireThat(t.deadline > this.now(), 'expired', 'Task deadline has passed.');
     requireThat(t.attempts < 3, 'attempts_exhausted', 'No automatic attempts remain.');
     requireThat(!this.one("SELECT id FROM tasks WHERE worker=? AND state='running'", workerId), 'worker_busy', 'Worker is already running a task.');
+    this.market.checkClaimEligibility(w, t);
     const a = this.wallet(t.owner);
     const active = this.one("SELECT COUNT(*) AS n FROM tasks WHERE owner=? AND state='running'", t.owner).n;
     requireThat(active < a.concurrency, 'concurrency_limit', 'Consumer concurrency limit reached.');
     requireThat(a.spent_24h + a.reserved_daily + t.amount <= a.daily_limit, 'daily_limit', 'Rolling 24-hour budget exhausted.');
-    this.run("UPDATE tasks SET state='running',worker=?,attempts=attempts+1,epoch=epoch+1,lease_until=? WHERE id=?",
-      workerId, Math.min(this.now() + LEASE, t.deadline), taskId);
+    const now = this.now();
+    this.run("UPDATE tasks SET state='running',worker=?,attempts=attempts+1,epoch=epoch+1,lease_until=?,claimed_at=? WHERE id=?",
+      workerId, Math.min(now + LEASE, t.deadline), now, taskId);
+    this.run('UPDATE workers SET last_seen_at=? WHERE id=?', now, workerId);
     return this.task(owner, taskId);
   }
   leasedTask(owner, taskId, epoch) {
@@ -201,13 +268,20 @@ export class Store {
   }
   heartbeat(owner, taskId, epoch) {
     const t = this.leasedTask(owner, taskId, epoch);
-    this.run('UPDATE tasks SET lease_until=? WHERE id=?', Math.min(this.now() + LEASE, t.deadline), taskId);
+    const now = this.now();
+    this.run('UPDATE tasks SET lease_until=? WHERE id=?', Math.min(now + LEASE, t.deadline), taskId);
+    this.run('UPDATE workers SET last_seen_at=? WHERE id=?', now, t.worker);
     return this.task(owner, taskId);
   }
   submit(owner, taskId, body) {
-    this.leasedTask(owner, taskId, body.epoch);
+    const t = this.leasedTask(owner, taskId, body.epoch);
     const result = string(body.result, 'result', 30_000);
-    this.run("UPDATE tasks SET state='submitted',result=?,submitted_at=?,lease_until=NULL WHERE id=?", result, this.now(), taskId);
+    const telemetry = this.market.computeSubmissionTelemetry(t, result);
+    this.run(
+      "UPDATE tasks SET state='submitted',result=?,submitted_at=?,lease_until=NULL,telemetry_flags=? WHERE id=?",
+      result, this.now(), JSON.stringify(telemetry), taskId,
+    );
+    this.market.evaluateWhitelistOnSubmit(t);
     return this.task(owner, taskId);
   }
   accept(owner, taskId, body) {
@@ -218,11 +292,39 @@ export class Store {
     const rating = integer(body.rating, 'rating', 1, 5);
     const w = this.one('SELECT * FROM workers WHERE id=?', t.worker);
     requireThat(!w.suspended, 'worker_suspended', 'Settlement is paused for review.');
-    this.entry(owner, taskId, 'pay', 0, -t.amount, taskId);
-    this.entry(w.owner, taskId, 'earn', t.amount, 0, taskId);
-    this.run('INSERT INTO daily_spend VALUES(?,?,?,?)', taskId, owner, t.amount, this.now());
-    this.run("UPDATE tasks SET state='completed',settled_at=?,rating=? WHERE id=?", this.now(), rating, taskId);
-    this.run('UPDATE workers SET rating_sum=rating_sum+?,rating_count=rating_count+1,verified_tokens=verified_tokens+? WHERE id=?', rating, t.verified_tokens, w.id);
+    const minPayout = t.min_payout_percent || 100;
+    const rawPayoutPct = body.payout_percent !== undefined ? body.payout_percent : (t.payout_percent != null ? t.payout_percent : 100);
+    requireThat(rawPayoutPct !== 0, 'judge_rejected', 'Judger rejected deliverable with 0% payout; resolve via dispute refund.');
+    const payoutPct = integer(rawPayoutPct, 'payout_percent', minPayout, 100);
+    const workerPay = Math.floor((t.amount * payoutPct) / 100);
+    const consumerRefund = t.amount - workerPay;
+    if (workerPay > 0) {
+      this.entry(owner, taskId, 'pay', 0, -workerPay, taskId);
+      this.entry(w.owner, taskId, 'earn', workerPay, 0, taskId);
+    }
+    if (consumerRefund > 0) {
+      this.entry(owner, taskId, 'partial_release', consumerRefund, -consumerRefund, `${taskId}:partial_release`);
+    }
+    this.run('INSERT INTO daily_spend VALUES(?,?,?,?)', taskId, owner, workerPay, this.now());
+    this.run("UPDATE tasks SET state='completed',settled_at=?,rating=?,payout_percent=? WHERE id=?", this.now(), rating, payoutPct, taskId);
+    this.run('UPDATE workers SET rating_sum=rating_sum+?,rating_count=rating_count+1,verified_tokens=verified_tokens+?,completed_count=completed_count+1 WHERE id=?', rating, t.verified_tokens, w.id);
+    const cat = t.category || 'general_files';
+    this.run(
+      `INSERT INTO worker_category_stats(worker,category,completed_count,rating_sum,payout_pct_sum,verified_tokens)
+       VALUES(?,?,1,?,?,?)
+       ON CONFLICT(worker,category) DO UPDATE SET
+         completed_count=completed_count+1, rating_sum=rating_sum+excluded.rating_sum,
+         payout_pct_sum=payout_pct_sum+excluded.payout_pct_sum, verified_tokens=verified_tokens+excluded.verified_tokens`,
+      w.id, cat, rating, payoutPct, t.verified_tokens,
+    );
+    this.run(
+      `INSERT INTO consumer_category_stats(account,category,tasks_created,tasks_settled,total_spent_minor)
+       VALUES(?,?,1,1,?)
+       ON CONFLICT(account,category) DO UPDATE SET
+         tasks_settled=tasks_settled+1, total_spent_minor=total_spent_minor+excluded.total_spent_minor`,
+      owner, cat, workerPay,
+    );
+    this.run('UPDATE accounts SET settled_tasks_count=settled_tasks_count+1, payout_pct_sum=payout_pct_sum+? WHERE id=?', payoutPct, owner);
     return this.task(owner, taskId);
   }
   cancel(owner, taskId) {

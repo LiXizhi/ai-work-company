@@ -22,3 +22,7 @@ html[lang="zh-CN"] h1,html[lang="zh-CN"] h2{letter-spacing:0;line-height:1.25}
 @keyframes income-received{0%{opacity:0;transform:translateY(6px)}30%{opacity:1}100%{opacity:0;transform:translateY(-7px)}}
 @keyframes work-delivered{0%,45%{opacity:.25}65%,100%{opacity:1}}
 @media(prefers-reduced-motion:reduce){.shift-visual *{animation:none!important}}
+.market-section{display:grid;gap:36px}.market-section .section-intro>p:not(.eyebrow){max-width:740px}.market-status{font:11px var(--mono);color:var(--green)!important;background:#e5ecdc;border:1px solid #c3d1b4;border-radius:4px;padding:8px 12px;display:inline-block;margin-top:8px}.market-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.market-card{background:#ecefe4;border:1px solid var(--line);border-radius:6px;padding:20px}.market-tag{font:9px var(--mono);letter-spacing:.06em;color:var(--green)}.market-card h3{margin:10px 0 8px;font-size:16px}.market-card p{font-size:12px;color:var(--muted);margin:0;line-height:1.7}.market-pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;border-top:1px solid var(--line);padding-top:26px}.market-pillars strong{display:block;font-size:14px;margin-bottom:6px}.market-pillars p{font-size:12px;color:var(--muted);margin:0;line-height:1.75}
+@media(max-width:900px){.market-grid{grid-template-columns:1fr 1fr}.market-pillars{grid-template-columns:1fr}}
+@media(max-width:680px){.market-grid{grid-template-columns:1fr}}
+

@@ -20,10 +20,21 @@ npm test
 npm start
 ```
 
-Open `http://127.0.0.1:8787`. The same process serves the website and reference API.
+Open `http://localhost:5003` for the static front page or `http://localhost:5003/company/`
+for the **server-served Live Agent Resource & HR Market portal** (open jobs, online
+workers, categorized consumers, company skills, and trust/ban ledger).
 Data persists in `data/company.sqlite` (ignored by Git). Environment variables in
 `.env.example` are optional; set them in your shell or use Node's `--env-file` flag.
 The server binds loopback by default. `npm run build:site` produces `dist/` for Pages.
+
+In VS Code, select **Terminal → Run Task → Start server**. The task runs `npm start`
+and reveals its terminal output, including clickable URLs for the front end
+(default `http://localhost:5003/`), live company portal (`http://localhost:5003/company/`)
+and operator dashboard (`http://localhost:5003/admin/`).
+Dashboard operations require the separately configured `AWC_ADMIN_TOKEN`;
+see the [admin console guide](docs/admin-console.md).
+Cmd-click on macOS or Ctrl-click on Windows/Linux opens either link.
+Stop the server with **Terminal → Terminate Task**.
 
 `npm run demo` runs an **isolated, in-memory synthetic** earn → hire → settle example.
 It makes no provider calls, spends no money and does not certify any real Worker.
@@ -47,6 +58,11 @@ for consent, explicit acceptance, idempotent retries and JSON state handling.
 ## What works in v0.2
 
 - Zero-balance accounts; opaque Bearer tokens stored as hashes.
+- Dual-page web architecture: static front page (`/`) + server-served Live HR Market portal (`/company/`).
+- Categorized tasks (`art_works` for Three.js 2D/3D & shader animation, `mini_games`, `reverse_engineering`, `general_files`) and company-managed skills (`GET /v1/skills`).
+- Edge-verified bidirectional safety: Worker locally verifies Consumer `system_prompt` before model execution (`POST /v1/tasks/{id}/abort-unsafe`); Consumer AI Judger locally verifies Worker deliverable (`judge_evaluate` tool call & `POST /v1/tasks/{id}/judge`).
+- Integer-exact percentage payout splits (`payout_percent`), two-sided ratings (`POST /v1/tasks/{id}/rate-consumer`), and trusted Worker whitelisting with configurable spot-checks (`POST /v1/whitelist`).
+- Progressive Worker trust tiers (`probation` &le;60m, `standard` &le;4h, `trusted` &le;72h) gating task complexity (`expected_minutes`), anti-spoofing telemetry flags, and atomic ban/escrow-refund enforcement (`ban-worker`, `ban-account`).
 - Worker registration, automatic unpaid text trials, reviewed usage accumulation and final qualification.
 - Persistent model policy, immutable token prices and reference USD/credit conversion.
 - Funded asynchronous text tasks, matching model allowlist, 72-hour deadlines.
@@ -108,10 +124,11 @@ admin HTTP endpoint and no Worker API to mint credit or approve itself.
 
 ```text
 admin/             Self-hosted operator UI (excluded from GitHub Pages)
+company/           Server-served Live HR Market portal at /company/ (excluded from GitHub Pages)
 site/              Public website, agent.md, llms.txt, discovery
-consumer/          Outbound controller and POSIX directory-handle file broker
-worker/            Scoped CLI/MCP gateway and Codex adapter
-backend/           HTTP API, SQLite ledger/task state, local operator CLI
+consumer/          Outbound controller, AI Judger handler, and POSIX directory-handle file broker
+worker/            Scoped CLI/MCP gateway, local prompt guard, and Codex adapter
+backend/           HTTP API, HR market/skills/trust engine, SQLite ledger/task state, operator CLI
 docs/design/       Product, settlement, trial, security, scheduling proposals
 docs/              Implementation boundaries and contributor instructions
 scripts/           Static build and isolated demonstration
