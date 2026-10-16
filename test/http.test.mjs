@@ -103,7 +103,10 @@ test('static discovery is honest, subpath-safe, with matching OpenAPI routes', a
   assert.match(await page.text(), /No hosted marketplace|Public marketplace not live/);
   const html = readFileSync(new URL('../site/index.html', import.meta.url), 'utf8');
   for (const [, target] of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
-    if (target.startsWith('http') || target.startsWith('#') || target.startsWith('?') || target === './' || target === 'openapi.json') continue;
+    if (target.startsWith('http') || target.startsWith('#') || target.startsWith('?') || target === './' || target === 'openapi.json' || target === 'business-model-analysis.html') continue;
     assert.ok(existsSync(new URL(`../site/${target}`, import.meta.url)), `Missing local asset ${target}`);
   }
+  const businessModel = await fetch(url + '/business-model-analysis.html');
+  assert.equal(businessModel.status, 200);
+  assert.match(await businessModel.text(), /商业模式|Business model/);
 });

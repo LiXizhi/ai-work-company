@@ -120,6 +120,10 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
     const path = resolve(root, 'site', name);
     if (existsSync(path)) staticFiles.set(url, { body: readFileSync(path), mime });
   }
+  for (const name of ['business-model-analysis.html', 'business-model-analysis-v1.html']) {
+    const path = resolve(root, 'docs', name);
+    if (existsSync(path)) staticFiles.set(`/${name}`, { body: readFileSync(path), mime: 'text/html' });
+  }
   for (const [url,name,mime] of [['/admin/','index.html','text/html'],['/admin','index.html','text/html'],['/admin/app.js','app.js','text/javascript'],['/admin/style.css','style.css','text/css']]) {
     const path=resolve(root,'admin',name); if(existsSync(path)) staticFiles.set(url,{body:readFileSync(path),mime});
   }
