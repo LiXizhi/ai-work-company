@@ -35,6 +35,7 @@ export const TASK_CATEGORIES = {
 };
 
 export const DEFAULT_SKILLS = [
+  {id:'public-pages-handoff',category:'general_files',title:'Public static artifact / GitHub Pages handoff',worker_preamble:'Prepare public static source as text. Do not execute code or deploy. Publishing requires participant-owned GitHub authorization. Never invent a deployment URL.',judge_guide:'Inspect source and public release consent. Treat external Pages links as unverified. See /skills/public-pages-handoff.md.'},
   {
     id: 'threejs-procedural-art',
     category: 'art_works',

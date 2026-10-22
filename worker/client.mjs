@@ -16,7 +16,7 @@ export class Api {
     const text = await response.text();
     if (Buffer.byteLength(text) > 1_000_000) throw new Error('Oversized server response.');
     const value = JSON.parse(text);
-    if (!response.ok) { const error = new Error(value.error?.code || 'request_failed'); error.code = value.error?.code; throw error; }
+    if (!response.ok) { const error = new Error(value.error?.code || 'request_failed'); error.code = value.error?.code; error.status = response.status; throw error; }
     return value;
   }
 }

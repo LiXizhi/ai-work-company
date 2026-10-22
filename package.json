@@ -19,6 +19,13 @@
     "worker": "node worker/run.mjs",
     "demo:live": "node scripts/live-e2e.mjs",
     "awc": "node cli/awc.mjs",
-    "demo:trial": "node scripts/trial-live.mjs"
+    "demo:trial": "node scripts/trial-live.mjs",
+    "build:docs": "node scripts/build-docs.mjs",
+    "service": "node scripts/local-service.mjs",
+    "backup": "node scripts/backup.mjs",
+    "debug:server": "node scripts/debug-server.mjs",
+    "debug:worker": "node scripts/debug-worker.mjs",
+    "sync:haqi": "node scripts/sync-haqi.mjs",
+    "check:haqi": "node scripts/sync-haqi.mjs --check"
   }
 }

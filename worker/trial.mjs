@@ -19,6 +19,7 @@ export async function runTrial({ api,workerId,runDir,signal,onEvent=()=>{},execu
   const timer=setInterval(async()=>{ try{await api.request(`/v1/trials/${lease.id}/heartbeat`,{epoch:lease.epoch});}catch(e){failed=e;stop();}},15000);
   try {
     const result=await execute({base:api.base,lease,runDir,signal:abort.signal,onEvent});
+    if(abort.signal.aborted) throw failed || new Error('worker_stopped');
     if(failed) throw failed;
     const usage=normalizeUsage(result.usage);
     const submitted=await api.request(`/v1/trials/${lease.id}/submit`,{epoch:lease.epoch,result:result.result,usage});

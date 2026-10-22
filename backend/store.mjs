@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, chmodSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { Trials } from './trials.mjs';
+import { usageValue, Trials } from './trials.mjs';
 import { Market, workerTrustTier } from './market.mjs';
 
 export const DAY = 86_400_000;
@@ -28,12 +28,20 @@ export function integer(value, name, min = 1, max = 1_000_000) {
 }
 
 export class Store {
-  constructor(path = ':memory:', { now = Date.now, models = ['claude-opus-5.5', 'gpt-6-astra'] } = {}) {
+  constructor(path = ':memory:', { debug = false, now = Date.now, models = ['claude-opus-5.5', 'gpt-6-astra'] } = {}) {
     this.now = now;
 
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
     this.db = new DatabaseSync(path, { timeout: 5000 });
     if (path !== ':memory:') chmodSync(path, 0o600);
+    const marked = !!this.db.prepare("SELECT name FROM sqlite_master WHERE name='debug_instance'").get();
+    const populated = !!this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").get();
+    if ((marked && !debug) || (debug && populated && !marked)) {
+      this.db.close(); throw new Error('debug_database_mode_mismatch');
+    }
+    this.debug = debug;
+    if(debug) this.db.exec('CREATE TABLE IF NOT EXISTS debug_instance(version INTEGER NOT NULL); INSERT INTO debug_instance SELECT 1 WHERE NOT EXISTS(SELECT 1 FROM debug_instance);');
+
     this.db.exec(`
       PRAGMA foreign_keys = ON;
       PRAGMA journal_mode = WAL;
@@ -111,6 +119,9 @@ export class Store {
       ['completed_count', 'INTEGER NOT NULL DEFAULT 0'], ['strikes', 'INTEGER NOT NULL DEFAULT 0'],
       ['last_seen_at', 'INTEGER'], ['ban_reason', 'TEXT'],
     ]) alterIfMissing('workers', col, def);
+    const hasSource = this.all('PRAGMA table_info(tasks)').some(c=>c.name==='source');
+    alterIfMissing('tasks','source',"TEXT NOT NULL DEFAULT 'consumer'");
+    if (!hasSource) this.run("UPDATE tasks SET source='system' WHERE owner IN (SELECT id FROM accounts WHERE role='platform')");
     for (const [col, def] of [
       ['category', "TEXT NOT NULL DEFAULT 'general_files'"], ['skill_id', "TEXT NOT NULL DEFAULT 'sandbox-file-ops'"],
       ['system_prompt', 'TEXT'], ['expected_minutes', 'INTEGER NOT NULL DEFAULT 30'],
@@ -173,7 +184,11 @@ export class Store {
     const a = this.one('SELECT id,name,available,frozen,daily_limit,concurrency,banned,ban_reason,primary_category,settled_tasks_count,payout_pct_sum,consumer_rating_sum,consumer_rating_count,consumer_strikes FROM accounts WHERE id=?', owner);
     const spent = this.one('SELECT COALESCE(SUM(amount),0) AS n FROM daily_spend WHERE account=? AND settled_at>?', owner, this.now() - DAY).n;
     const reserved = this.one("SELECT COALESCE(SUM(amount),0) AS n FROM tasks WHERE owner=? AND state IN ('running','submitted')", owner).n;
-    return { ...a, spent_24h: spent, reserved_daily: reserved, unit: 'work_credit_minor', withdrawable: false };
+    const minutes=this.one("SELECT COALESCE(SUM((t.expected_minutes * t.payout_percent) / 100),0) n FROM tasks t JOIN workers w ON w.id=t.worker WHERE w.owner=? AND t.source='consumer' AND t.state='completed'",owner).n;
+    const platform=this.one('SELECT role FROM accounts WHERE id=?',owner).role==='platform';
+    const eligible=platform || minutes>=120;
+    const trialLocked=this.all("SELECT r.price,r.reviewed_usage FROM trial_runs r JOIN workers w ON w.id=r.worker WHERE w.owner=? AND r.state='approved'",owner).reduce((n,r)=>n+usageValue(JSON.parse(r.price),JSON.parse(r.reviewed_usage)).credit_minor,0);
+    return { ...a, spendable_minor:eligible?a.available:0, locked_earnings_minor:eligible?0:a.available, trial_locked_minor:trialLocked, qualifying_minutes:minutes, required_minutes:120, can_hire:eligible, spent_24h: spent, reserved_daily: reserved, unit: 'work_credit_minor', withdrawable: false };
   }
   registerWorker(owner, body) {
     requireThat(body.accept_trial === true, 'trial_consent_required', 'Owner must authorize approximately $20 of unpaid reference-token service.', 400);
@@ -202,7 +217,8 @@ export class Store {
       'invalid_deadline', 'Deadline must be in the next 30 days.', 400);
     const meta = this.market.validateTaskMetadata(body);
     const a = this.wallet(owner);
-    requireThat(a.available >= amount, 'insufficient_balance', 'Earn settled work credits or recharge before hiring.', 402);
+    requireThat(a.available >= amount, 'insufficient_balance', 'Earn settled work credits before hiring. Recharge is unavailable.', 402);
+    requireThat(a.can_hire, 'work_threshold_required', 'Complete 120 accepted minutes of non-system work before spending earnings.', 409);
     requireThat(amount <= a.daily_limit, 'milestone_too_large', 'This release supports one milestone per task. Split the job or change the owner budget locally.', 400);
     const task = id('task');
     this.run(
@@ -213,6 +229,7 @@ export class Store {
       task, owner, title, description, model, amount, this.now(), deadline,
       meta.category, meta.skill_id, meta.system_prompt, meta.expected_minutes, meta.min_trust_tier, meta.judge_mode, meta.judge_rubric, meta.min_payout_percent,
     );
+    this.run("UPDATE tasks SET source=CASE WHEN (SELECT role FROM accounts WHERE id=?)='platform' THEN 'system' ELSE 'consumer' END WHERE id=?",owner,task);
     this.entry(owner, task, 'reserve', -amount, amount, task);
     this.market.recordTaskCreated(owner, meta.category);
     return this.task(owner, task);
@@ -239,6 +256,7 @@ export class Store {
     const w = this.worker(owner, workerId);
     requireThat(this.models.includes(w.model), 'model_not_allowed', 'Model is disabled.');
     requireThat(w.qualified && !w.suspended, 'worker_not_qualified', 'Worker has not passed operator review.');
+    if(this.freeTasks) requireThat(!this.one("SELECT id FROM free_tasks WHERE worker=? AND state='running' AND lease_until>?",workerId,this.now()),'worker_busy','Worker is running a public free task.');
     const t = this.one('SELECT * FROM tasks WHERE id=?', taskId);
     requireThat(t && t.state === 'queued' && t.owner !== owner, 'not_claimable', 'Task is unavailable.');
     requireThat(t.model === w.model, 'model_mismatch', 'No model substitution is allowed.');

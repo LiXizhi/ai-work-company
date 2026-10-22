@@ -1,0 +1,62 @@
+{
+  "repository": "https://github.com/LiXizhi/HaqiWebTools.git",
+  "ref": "main",
+  "subdirectory": "HaqiCombatSim",
+  "entries": [
+    "hero_renderer.js",
+    "adventure_social_motion_core.js",
+    "scene_order_core.js",
+    "scene_resolution_core.js",
+    "adventure_scene_pause_core.js",
+    "adventure_renderer.js",
+    "adventure_environment_art.js",
+    "home_core.js",
+    "home_walk_core.js",
+    "home_building_core.js",
+    "home_building_templates_core.js",
+    "home_actions_core.js",
+    "home_terrain_cache.js",
+    "home_building_cache.js",
+    "view_home_art.js",
+    "view_home_building.js",
+    "home_store.js",
+    "adventure_ui_art.js",
+    "view_detail_dialog.js"
+  ],
+  "personas": [
+    "astra",
+    "claude",
+    "deepseek",
+    "gemini"
+  ],
+  "sceneAtlases": {
+    "building-art": [
+      "camp",
+      "town"
+    ],
+    "environment-art": [
+      "campTrees",
+      "islandTrees",
+      "trees",
+      "townFeatures"
+    ],
+    "terrain-decoration-art": [
+      "meadow",
+      "stones",
+      "shore"
+    ],
+    "neural-city-art": [
+      "neuralObservatory",
+      "neuralMemory",
+      "neuralLibrary",
+      "neuralWelcome",
+      "neuralFountain",
+      "neuralWorkshop"
+    ]
+  },
+  "data": [
+    "data/adventure/home/catalog.json",
+    "data/adventure/ui-art.json",
+    "data/adventure/neural-city-art.json"
+  ]
+}

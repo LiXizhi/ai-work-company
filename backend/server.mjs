@@ -1,3 +1,4 @@
+import { FreeTasks, freeOpenapiPaths } from './free-tasks.mjs';
 import http from 'node:http';
 import { initAdmin, authenticateAdmin, adminGet, adminPost, adminOpenapiPaths } from './admin-web.mjs';
 import { readFileSync, existsSync } from 'node:fs';
@@ -99,9 +100,10 @@ export function openapi() {
     }
     paths[path] ??= {}; paths[path][method.toLowerCase()] = operation;
   }
+  paths['/v1/me'].get.responses[200].description='Wallet: available is unfrozen ledger balance; spendable_minor is available only for platform employer or qualifying_minutes >= required_minutes (120). locked_earnings_minor is gated income. trial_locked_minor is permanent non-spendable approved trial contribution. No recharge or withdrawal.';
   return {
-    openapi: '3.1.0', info: { title: 'AI Work Company', version: '0.2.0', description: 'Self-hosted reference API. No hosted marketplace API is advertised by the documentation site.' },
-    servers: [{ url: 'http://localhost:5003', description: 'Your local reference server' }], paths: {...paths,...adminOpenapiPaths()},
+    openapi: '3.1.0', info: { title: 'AI Work Company', version: '0.2.0', description: 'Self-hosted reference API. Bounded continuous local Workers reuse existing lease and idempotency endpoints; independent evidence review and Consumer acceptance remain required. No hosted marketplace API is advertised by the documentation site.' },
+    servers: [{ url: 'http://localhost:5003', description: 'Your local reference server' }], paths: {...paths,...adminOpenapiPaths(),...freeOpenapiPaths()},
     components: {
       securitySchemes: { adminBearer: {type:'http',scheme:'bearer',description:'Separate operator credential; account and task tokens are not accepted.'}, bearerAuth: { type: 'http', scheme: 'bearer' }, taskCapability: { type: 'http', scheme: 'bearer', description: 'Claim tool_token, scoped to task and lease epoch; cannot access account APIs.' } },
       schemas: { Error: { type: 'object', required: ['error'], properties: { error: { type: 'object', properties: { code: { type: 'string' }, message: { type: 'string' } } } } } },
@@ -132,23 +134,49 @@ async function readBody(req) {
 }
 
 export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', '[::1]'], adminToken = process.env.AWC_ADMIN_TOKEN } = {}) {
-  initRelay(store); initAdmin(store);
+  initRelay(store); initAdmin(store); store.freeTasks=new FreeTasks(store);
   const staticFiles = new Map();
   for (const [url, name, mime] of [
     ['/', 'index.html', 'text/html'], ['/style.css', 'style.css', 'text/css'], ['/app.js', 'app.js', 'text/javascript'],
+    ['/guide.html', 'guide.html', 'text/html'],
+    ['/world.css', 'world.css', 'text/css'], ['/world-layout.css', 'world-layout.css', 'text/css'],
+    ['/world.js', 'world.js', 'text/javascript'], ['/world-state.mjs', 'world-state.mjs', 'text/javascript'],
+    ['/assets/persona-portraits.png', 'assets/persona-portraits.png', 'image/png'],
+    ...['world-scene.mjs','world-scene-core.mjs','world-map.mjs','world-map-core.mjs'].map(name=>['/'+name,name,'text/javascript']),
+    ['/world-rig.mjs', 'world-rig.mjs', 'text/javascript'],
+    ['/sprite-lab.html', 'sprite-lab.html', 'text/html'],
+    ['/sprite-lab.js', 'sprite-lab.js', 'text/javascript'], ['/sprite-lab.css', 'sprite-lab.css', 'text/css'],
     ['/llms.txt', 'llms.txt', 'text/plain'], ['/agent.md', 'agent.md', 'text/markdown'],
     ['/.well-known/agent.json', '.well-known/agent.json', 'application/json'],
     ['/favicon.svg', 'favicon.svg', 'image/svg+xml'],
+    ['/skills/public-pages-handoff.md','skills/public-pages-handoff.md','text/markdown'],
   ]) {
     const path = resolve(root, 'site', name);
     if (existsSync(path)) staticFiles.set(url, { body: readFileSync(path), mime });
   }
+  // Build-time pinned assets only; this is not a user-controlled filesystem route.
+  const haqiIndex=resolve(root,'site/vendor/haqi/provenance.json');
+  if(existsSync(haqiIndex)) {
+    const provenance=JSON.parse(readFileSync(haqiIndex,'utf8'));
+    for(const name of Object.keys(provenance.outputs)) {
+      if(!/^(?:vendor\/haqi(?:-data)?|assets)\/[a-zA-Z0-9_./-]+$/.test(name)||name.split('/').includes('..'))throw Error('Invalid shared asset path');
+      const mime=name.endsWith('.js')?'text/javascript':name.endsWith('.json')?'application/json':name.endsWith('.webp')?'image/webp':null;
+      if(!mime)throw Error('Unsupported shared asset type');
+      staticFiles.set('/'+name,{body:readFileSync(resolve(root,'site',name)),mime});
+    }
+  }
+  if(existsSync(resolve(root,'docs/report.css'))) staticFiles.set('/report.css',{body:readFileSync(resolve(root,'docs/report.css')),mime:'text/css'});
+  for (const name of ['business-model-analysis','autonomous-operation-plan']) for (const ext of ['md','html']) {
+    const path=resolve(root,'docs',`${name}.${ext}`);
+    if(existsSync(path)) staticFiles.set(`/${name}.${ext}`,{body:readFileSync(path),mime:ext==='html'?'text/html':'text/markdown'});
+  }
   for (const [url,name,mime] of [['/admin/','index.html','text/html'],['/admin','index.html','text/html'],['/admin/app.js','app.js','text/javascript'],['/admin/style.css','style.css','text/css']]) {
     const path=resolve(root,'admin',name); if(existsSync(path)) staticFiles.set(url,{body:readFileSync(path),mime});
   }
-  for (const [url,name,mime] of [['/company/','index.html','text/html'],['/company','index.html','text/html'],['/company/app.js','app.js','text/javascript'],['/company/style.css','style.css','text/css']]) {
+  for (const [url,name,mime] of [['/company/','index.html','text/html'],['/company','index.html','text/html'],['/company/app.js','app.js','text/javascript'],['/company/style.css','style.css','text/css'],['/company/free-preview.js','free-preview.js','text/javascript']]) {
     const path=resolve(root,'company',name); if(existsSync(path)) staticFiles.set(url,{body:readFileSync(path),mime});
   }
+  for(const [url,name,mime] of [['/free/','index.html','text/html'],['/free/app.js','app.js','text/javascript'],['/free/style.css','style.css','text/css']]) staticFiles.set(url,{body:readFileSync(resolve(root,'free',name)),mime});
   const buckets = new Map();
   const server = http.createServer(async (req, res) => {
     const send = (status, value) => { res.writeHead(status, { ...securityHeaders, ...jsonHeaders }); res.end(JSON.stringify(value)); };
@@ -168,9 +196,9 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       if (method === 'GET' && path === '/openapi.json') { send(200, openapi()); return; }
       if (method === 'GET' && path === '/health') { send(200, { status: 'ok', version: '0.2.0' }); return; }
       if (method === 'GET' && path === '/v1/capabilities') {
-        send(200, { version: '0.2.0', models: store.models, unit: 'work_credit_minor', minor_per_credit: 100,
+        send(200, { version: '0.2.0', debug: !!store.debug, ledger_scope: store.debug?'isolated_test_only':'ordinary', models: store.models, unit: 'work_credit_minor', minor_per_credit: 100,
           defaults: { deadline_hours: 72, daily_limit_minor: 1000, consumer_concurrency: 1, max_attempts: 3, lease_seconds: 60 },
-          available: ['accounts', 'workers', 'queue', 'leases', 'text_deliverables', 'ledger', 'ratings', 'operator_review', 'task_tool_relay', 'posix_file_broker', 'worker_cli', 'worker_stdio_mcp', 'automatic_trial_dispatch', 'versioned_token_pricing', 'model_catalog', 'operator_console', 'categorized_market', 'company_skills', 'worker_prompt_verification', 'consumer_ai_judger', 'trust_tiers', 'whitelist_spotcheck', 'fraud_ban_enforcement'],
+          available: ['public_free_tasks', 'public_task_outputs', 'work_to_hire_threshold', 'admin_system_text_tasks', 'bounded_local_continuous_worker', 'accounts', 'workers', 'queue', 'leases', 'text_deliverables', 'ledger', 'ratings', 'operator_review', 'task_tool_relay', 'posix_file_broker', 'worker_cli', 'worker_stdio_mcp', 'automatic_trial_dispatch', 'versioned_token_pricing', 'model_catalog', 'operator_console', 'categorized_market', 'company_skills', 'worker_prompt_verification', 'consumer_ai_judger', 'trust_tiers', 'whitelist_spotcheck', 'fraud_ban_enforcement'],
           unavailable: ['recharge', 'cashout', 'automatic_model_attestation', 'arbitrary_code_sandbox', 'image_generation', 'alive_tasks'],
           evidence: 'operator_reviewed; not cryptographic model attestation' }); return;
       }
@@ -201,6 +229,8 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       if (method === 'GET' && path === '/v1/skills') {
         send(200, { skills: store.market.skills(url.searchParams.get('category') || undefined) }); return;
       }
+      if(method==='GET' && path==='/v1/free-tasks') {send(200,store.freeTasks.list(url));return;}
+      if(method==='GET' && /^\/v1\/free-tasks\/free_[a-f0-9-]+$/.test(path)) {send(200,store.freeTasks.get(path.split('/')[3]));return;}
       if (method === 'POST' && path === '/v1/accounts') {
         const body = await readBody(req); validate(body, ['name'], ['name']);
         send(200, store.register(body.name)); return;
@@ -220,6 +250,9 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
         send(200, store.mutation(`${cap.worker}:${cap.task}:${cap.epoch}`, path, req.headers['idempotency-key'], body, () => { authorizeTool(store, secret, cap.task); return enqueueTool(store, cap, body.name, body.arguments); })); return;
       }
       const account = store.authenticate(secret);
+      if(method==='POST' && /^\/v1\/free-tasks(?:\/free_[a-f0-9-]+\/(?:claim|heartbeat|submit|cancel))?$/.test(path)) {
+        store.freeTasks.sweep();const body=await readBody(req);const segments=path.split('/');send(200,store.mutation(account.id,path,req.headers['idempotency-key'],body,()=>store.freeTasks.mutate(account.id,segments[3],segments[4]||'create',body)));return;
+      }
       store.sweep();
       if (method === 'GET' && path === '/v1/models') { send(200, {models:store.trials.catalog()}); return; }
       if (method === 'GET' && path === '/v1/trials') {
@@ -269,7 +302,7 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
           return task;
         }
         const [, taskId, action] = match;
-        if (action === 'claim') { const task = store.claim(account.id, taskId, body.worker_id); return { ...task, tool_token: mintToolCap(store, task) }; }
+        if (action === 'claim') { const task = store.claim(account.id, taskId, body.worker_id); return { ...task, workspace_required:!!store.one('SELECT required FROM task_workspaces WHERE task=?',task.id)?.required, tool_token: mintToolCap(store, task) }; }
         if (action === 'heartbeat') return store.heartbeat(account.id, taskId, body.epoch);
         if (action === 'abort-unsafe') return store.market.abortUnsafeTask(account.id, taskId, body);
         if (action === 'submit') { const task = store.submit(account.id, taskId, body); bindSubmission(store, taskId, body); return store.task(account.id, taskId); }

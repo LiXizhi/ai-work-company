@@ -38,6 +38,9 @@ test('HTTP earn-and-hire roundtrip uses auth, reviewed evidence and one settleme
   store.reviewTask(job.id, { model: w.model, result_sha256: hash('HTTP result'), verified_tokens: 100, evidence_ref: 'synthetic:http-task' });
   for (let i = 0; i < 2; i++) assert.equal((await request(`/v1/tasks/${job.id}/accept`, { token: p.token, key: 'accept-once', body: { rating: 5 } })).status, 200);
   assert.equal((await request('/v1/me', { token: a.token })).value.available, 500);
+  assert.equal((await request('/v1/me',{token:a.token})).value.spendable_minor,0);
+  // Synthetic historical eligibility fixture, not an operator action.
+  store.run("UPDATE tasks SET source='consumer',expected_minutes=120 WHERE id=?",job.id);
   assert.equal((await request('/v1/tasks', { token: a.token, body: { title: 'Spend earnings', description: 'A real next task', model: w.model, amount_minor: 500 } })).status, 200);
 });
 
@@ -100,11 +103,14 @@ test('static discovery is honest, subpath-safe, with matching OpenAPI routes', a
   assert.deepEqual(spec, openapi());
   assert.equal(spec.paths['/v1/tasks/{id}/submit'].post.requestBody.content['application/json'].schema.additionalProperties, false);
   const page = await fetch(url + '/'); assert.equal(page.status, 200);
-  assert.match(await page.text(), /No hosted marketplace|Public marketplace not live/);
+  assert.match(await page.text(), /尚未关联真实 Worker 账户；本地模拟不产生积分。/);
   const html = readFileSync(new URL('../site/index.html', import.meta.url), 'utf8');
-  for (const [, target] of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
-    if (target.startsWith('http') || target.startsWith('#') || target.startsWith('?') || target === './' || target === 'openapi.json') continue;
-    assert.ok(existsSync(new URL(`../site/${target}`, import.meta.url)), `Missing local asset ${target}`);
+  for (const [, rawTarget] of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
+    const target = rawTarget.split('#')[0];
+    if (!target || target.startsWith('http') || target.startsWith('#') || target.startsWith('?') || target === './' || target === 'openapi.json') continue;
+    const generated = ['business-model-analysis.html','autonomous-operation-plan.html'].includes(target);
+    assert.ok(existsSync(new URL(`../${generated?'docs':'site'}/${target}`, import.meta.url)), `Missing local asset ${target}`);
+    assert.equal((await fetch(url+'/'+target)).status,200);
   }
 });
 

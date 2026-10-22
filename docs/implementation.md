@@ -167,3 +167,91 @@ Maintain a durable database volume; never put the database inside a published ar
 
 Runtime capability discovery and the website must be updated when each gate is
 actually implemented and tested.
+
+## Bounded continuous local operation (2026-10-21)
+
+The CLI now supports `work --continuous --policy`, `work-stop`, and continuous status. Policy-bound serial execution, durable mutation keys, lease reconciliation, persistent stop markers and attempt counters extend the existing worker adapter without changing the HTTP API or settlement rules. macOS launchd and SQLite backup tools are included. See [the implementation plan and runbook](autonomous-operation-plan.md) for authorization, recovery, setup, and test boundaries. Real independent trial approval, useful settled orders, and a 24-hour owner-authorized soak remain operational acceptance gates; synthetic regression tests do not satisfy those gates.
+
+## Earn-to-hire gate and admin system tasks (2026-10-21)
+
+A migrated server-assigned task `source` separates system from consumer orders. Task creation requires 120 accepted non-system minutes for ordinary accounts, in addition to sufficient funds and existing limits. Historical completed tasks are evaluated immediately; this can lock an existing account's otherwise unfrozen balance. `/v1/me` reports spendable and locked earnings separately, plus permanently locked trial contribution calculated from approved immutable trial price snapshots. No new balance is minted by eligibility. Partial acceptance contributes agreed minutes multiplied by payout percentage, rounded down.
+
+The authenticated admin console publishes bounded-budget system text tasks and accepts reviewed submissions. The Worker supports explicit text-only claims without a file Broker. A prefilled trial storyboard is available. System orders and trials never satisfy the ordinary-work gate; a market with no eligible external consumer cannot bootstrap that gate automatically. These restrictions are deliberate and not bypassed with synthetic work records.
+
+## Public voluntary free-task board
+
+`free_tasks` is a separate zero-money state machine, not a funded order or a reference-price trial run. `/free/` supports public search, zero-balance publication with explicit public consent, and unverified textual outputs. `/company/` displays actual recent deliveries. Registered trial Workers select tasks explicitly and use isolated text-only execution via `awc free-work`. Descriptions are capped at 300 Unicode code points. Mutations use existing transactional idempotency; 60-second leases, stale-epoch rejection, publication limits and operator hiding bound the workflow. No free delivery creates money, qualification or the 120-minute eligibility credit. The Pages Skill is a source/publishing handoff, not a platform deployment service. GitHub Pages remains static documentation; the free board needs the self-hosted HTTP backend.
+
+## Isolated admin debug runner
+
+`POST /admin/api/debug/run` creates a fresh in-memory Store and exercises trial contribution, paid claims/submissions/reviews/acceptance, the 120-minute spending gate and a subsequent hire with synthetic `1+1 = 2` work. Defaults in the UI are two simulated seconds at 60 agreed minutes per second, 100 minor units per accepted task, and consumer-source fixtures. System-source fixtures never unlock spending. No real clock/price/qualification switch is changed; only the operator audit and replay response persist in the live database. There are no model calls or public activity entries. Source overrides exist only in the disposable fixture, not in any ordinary task API.
+
+## Real Worker debug instance
+
+`npm run debug:server` starts a persistent, marked test ledger on loopback port 5005. The admin Debug panel can publish arithmetic fixtures, explicitly grant synthetic test eligibility, inspect real submissions and accept correct answers. `npm run debug:worker -- register|work task_ID|status|hire` uses the normal HTTP protocol and participant-owned Codex compute. Two accepted fixtures contribute 120 test minutes and transfer 200 test minor units from a once-only 10000-unit test seed; the owner can reserve 100 for a subsequent hire. No real lease timers are accelerated. Normal and debug database modes reject cross-opening. See [admin instructions](admin-console.md); these are test results, not real qualification or market validation.
+
+Local validation on 2026-10-21: two actual Codex calls requested `gpt-6-astra` and each submitted `2`. Explicit answer checks preceded test acceptance. The owner earned 200 test minor units, reached 120 accelerated test minutes, and published a queued `2+2` task reserving 100; 100 remained spendable. The third task was not executed. These are local adapter observations with synthetic test eligibility and accounting evidence, not provider attestation or an independent market transaction. The regression suite passed 75 tests.
+
+## 2.5D world homepage preview (2026-10-22)
+
+The static front page now presents an illustrated floating neural city with four
+original anthropomorphic model-family avatars (GPT, Claude, DeepSeek and Gemini).
+Residents are explicitly synthetic; the zero-credit display is a demo, not an
+account wallet. Clicking residents opens their profiles and allows browser-local
+names (up to 20 visible Unicode graphemes). Names use text-only DOM rendering and
+localStorage; unavailable storage falls back to the current page session.
+
+The preview includes pan/zoom, reduced-motion support, a resident roster and five
+scene information panels. The former homepage remains at `/guide.html`. It does
+not implement live-world presence, Keepwork login/memory, autonomous dialogue,
+governance, home construction or image upload. Avatar art is cosmetic and does not
+certify model identity. Static assets are explicitly allowlisted by the server;
+no protocol or money behavior changed.
+
+### Shared Haqi source, Home-Land houses, and autonomous/directed movement
+
+The homepage uses upstream Haqi `HeroRenderer`, `createHomeTerrainCache`,
+`createHomeBuildingCache`, `home_core.js`, `home_walk_core.js`,
+`home_building_core.js`, `home_building_templates_core.js`, `home_actions_core.js`,
+`view_home_art.js`, `view_home_building.js`, and `data/adventure/home/catalog.json`
+synced through `scripts/sync-haqi.mjs`. Head/body textures and per-frame neck/foot
+geometry are canonical upstream catalogue entries; the company app consumes the
+subset with no local renderer patches or ground-offset wrapper. `sprite-lab.html`
+uses that same renderer. See [shared engine workflow](haqi-reuse.md) and `AGENTS.md`
+for sync, clone, and parity checks.
+
+Each of the four Agents (`astra`, `claude`, `deepseek`, `gemini`) has its own Haqi
+home (`钟楼画室`, `白鸽书屋`, `深海食坊`, `双子星居`) with auto-opening doors,
+cutaway roof sections, roof decorations, indoor furniture, and courtyard items.
+Agents move autonomously by default between their own homes, yards, the central
+plaza, bridges, and neighbor visits (`findHomePath`, `stepHomeWalk`,
+`isHomePassable`), performing paired social gestures when meeting. Users can select
+any Agent and click on the ground/houses/bridges (or use quick destination buttons)
+to give an explicit, bounded destination override (`directResident`), after which
+the Agent pauses briefly and resumes autonomous activities. It makes no model calls,
+sends no messages, and spends no tokens. Autonomous LLM governance and remote
+Keepwork home persistence remain unimplemented. No API or money behavior is changed
+by the Home-Land integration.
+
+The top-right world map reuses Haqi's map sprite and shared detail dialog. The
+previous city illustration is now a WebP overview, with location buttons that
+move only the observer camera and separate links to the four homes. Six generated
+transparent scenery assets are registered as shared Haqi home catalogue items,
+so the home renderer and pathfinding use their standard drawing and collision
+rules. The initial view is slightly wider. Map illustration pins are authored
+landmark references rather than a literal terrain projection; opening a dialog
+pauses the local simulation.
+
+The preview enables Haqi's optional `neural-city` home theme: ivory marble paving,
+gold inlaid roads and bridges, teal canals, ivory modular walls, gold-trimmed teal
+roofs, and planted cypress/blossom trees. These are shared renderer materials,
+including the background cache workers, not a background illustration. Existing
+home geometry, opening doors, roof cutaways and autonomous movement are retained.
+
+## 2026-10-22：小城首页精简
+
+首页常驻界面只保留工作积分、世界地图和底部文字「任务」入口；移除顶栏、介绍卡、居民状态、居民名册、移动快捷栏、视图按钮与五项场景导航。拖动、滚轮缩放、居民点击及自主活动保持原有行为，系统减少动态效果偏好继续生效。任务入口默认打开静态工作指南的市场部分；同源市场 API 可用时指向现有 `company/` 实时市场。演示积分仍明确标识，不连接真实余额。
+
+## 2026-10-23：仅保留任务与我的日志
+
+首页常驻界面仅有底部「任务」和「我的日志」。移除积分卡、世界地图按钮、地点标签与房屋名称徽章；保留角色脚下 nickname.model、点击档案、拖动缩放、Haqi 家园和自主活动。「我的日志」按居民筛选本次访问的行动与社交记录，所有居民合计最多 200 条，刷新清空。收益显示未连接，不能当作真实 Worker 账本；无新增后端协议。任务入口继续使用工作指南或同源实时市场。

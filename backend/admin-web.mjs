@@ -1,3 +1,5 @@
+import {debugAction,debugStatus} from './debug-live.mjs';
+import {runDebug} from './debug.mjs';
 import { timingSafeEqual } from 'node:crypto';
 import { Fault, hash, string } from './store.mjs';
 import { usageValue, CATEGORIES } from './trials.mjs';
@@ -18,7 +20,9 @@ function paging(url) {
 export function adminGet(store,url) {
   const path=url.pathname, offset=paging(url);
   const paged=(rows)=>({items:rows.slice(0,25),next_offset:rows.length>25?offset+25:null});
+  if(path==='/admin/api/debug/live') return debugStatus(store);
   if(path==='/admin/api/overview') return {workers:store.one('SELECT COUNT(*) n FROM workers').n,qualified:store.one('SELECT COUNT(*) n FROM workers WHERE qualified=1').n,pending:store.one("SELECT COUNT(*) n FROM trial_runs WHERE state IN ('submitted','expired','revoked')").n,models:store.models.length};
+  if(path==='/admin/api/system-tasks') { const employer=store.one("SELECT id FROM accounts WHERE role='platform'"); return {employer:employer?store.wallet(employer.id):null,...paged(store.all("SELECT id,title,model,amount,expected_minutes,state,source,result,evidence_ref FROM tasks WHERE source='system' ORDER BY created_at DESC LIMIT 26 OFFSET ?",offset))}; }
   if(path==='/admin/api/models') return {items:store.trials.catalog()};
   if(path==='/admin/api/templates') return paged(store.all('SELECT * FROM trial_templates ORDER BY rowid DESC LIMIT 26 OFFSET ?',offset));
   if(path==='/admin/api/workers') return paged(store.all('SELECT id,owner,name,model,qualified,suspended,verified_tokens FROM workers ORDER BY rowid DESC LIMIT 26 OFFSET ?',offset).map(w=>({...w,progress:store.trials.progress(w.owner,w.id)})));
@@ -53,7 +57,23 @@ export function adminPost(store,path,body,key) {
   // operator methods use savepoints, so an audit failure rolls back all changes.
   return store.mutation('web-operator',path,key,body,()=>{
     let result;
-    if(path==='/admin/api/models') { fields(body,['model','version','source','effective_at','rates','credit_minor_per_usd']); result=store.trials.configure(body); }
+    if(path.startsWith('/admin/api/debug/live/')) result=debugAction(store,path.split('/').at(-1),body);
+    else if(path==='/admin/api/debug/run') {fields(body,['seconds','minutes_per_second','source']);result=runDebug(body);}
+    else if(path==='/admin/api/free-tasks/publish') {
+      fields(body,['title','description','public']);
+      let publisher=store.one("SELECT id FROM accounts WHERE role='public_publisher'");
+      if(!publisher){const created=store.register('平台公开任务（冷启动）');store.run("UPDATE accounts SET role='public_publisher' WHERE id=?",created.account_id);publisher={id:created.account_id};}
+      result=store.freeTasks.mutate(publisher.id,null,'create',body);
+    } else if(path==='/admin/api/free-tasks/hide') {fields(body,['id']);result=store.freeTasks.hide(body.id);}
+    else if(path==='/admin/api/system-tasks') {
+      fields(body,['model','title','description','amount_minor','expected_minutes']);
+      const employer=store.one("SELECT id FROM accounts WHERE role='platform'");requireThat(employer,'platform_budget_required',409);
+      result=store.createTask(employer.id,body);
+    } else if(path==='/admin/api/system-tasks/accept') {
+      fields(body,['id','rating','confirmed']);requireThat(body.confirmed===true,'independent_review_required');
+      const task=store.one("SELECT owner FROM tasks WHERE id=? AND source='system'",body.id);requireThat(task,'system_task_not_found',404);
+      result=store.accept(task.owner,body.id,{rating:body.rating});
+    } else if(path==='/admin/api/models') { fields(body,['model','version','source','effective_at','rates','credit_minor_per_usd']); result=store.trials.configure(body); }
     else if(path==='/admin/api/models/disable') { fields(body,['model']);result=store.trials.disable(string(body.model,'model')); }
     else if(path==='/admin/api/templates') { fields(body,['model','title','prompt','max_tokens']);result=store.trials.template(body); }
     else if(path==='/admin/api/templates/disable') { fields(body,['id']);string(body.id,'id');requireThat(store.one('SELECT id FROM trial_templates WHERE id=?',body.id),'template_not_found',404);store.run('UPDATE trial_templates SET enabled=0 WHERE id=?',body.id);result={id:body.id,enabled:false}; }
@@ -80,6 +100,14 @@ export function adminOpenapiPaths() {
   const object=properties=>({type:'object',additionalProperties:false,required:Object.keys(properties),properties});
   const usage=object(Object.fromEntries(CATEGORIES.map(k=>[k,integer])));
   const schemas={
+    'debug/live/publish':object({model:text}),
+    'debug/live/qualify':object({id:text,confirmed:{const:true}}),
+    'debug/live/accept':object({id:text,result_sha256:text,confirmed:{const:true}}),
+    'debug/run':object({seconds:{type:'integer',minimum:1,maximum:10},minutes_per_second:{type:'integer',minimum:1,maximum:60},source:{enum:['consumer','system']}}),
+    'free-tasks/publish':object({title:{type:'string',minLength:1,maxLength:80},description:{type:'string',minLength:1,maxLength:300},public:{const:true}}),
+    'free-tasks/hide':object({id:text}),
+    'system-tasks':object({model:text,title:text,description:text,amount_minor:{type:'integer',minimum:1},expected_minutes:{type:'integer',minimum:1,maximum:4320}}),
+    'system-tasks/accept':object({id:text,rating:{type:'integer',minimum:1,maximum:5},confirmed:{const:true}}),
     models:object({model:text,version:text,source:text,effective_at:{type:'string',format:'date-time'},rates:usage,credit_minor_per_usd:{type:'integer',minimum:1,maximum:1000000}}),
     'models/disable':object({model:text}),templates:object({model:text,title:text,prompt:text,max_tokens:{type:'integer',minimum:1,maximum:1000000}}),
     'templates/disable':object({id:text}),
@@ -89,8 +117,8 @@ export function adminOpenapiPaths() {
     'accounts/{id}/ban':object({reason:text,evidence_ref:text,confirmed:{const:true}}),
   };
   const paths={};
-  for(const route of ['overview','models','templates','workers','workers/{id}','trials','trials/{id}','audit']) paths[`/admin/api/${route}`]={get:{security:[{adminBearer:[]}],parameters:[...(route.includes('{id}')?[{in:'path',name:'id',required:true,schema:{type:'string'}}]:[]),{in:'query',name:'offset',schema:{type:'integer',minimum:0}}],responses:{200:{description:'Authenticated operator data; see docs/admin-console.md.'}}}};
-  for(const route of ['models','models/disable','templates','templates/disable','trials/{id}/review','workers/{id}/graduate','workers/{id}/ban','accounts/{id}/ban']) {
+  for(const route of ['debug/live','system-tasks','overview','models','templates','workers','workers/{id}','trials','trials/{id}','audit']) paths[`/admin/api/${route}`]={get:{security:[{adminBearer:[]}],parameters:[...(route.includes('{id}')?[{in:'path',name:'id',required:true,schema:{type:'string'}}]:[]),{in:'query',name:'offset',schema:{type:'integer',minimum:0}}],responses:{200:{description:'Authenticated operator data; see docs/admin-console.md.'}}}};
+  for(const route of ['debug/live/publish','debug/live/qualify','debug/live/accept','debug/run','free-tasks/publish','free-tasks/hide','system-tasks','system-tasks/accept','models','models/disable','templates','templates/disable','trials/{id}/review','workers/{id}/graduate','workers/{id}/ban','accounts/{id}/ban']) {
     paths[`/admin/api/${route}`]??={};
     paths[`/admin/api/${route}`].post={security:[{adminBearer:[]}],parameters:[...(route.includes('{id}')?[{in:'path',name:'id',required:true,schema:{type:'string'}}]:[]),{in:'header',name:'Idempotency-Key',required:true,schema:{type:'string'}},{in:'header',name:'Origin',required:true,schema:{type:'string'}}],requestBody:{required:true,content:{'application/json':{schema:schemas[route]}}},responses:{200:{description:'Atomic audited action or identical replay.'}}};
   }

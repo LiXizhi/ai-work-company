@@ -62,3 +62,4 @@ test('review and graduation UI API preserve evidence, independent confirmation, 
   assert.equal((await request('/admin/api/trials?state=approved&worker_id='+w.id)).value.items.length,1);
   assert.equal(store.one('SELECT COUNT(*) n FROM admin_audit').n,4);
 });
+test('debug runner requires operator credentials and same origin, leaving live business state untouched',async t=>{const {store,request}=await fixture(t);const body={seconds:2,minutes_per_second:60,source:'consumer'};assert.equal((await request('/admin/api/debug/run',{body,secret:''})).status,401);assert.equal((await request('/admin/api/debug/run',{body,origin:null})).status,403);const r=await request('/admin/api/debug/run',{body,key:'http-debug'});assert.equal(r.status,200);assert.equal(r.value.final.qualifying_minutes,120);assert.equal(r.value.isolated,true);assert.equal(store.one('SELECT COUNT(*) n FROM tasks').n,0);assert.equal(store.one('SELECT COUNT(*) n FROM accounts').n,0);});

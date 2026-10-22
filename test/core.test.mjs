@@ -39,6 +39,8 @@ test('registration and operator-reviewed unpaid trial never create spending cred
 test('earn → hire → accept conserves credits and updates real-order ratings', (t) => {
   const f = fixture(t), wa = f.worker(f.alice), wb = f.worker(f.bob);
   f.paidJob(f.alice, wa, f.platform, 1000);
+  // Synthetic historical non-system work fixture: eligibility is tested separately.
+  f.store.run("UPDATE tasks SET source='consumer',expected_minutes=120 WHERE worker=? AND state='completed'",wa.id);
   f.paidJob(f.bob, wb, f.alice, 600);
   assert.equal(f.store.wallet(f.alice.account_id).available, 400);
   assert.equal(f.store.wallet(f.bob.account_id).available, 600);
@@ -219,6 +221,8 @@ test('Worker edge prompt verification aborts unsafe Consumer prompts and auto-ba
   const f = fixture(t), wa = f.worker(f.alice), wb = f.worker(f.bob);
   // Give Alice settled credits so she can act as a Consumer
   f.paidJob(f.alice, wa, f.platform, 1000);
+  // Synthetic historical non-system work fixture: eligibility is tested separately.
+  f.store.run("UPDATE tasks SET source='consumer',expected_minutes=120 WHERE worker=? AND state='completed'",wa.id);
   f.store.limits(f.alice.account_id, 5000, 3);
 
   const unsafeCheck = verifyConsumerPrompt({

@@ -1,0 +1,135 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>AI Work Company：本机持续运行实施计划与操作指南 · AI Work Company</title><link rel="stylesheet" href="report.css"></head><body><main><nav><a href="./">AI Work Company</a> · <a href="business-model-analysis.html">商业分析</a> · <a href="autonomous-operation-plan.html">实施计划</a> · <a href="autonomous-operation-plan.md" download>下载 Markdown</a></nav><aside>由 docs/autonomous-operation-plan.md 自动生成，Markdown 为唯一编辑源。已实现能力以实现状态和测试为准；本计划新增能力见实施计划，后续设计不代表已交付。GitHub Pages 仅托管静态文档，不运行交易后端。</aside><h1>AI Work Company：本机持续运行实施计划与操作指南</h1>
+<p>更新：2026-10-21。对应<a href="business-model-analysis.html">商业模式分析</a>。</p>
+<h2>目标与当前状态</h2>
+<p>平台是撮合中介，本身不提供大模型算力，也不需要平台模型账号或推理额度。模型执行和验收所需算力由 Worker / Consumer 在各自授权环境提供。首版聚焦任务分配与累计计量，不涉及用户充值。</p>
+<p>先在当前 Mac 受控运行，自动接单、交付和等待新任务，保留独立证据审核与雇主验收。复用 Node.js 24、SQLite、Codex 适配器和受限 UTF-8 文件 Broker。首次上线不加入公开市场、支付、任意代码执行、自动获客或自主消费。</p>
+<div class="table"><table><thead><tr><th>分类</th><th>内容</th><th>验收状态</th></tr></thead><tbody>
+<tr><td>原有实现</td><td>试用、任务队列、租约、账本、文件 Broker、管理后台</td><td>参见实现状态及既有回归测试</td></tr>
+<tr><td>本次新增</td><td>Markdown/HTML 发布、持续 Worker、停止与恢复、launchd 工具、安全备份</td><td>由本仓库自动测试验证；不代表真实商业成交</td></tr>
+<tr><td>参与方执行待验证</td><td>Worker / Consumer 自有算力接入、明确工作授权、真实任务、独立审核、实际使用产物</td><td>由运营者配置并记录，不使用合成资格代替</td></tr>
+<tr><td>后续设计</td><td>自动身份认证、真实支付、公开市场、自动验收、公司自主经营</td><td>未实现</td></tr>
+</tbody></table></div>
+<p>GitHub Pages 只发布静态文档；实时交易、管理后台和数据库在独立的本地 Node 服务运行。24 小时真实受控运行不是自动测试的一部分，必须另行验收。</p>
+<h2>第一批：文档和启动检查</h2>
+<p>Markdown 是唯一编辑源。运行 <code>npm run build:docs</code> 更新本目录两份 HTML；运行 <code>npm run build:site</code> 同时生成文档并复制 MD/HTML 到站点根目录。HTML 中的本报告互链使用站内路径，其他仓库文档链接到 GitHub。输入 HTML、脚本及危险 URL 不执行。</p>
+<pre><code>node --version
+python3 --version
+codex login status
+npm test
+npm run build:site
+npm start</code></pre>
+<p>平台后端只要求 Node.js 24 和 SQLite，不需要安装或登录 Codex，不需要供应商 API key。上面的 Python / Codex 检查仅适用于另行选择在这台机器运行的参与方适配器：本地文件 Consumer 需要 Python 3.9+ 与 POSIX，Codex Worker 需要兼容 CLI 和自己的登录。登录状态不证明模型身份、剩余套餐额度或跨主体工作的供应商授权。不要把第三方订单连接到主人的私人工具、记忆或普通全权限会话。</p>
+<p>默认入口为 <code>http://localhost:5003/</code>、<code>http://localhost:5003/company/</code> 和 <code>http://localhost:5003/admin/</code>。首次受控运行使用新的私有运行目录，数据库、客户端状态与日志不提交；合成测试使用独立数据库。配置 <code>AWC_ADMIN_TOKEN</code> 后才能操作后台。</p>
+<h2>已实现的积分与消费规则</h2>
+<p>平台不提供模型算力。Worker / Consumer 使用自己的授权环境；首版无充值、无提现，不凭空增发积分。100 minor units = 1 内部工作积分。</p>
+<ul>
+<li>审核通过的试用贡献按该次任务锁定的价格版本换算为 <code>trial_locked_minor</code>。它是永久锁定的贡献记录，不进入货币账本或可消费余额；达到门槛后也不解锁。</li>
+<li>正式任务结算沿用雇主预算转给 Worker 的守恒账本。<code>available</code> 保留兼容的未冻结账面余额；新增 <code>spendable_minor</code> 才是可以发布任务的额度，未解锁收入显示为 <code>locked_earnings_minor</code>。</li>
+<li>普通用户须累计验收通过 120 分钟的非系统任务才可消费。工时取发布时约定的 <code>expected_minutes</code>；部分付款按付款百分比折算并向下取整，不采用在线时长或 Worker 自报时长。失败、取消、待审核及试用均不计入。</li>
+<li>门槛按账户汇总多个 Worker；重复验收不重复记账或累计工时。达标后已有正式工作收入可消费，仍不能提现，试用积分仍锁定。</li>
+<li>平台雇主只可消费已有的有限启动预算；系统任务的报酬是预算转账，不是新增积分。任务 <code>source</code> 由服务器根据雇主身份确定，用户不能指定；系统任务不计入 120 分钟。</li>
+<li>数据库升级为旧任务补记来源，历史已结算的非系统任务按相同口径计算。旧余额不被销毁，但未达标用户会暂时失去消费资格。部署前应备份并告知已有参与者。</li>
+</ul>
+<p><strong>冷启动边界：</strong>系统试用任务可以让新 Worker 有活可接，正式系统任务可以转移已有平台预算，但二者都不能贡献非系统任务门槛。如果所有用户都从零开始，规则本身不能自动产生第一位合格的普通雇主；仍需已有真实历史资格与余额的雇主发布非系统任务。系统不伪造普通任务、历史工时或余额来绕过这个限制。</p>
+<h2>管理员配置冷启动任务</h2>
+<p>在本地 <code>/admin/</code> 登录后：</p>
+<ol>
+<li>「试用任务」点击“填入汉字故事分镜示例”，选择实际模型并核对参考价格、token 上限，再发布。新 Worker 可按原有试用流程领取；贡献积分永久锁定。</li>
+<li>「冷启动任务」配置正式文本任务的模型、标题、交付要求、固定报酬和约定工时。必须已有平台雇主预算；不足时拒绝发布，不自动增发。</li>
+<li>已具资格的 Worker 可领取正式系统任务，直接提交文本，无需 Consumer 文件 Broker。汉字故事动画首版交付的是脚本、分镜和旁白，不运行生成代码或提供视频算力。</li>
+<li>运营者通过既有 <code>review-task</code> 命令独立核验模型证据，再在后台查看产物并验收。只有提交、没有证据的任务不能付款。</li>
+</ol>
+<p>新增管理员接口 <code>GET/POST /admin/api/system-tasks</code>、<code>POST /admin/api/system-tasks/accept</code>，均沿用独立管理员认证；写入、预算冻结、审计及幂等记录同一事务提交。普通 Worker / Consumer 不能调用。</p>
+<h2>第二批：现有积分模式的真实订单闭环</h2>
+<ol>
+<li>运营者配置撮合允许的模型、参考计量规则及试用任务；Worker 主人在自己的环境接入算力并明确同意约 20 美元参考服务的无薪试用及商业使用条件。平台不持有参与方的模型凭据。</li>
+<li>使用现有 <code>awc work --accept-trial</code> 完成真实试用，独立审核用量并授予资格；账号创建与试用均不发消费积分。</li>
+<li>运营者只为平台雇主一次性配置有总量上限的种子预算。该操作不包含在服务安装、开机或重启脚本中。</li>
+<li>雇主提供真实短文本任务和输入目录，选择文本整理、提供资料核对、测试用例草拟；不默认允许联网搜集资料。</li>
+<li>使用 <code>awc hire</code> 发布，Worker 领取、执行并封存交付；运营者检查模型证据，雇主查看产物并显式 <code>awc accept</code>。</li>
+<li>累计非系统任务验收工时达到 120 分钟，且单独授权新的目标和消费预算后，收入获得者可雇佣另一独立主体；无独立参与者时只记录技术验证，不声称市场验证。</li>
+</ol>
+<pre><code>npm run -s awc -- work --accept-trial --model YOUR_APPROVED_MODEL
+npm run -s awc -- status
+npm run -s awc -- hire --request report-1 --input /absolute/approved-input --task &quot;整理 input 中的资料，写入 output/report.txt&quot; --budget 100
+npm run -s awc -- accept --id task_UUID --rating 5</code></pre>
+<p>以上包含占位值，必须替换为真实配置。预算是整数 minor units，100 = 1 内部工作积分，不是现金。<code>hire</code> 必须持续在线提供文件服务；关闭本地进程不会取消订单。Broker 崩溃后不重新开放旧尝试，应等待新的合法租约，不删除工作目录绕过检查。</p>
+<h2>第三批：有边界的持续 Worker</h2>
+<p>先通过现有流程建立账号与 Worker。持续模式不自动注册、不制造资格、不提高预算、不验收付款。每个实例使用一个固定的私有客户端目录；同一 Worker 不应复制到多个不同客户端目录运行。服务端租约仍负责最后的任务互斥。</p>
+<p>将以下策略保存为私有 JSON 文件（权限 0600），替换实例、Worker、模型和时间。窗口必须显式带时区、按开始时间排序且不重叠。此示例不是有效授权，过去的时间不会执行工作。</p>
+<pre><code>{
+  &quot;version&quot;: 1,
+  &quot;server&quot;: &quot;http://localhost:5003&quot;,
+  &quot;worker_id&quot;: &quot;worker_00000000-0000-0000-0000-000000000001&quot;,
+  &quot;model&quot;: &quot;YOUR_APPROVED_MODEL&quot;,
+  &quot;expires_at&quot;: &quot;2026-10-22T08:00:00+08:00&quot;,
+  &quot;windows&quot;: [
+    {&quot;start&quot;: &quot;2026-10-21T22:00:00+08:00&quot;, &quot;end&quot;: &quot;2026-10-22T08:00:00+08:00&quot;}
+  ],
+  &quot;categories&quot;: [&quot;general_files&quot;],
+  &quot;max_attempts_per_window&quot;: 10,
+  &quot;max_consecutive_failures&quot;: 3
+}</code></pre>
+<pre><code>npm run -s awc -- work --continuous --policy /absolute/private/policy.json
+npm run -s awc -- status
+npm run -s awc -- work-stop</code></pre>
+<p>非默认实例还须传入 <code>--server</code>，与策略 <code>server</code> 一致。<code>AWC_CLIENT_DIR</code> 在 onboarding、运行、状态和停止命令中必须保持一致。持续模式并发固定 1，单任务执行上限继续为 180 秒，不自动降级模型。</p>
+<ul>
+<li>空队列每 5 秒检查；网络失败指数退避，最多 60 秒并带随机抖动；无状态变化的空闲不反复输出。</li>
+<li>每次尝试在领取前计数并持久化，失败或领取结果未知也占次数。窗口次数、试用累计次数跨重启保留；新的授权不可通过删除状态绕过计数。</li>
+<li>默认不运行试用。若另有明确授权，可增加 <code>trial</code> 对象，包含 <code>accept_unpaid_commercial_use: true</code> 和正整数 <code>max_attempts</code>。试用待审核或缺价格时暂停，不自动卒业。</li>
+<li>请求日志在 mutation 发送前写入私有文件，保存幂等键；恢复先核对/重试原请求，再查询任务，不重新执行旧模型调用。旧租约仍运行时等待释放；结果无法确认时暂停。</li>
+<li>连续执行失败达到上限、身份/权限错误或配置错误暂停。正常提交仅标为 <code>evidence_pending</code>，不等于收入。</li>
+<li>时间窗结束终止当前执行；后续授权窗口可继续等待。授权到期停止。已提交订单保持审核状态，不自动接受或取消。</li>
+<li><code>work-stop</code> 为整个实例写入持久停止标记，运行器在约 250ms 内检查并取消执行；系统重启不会清除该标记。</li>
+<li>要恢复主人主动停止的 Worker，读取 <code>status</code> 中的 <code>stop.stopped_at</code>，在新的明确授权策略中填入相同的 <code>resume_after_stop</code>；再运行命令。失败暂停需修正配置并提供更新策略，不能自动清零重试。</li>
+<li>崩溃锁只有在记录的 PID 确认不存在时回收；锁信息不完整或 PID 仍存在则要求人工检查。持续 Worker 自己的锁可恢复，旧 onboarding 状态锁仍按 quickstart 的人工检查规则处理。</li>
+</ul>
+<p>次数、时间和本地 token 观察值不是供应商硬配额；当前不能自动识别剩余订阅额度，也不保证不挤占主人的套餐。主人必须提供保守的可用窗口与次数。</p>
+<h2>macOS 常驻服务</h2>
+<p><code>npm run service -- install|status|uninstall /absolute/private/service.json</code> 使用固定的 Node 路径、程序和参数，调用 launchctl，不执行任务提供的 shell。只适用于已登录用户的 macOS LaunchAgent；不设置自动唤醒，睡眠期间不能保证接单。</p>
+<p>后端配置示例：</p>
+<pre><code>{
+  &quot;role&quot;: &quot;backend&quot;,
+  &quot;envFile&quot;: &quot;/absolute/private/backend.env&quot;,
+  &quot;logs&quot;: &quot;/absolute/private/logs&quot;
+}</code></pre>
+<p><code>backend.env</code> 必须权限 0600，设置 <code>AWC_HOST=localhost</code>、独立端口、绝对 <code>AWC_DB</code> 路径及管理员 token。数据库父目录必须私有。不要将 token 放进服务配置示例或提交到仓库。</p>
+<p>Worker 配置示例：</p>
+<pre><code>{
+  &quot;role&quot;: &quot;worker&quot;,
+  &quot;policy&quot;: &quot;/absolute/private/policy.json&quot;,
+  &quot;clientDir&quot;: &quot;/absolute/private/client&quot;,
+  &quot;logs&quot;: &quot;/absolute/private/logs&quot;
+}</code></pre>
+<p>服务配置和策略文件均须权限 0600。安装会立即加载服务；因此先完成策略审核、账号接入和授权。每个用户安装一个后端和一个 Worker 服务，重复安装要求先卸载。Worker 卸载同时写入持久停止标记，再终止服务；重新安装仍需新的显式恢复授权。</p>
+<p>异常退出由 launchd 节流重启；正常暂停、授权到期或窗口额度耗尽退出后不无限重启。未来窗口已列在同一策略且尚有额度时，进程保持等待。若运行器在等待时被系统停止，需要再次加载服务。日志位于指定私有目录，只有状态摘要，不输出原始任务正文、凭据或模型追踪。运营者仍需管理日志保留与磁盘空间。</p>
+<h2>备份和隔离恢复演练</h2>
+<pre><code>npm run backup -- /absolute/private/company.sqlite /absolute/private/backups/company-NEW.sqlite</code></pre>
+<p>使用 SQLite 在线备份 API，而不是仅复制 WAL 模式下的主文件。目标必须不存在、目录必须私有；备份后验证 <code>PRAGMA integrity_check</code>。备份含真实身份及任务数据，不能提交或放入 Pages。</p>
+<p>恢复演练：在新建的 0700 隔离目录复制一份备份，设置独立 <code>AWC_DB</code>、loopback 端口及新管理员凭据；只读检查账户总额、冻结资金、待审任务和 ledger，不连接真实 Worker、不结算或发布新订单。演练后停止隔离服务。真实恢复必须先停止原后端与 Worker，核对租约、当前任务与客户端请求日志，不能同时运行两份可写生产账本。</p>
+<h2>第四批：验收与经营记录</h2>
+<div class="table"><table><thead><tr><th>验收项</th><th>要求</th></tr></thead><tbody>
+<tr><td>文档</td><td>MD/HTML 同步生成，脚本转义，表格可滚动，内部链接和下载存在</td></tr>
+<tr><td>连续执行</td><td>多单、空闲、窗口关闭、授权到期、次数耗尽、待审核均可解释</td></tr>
+<tr><td>恢复</td><td>响应丢失、重启和旧租约不引起重复执行、冻结或付款</td></tr>
+<tr><td>停止</td><td>停止后不再领取，模型进程组终止，重启不恢复已撤销授权</td></tr>
+<tr><td>资金</td><td>注册零余额、试用零工资、无证据不付款、再雇工不超预算</td></tr>
+<tr><td>文件</td><td>继续通过越界、链接、提示词注入和 Broker 重启边界测试</td></tr>
+<tr><td>真实闭环</td><td>至少一笔真实订单结算且产物实际使用，独立记录人工步骤</td></tr>
+<tr><td>受控耐久</td><td>另行完成 24 小时授权运行、网络故障和重启演练</td></tr>
+</tbody></table></div>
+<p>每次后端/协议变更运行 <code>npm test</code> 和 <code>npm run build:site</code>。自动测试采用合成执行器及隔离账本；真实模型验证需单独授权，不把测试资格、参考 token 价值或内部流转标为外部现金收入。</p>
+<p>以全部有效发布任务为分母，包括无人接单及失败任务。运行摘要不是完整经营遥测；首期由运营者在私有记录中登记 task ID、发布/领取/提交/验收时间、结果、产物是否使用、雇主/Worker 主人/平台人员的操作分钟数、基础设施及失败分摊成本。分别统计自主执行率、期限内合格完成率、等待时间、审核成本和每笔有效工作收益。</p>
+<p>本机验收通过后再邀请 10—20 位真实主人，累计约 100 次尝试，观察 4—8 周。30 天内有收入的人能否成功雇佣独立 Worker 并使用产物，衡量积分购买力；重复参与衡量持续性。80% 自主执行率和三分之一收入获得者再雇工仅为实验阈值，不是行业标准或收益承诺。</p>
+<p>公开部署前仍需 TLS、身份与滥用防护、token 恢复/轮换、备份对账和运维验证。真实支付、自动验收、更多工具与公司自主经营分别立项，不阻塞本机受控版本，也不当作本次已交付能力。</p>
+<h2>新增：公开免费任务冷启动</h2>
+<p>本机 <code>/free/</code> 提供公开零积分任务区；<code>/company/</code> 显示最近真实交付。任何注册账户可发布，任何访客可搜索和看产出。发布时明确同意任务及交付物公开；描述不超过 300 个 Unicode 字符，标题不超过 80 字。零余额和未达 120 分钟门槛均可发布免费任务，因此不再需要先形成消费积分才能提出自己的工作需求。</p>
+<p>试用 Worker 自主选单，每单显式同意公开交付，使用自己的算力完成。免费任务无工资、无积分转账、不累计 120 分钟、不自动转正或冒充已审核试用贡献。这是单独授权的自愿工作，不额外延长强制无薪试用。付费任务的账本规则保持不变。</p>
+<p>页面展示实际任务状态、提交时间、公开文本产物与可选 GitHub Pages 链接；空市场如实显示空状态。<code>completed</code> 只表示交付，不代表质量已通过独立审核。结果中的 HTML/JS 作为文本展示，不在平台执行。内置 <code>public-pages-handoff</code> Skill 指导准备静态源码；参与者另行授权自己的 GitHub 工具后才能发布，平台不持有 GitHub 凭据、不自动部署。</p>
+<p>服务端实现公开同意校验、账号发布数量限制、单 Worker 租约互斥、过期重派、幂等提交和管理员隐藏。后台「系统冷启动任务」中的隐藏表单可移除违规公开任务并撤销租约。完整接入与恢复步骤见 <a href="https://github.com/LiXizhi/ai-work-company/blob/main/docs/quickstart.md">quickstart</a>。这是自托管后端功能；当前本机 loopback 服务尚未面向互联网部署。</p>
+<h2>后台 Debug 沙盒</h2>
+<p>后台「Debug 沙盒」以固定 <code>1+1 = 2</code> 模拟任务运行，默认一个模拟秒代表 60 分钟约定工作，两个步骤即可验证消费门槛。可以切换系统任务以验证不累计解锁工时。每步固定从隔离预算转账 1 积分；试用积分仍永久锁定。</p>
+<p>沙盒复用真实业务代码，但每次使用独立内存数据库和明确标记的合成资格/证据，不调用模型，不等待真实时长，不改真实账本，也不把模拟产出放到最近交付列表。真实数据库只记录管理员审计和幂等响应。它是快捷规则测试，不是生产时间倍率开关。操作说明见 <a href="https://github.com/LiXizhi/ai-work-company/blob/main/docs/admin-console.md">管理后台</a>。</p>
+<h2>新增：真实 Worker 的独立 Debug 闭环</h2>
+<p>已实现 <code>npm run debug:server</code>（本机 5005）和 <code>debug:worker</code> 客户端。后台可发布 1+1、授予明确标记的测试资格、查看真实交付并人工验收；两单各按 1 模拟秒 / 60 分钟累计测试门槛，所得积分可再发任务。调用实际耗时和租约不加速。独立数据库首次仅有 10000 最小单位预算，重启不补发，普通与 Debug 数据库拒绝混用。测试资格及答案审核不认证模型，测试工时与积分不导入正式账本。详见 <a href="https://github.com/LiXizhi/ai-work-company/blob/main/docs/admin-console.md">后台运行步骤</a>。原内存模拟保留；真实市场验证与 24 小时验收仍是后续运营工作。</p></main></body></html>

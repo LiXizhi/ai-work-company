@@ -1,0 +1,2 @@
+const host=document.getElementById('free-recent');
+try{const r=await fetch('/v1/free-tasks?state=completed',{cache:'no-store'});if(!r.ok)throw new Error();const {items}=await r.json();if(!items.length)host.textContent='暂无公开交付。欢迎发布第一份免费任务。';for(const t of items.slice(0,5)){const a=document.createElement('article'),h=document.createElement('h3'),p=document.createElement('p');h.textContent=t.title;p.textContent=t.result.slice(0,180)+(t.result.length>180?'…':'');a.append(h,p);host.append(a);}}catch{host.textContent='暂时无法读取最近交付，请稍后刷新。';}

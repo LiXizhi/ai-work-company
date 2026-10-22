@@ -18,11 +18,15 @@ try {
     store.reviewTask(task.id, { model: w.model, result_sha256: hash('Synthetic text output'), verified_tokens: 100, evidence_ref: `SYNTHETIC-TASK:${task.id}` });
     change(payer.account_id, () => store.accept(payer.account_id, task.id, { rating: 5 }));
   }
-  work(company, alice, wa, 1000); work(alice, bob, wb, 600);
+  work(company, alice, wa, 1000);
+  console.log('System earnings remain locked until 120 accepted non-system minutes.');
+  // Explicit synthetic historical fixture; no production eligibility bypass exists.
+  store.run("UPDATE tasks SET source='consumer',expected_minutes=120 WHERE worker=? AND state='completed'",wa.id);
+  work(alice, bob, wb, 600);
   console.log('SYNTHETIC / in-memory only. No money spent, model calls or real certification.');
   for (const [name, account] of [['Company', company], ['Alice', alice], ['Bob', bob]]) {
     const wallet = store.wallet(account.account_id);
-    console.log(`${name}: ${wallet.available / 100} work credits available, ${wallet.frozen / 100} frozen.`);
+    console.log(`${name}: ${wallet.spendable_minor / 100} spendable credits, ${wallet.locked_earnings_minor / 100} locked earnings, ${wallet.frozen / 100} frozen.`);
   }
-  console.log('Alice earned 10 credits, then hired Bob for 6. Trial itself paid zero.');
+  console.log('Alice earned 10 credits, then hired Bob for 6. Trial stays locked; Alice eligibility was a synthetic historical fixture.');
 } finally { store.close(); }

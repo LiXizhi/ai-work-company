@@ -1,9 +1,11 @@
 #!/usr/bin/env node
+import { freeWork } from '../worker/free-work.mjs';
 import { mkdir, readFile, writeFile, rename, lstat, rm, mkdtemp, realpath } from 'node:fs/promises';
 import { resolve, relative, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash, randomUUID } from 'node:crypto';
 import { Api } from '../worker/client.mjs';
+import { runContinuous, stopContinuous, readState } from '../worker/continuous.mjs';
 import { workOnce } from '../worker/run.mjs';
 import { runTrial } from '../worker/trial.mjs';
 import { consume, startBroker } from '../consumer/run.mjs';
@@ -14,6 +16,9 @@ const emit = value => console.log(JSON.stringify(value));
 const help = `AI Work Company — local CLI (JSON output, no interactive prompts)
   npm run -s awc -- work --accept-trial [--model gpt-6-astra] [--wait-seconds 300] [--trial-tasks 100]
   npm run -s awc -- hire --request REPORT-1 --input ./input --task "Write output/report.txt" --budget 100
+  npm run -s awc -- free-work --id free_UUID --worker worker_UUID --public
+  npm run -s awc -- work --continuous --policy /private/policy.json
+  npm run -s awc -- work-stop
   npm run -s awc -- status
   npm run -s awc -- accept --id TASK_ID --rating 5
   npm run -s awc -- cancel --id TASK_ID
@@ -30,13 +35,13 @@ Acceptance is explicit and still requires operator evidence review.`;
 
 export function parse(argv) {
   const [command = 'help', ...rest] = argv;
-  if (!['help', 'work', 'hire', 'status', 'accept', 'cancel'].includes(command)) throw new Error('unknown_command');
-  const allowed = { help: [], work: ['server','model','name','accept-trial','wait-seconds','trial-tasks'], hire: ['server','model','name','request','input','task','budget'], status: ['server'], accept: ['server','id','rating'], cancel: ['server','id'] }[command];
+  if (!['help', 'free-work', 'work', 'work-stop', 'hire', 'status', 'accept', 'cancel'].includes(command)) throw new Error('unknown_command');
+  const allowed = { help: [], 'free-work':['server','id','worker','public'], work: ['server','model','name','accept-trial','wait-seconds','trial-tasks','continuous','policy'], 'work-stop':['server'], hire: ['server','model','name','request','input','task','budget'], status: ['server'], accept: ['server','id','rating'], cancel: ['server','id'] }[command];
   const options = {};
   for (let i=0; i<rest.length; i++) {
     const key = rest[i].slice(2);
     if (!rest[i].startsWith('--') || !allowed.includes(key) || key in options) throw new Error('invalid_option');
-    if (key === 'accept-trial') options[key] = true;
+    if (['accept-trial','continuous','public'].includes(key)) options[key] = true;
     else { const value = rest[++i]; if (!value || value.startsWith('--')) throw new Error('missing_option_value'); options[key] = value; }
   }
   return { command, options };
@@ -81,6 +86,8 @@ export async function main(argv, { env = process.env, output = emit, runWorker =
   const clientRoot = resolve(env.AWC_CLIENT_DIR || resolve(project, 'data/client'));
   await secureDirectory(clientRoot);
   const home = resolve(clientRoot, digest(base)); await secureDirectory(home);
+  if(command === 'work-stop') { output(await stopContinuous(home)); return; }
+  if(o.continuous && !o.policy) throw new Error('continuous_policy_required');
   const lock = resolve(home, 'lock');
   try { await mkdir(lock, { mode: 0o700 }); } catch (e) { if (e.code === 'EEXIST') throw new Error('client_busy_or_stale_lock'); throw e; }
   let locked = true;
@@ -96,6 +103,7 @@ export async function main(argv, { env = process.env, output = emit, runWorker =
       state.token = env.AWC_TOKEN; state.account_id = wallet.account_id || wallet.id || state.account_id;
       await save(statePath, state);
     }
+    if(o.continuous && !state.token) throw new Error('continuous_requires_existing_identity');
     if (!state.token) {
       if (!['work','hire'].includes(command)) { output({ state: 'not_registered', next_action: 'Run work with owner trial consent, or hire with an explicit task and budget.' }); return; }
       if (command === 'work' && !o['accept-trial']) throw new Error('owner_trial_consent_required');
@@ -109,10 +117,19 @@ export async function main(argv, { env = process.env, output = emit, runWorker =
       await save(statePath, state);
     }
     const api = new Api(base, state.token);
+    if(command==='free-work') {
+      if(!o.public)throw new Error('public_delivery_consent_required');await unlock();output(await freeWork({api,home,workerId:o.worker,taskId:o.id,signal:abort.signal}));return;
+    }
+    if(o.continuous) {
+      const policy=await readState(resolve(o.policy));
+      await unlock();
+      return await runContinuous({api,home,policy,signal:abort.signal,output,execute:runWorker,trialExecute:trialRunner});
+    }
     if (command === 'status') {
       const workers=(await api.request('/v1/workers')).workers;
       const trial_progress=[]; for(const w of workers.slice(0,20)) { const {runs,...progress}=await api.request(`/v1/trials?worker_id=${w.id}`); trial_progress.push(progress); }
-      output({ state: 'connected', wallet: await api.request('/v1/me'), workers, trial_progress, trial_progress_truncated: workers.length>20, tasks: (await api.request('/v1/tasks')).tasks }); return;
+      const continuous=[]; for(const w of workers) { const s=await readState(resolve(home,`continuous-${w.id}/state.json`)); if(s.status) continuous.push({worker_id:w.id,status:s.status,attempts_by_window:s.windows,trial_attempts:s.trial_attempts,failures:s.failures}); }
+      output({ state: 'connected', continuous, stop:await readState(resolve(home,'continuous-stop.json')), wallet: await api.request('/v1/me'), workers, trial_progress, trial_progress_truncated: workers.length>20, tasks: (await api.request('/v1/tasks')).tasks }); return;
     }
     if (command === 'accept' || command === 'cancel') {
       output(await api.request(`/v1/tasks/${o.id}/${command}`, command === 'accept' ? { rating } : {}, `cli:${command}:${o.id}`)); return;
@@ -167,6 +184,7 @@ export async function main(argv, { env = process.env, output = emit, runWorker =
     if (job && job.signature !== signature) throw new Error('request_conflict_use_original_arguments_or_new_request');
     if (!job) {
       const wallet = await api.request('/v1/me');
+      if (wallet.available >= amount && wallet.can_hire === false) { output({state:'work_threshold_required',qualifying_minutes:wallet.qualifying_minutes,required_minutes:120,next_action:'Complete accepted non-system work; trial credits stay locked.'}); return; }
       if (wallet.available < amount) { output({ state: 'funding_required', available_minor: wallet.available, required_minor: amount, next_action: 'Earn settled credits first. Recharge is not implemented.' }); return; }
       const directory = await mkdtemp(resolve(home, 'job-'));
       const broker = startBroker(resolve(directory, 'snapshot'), source);
