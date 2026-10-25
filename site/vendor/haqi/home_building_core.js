@@ -9,8 +9,19 @@ export function buildingSlotKind(item){const type=item?.building?.type;if(type==
 export function buildingGridBounds(obj,item){const s=obj.sizeScale??1;return {x:Math.floor(obj.x),y:Math.floor(obj.y),w:s,h:s};}
 export function buildingPlacement(obj,item){if(!(obj.properties?.snap??item?.building?.snap??false))return obj;return {...obj,x:Math.floor(obj.x),y:Math.floor(obj.y)};}
 export function buildingBounds(obj,item){const s=obj.sizeScale??1,vertical=(obj.rotation||0)%2;return isEdge(item)?{x:obj.x,y:obj.y,w:vertical?.18*s:s,h:vertical?s:.18*s}:{x:obj.x,y:obj.y,w:(item.size?.[vertical?1:0]||1)*s,h:(item.size?.[vertical?0:1]||1)*s};}
+// Roof cells only need their N=1/E=2/S=4/W=8 roof neighbours (presentation edges).
+function roofNeighbourMask(obj,objects,catalog){
+ const x=Math.floor(obj.x),y=Math.floor(obj.y);let mask=0;
+ for(const other of objects){
+  if(other.id===obj.id||isRoofDecoration(other)||buildingItem(other,catalog)?.building?.type!=='roof')continue;
+  const ox=Math.floor(other.x),oy=Math.floor(other.y);
+  for(const [bit,dx,dy] of [[1,0,-1],[2,1,0],[4,0,1],[8,-1,0]])if(ox===x+dx&&oy===y+dy)mask|=bit;
+ }
+ return mask;
+}
 export function buildingConnectionMask(obj,objects,catalog){
  const item=buildingItem(obj,catalog),type=item?.building?.type;
+ if(type==='roof')return roofNeighbourMask(obj,objects,catalog);
  if(!isEdgeLike(item)&&type!=='floor')return 0;
  const x=Math.floor(obj.x),y=Math.floor(obj.y);
  let wallMask=0,floorMask=0,hasFloorSelf=false;

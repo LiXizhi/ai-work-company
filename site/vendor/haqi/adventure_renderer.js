@@ -1,3 +1,4 @@
+import {presenceLanguageLabel} from './adventure_presence_core.js';
 import {battleDamageFeedback} from './battle_damage_feedback_core.js';
 import {cinematicCast,sampleBattleCamera,projectBattlePoint,cameraActorFacing} from './battle_camera_core.js';
 import {battleCameraViewport,drawCameraGround} from './view_battle_camera.js';
@@ -281,7 +282,7 @@ export function createRenderer(canvas,assets) {
         if(!assets.drawMonster?.(c,m,-52*scale,-104*scale+bob,104*scale,104*scale))creature(c,m?.id||'water-bubble',0,bob,t,scale,false);
         c.restore();
     }
-    function render(world,save,time,{localSecond=null,localSecondMoving=false,localFollowing=false,localSecondFollowing=false,gatheringPets=[],graphics={particles:true,trails:true},socialGesture=null,petScene=null,socialActors=[],inParty=false,moving=false,path=[],title=false,rewardEffect=null,teleportEffect=null,weatherOverride=null,weatherTime=time,fishingPose=null,membership={},motionHidden=false,companionBubble=null,learningGreeting=null}={}) {
+    function render(world,save,time,{localSecond=null,localSecondMoving=false,localFollowing=false,localSecondFollowing=false,gatheringPets=[],graphics={particles:true,trails:true},socialGesture=null,petScene=null,socialActors=[],remotePlayers=[],inParty=false,moving=false,path=[],title=false,rewardEffect=null,teleportEffect=null,weatherOverride=null,weatherTime=time,fishingPose=null,membership={},motionHidden=false,companionBubble=null,learningGreeting=null}={}) {
         let phaseTime=perf.enabled?performance.now():0;
         const mark=name=>{if(phaseTime){const now=performance.now();perf.record(world.isEarth?name:name.replace('earth-','island-'),now-phaseTime);phaseTime=now;}};
         const markerFor=markerCache.forState(save,assets.content,world);
@@ -378,6 +379,11 @@ export function createRenderer(canvas,assets) {
             if(!gatheringPets.some(row=>row.pet.id===petId))objects.push({...companion.position,kind:'pet'});
         }else companion=petScene?.pets.find(row=>row.pet.id===petId)||null;
         lastPetTime=time;
+        for(const peer of remotePlayers){
+            if(!title&&peer.position.x>=viewRect.x-80&&peer.position.x<=viewRect.x+viewRect.w+80
+                &&peer.position.y>=viewRect.y-80&&peer.position.y<=viewRect.y+viewRect.h+80)
+                objects.push({...peer.position,kind:'remote-player',peer});
+        }
         const liveSocial=new Set();
         const lookables=[{id:'hero',x:save.position.x,y:save.position.y,moving},...(localSecond&&!title?[{id:'local-hero-1',...localSecond.position,moving:localSecondMoving}]:[]),...socialActors.map(a=>({id:a.profile.id,x:a.position.x,y:a.position.y,moving:!!a.moving}))];
         for(const actor of socialActors){
@@ -484,6 +490,14 @@ export function createRenderer(canvas,assets) {
                 }else if((goal&&questState(save,q.id).accepted)||trackedMob)text(ctx,'◇',o.x,o.y-90+Math.sin(t*3)*3,25,'#fff2a9');
                 ctx.restore();
             }
+            if(o.kind==='remote-player'){
+                const peer=o.peer;
+                ctx.save();ctx.filter='saturate(1.12) hue-rotate(8deg)';
+                const nameY=avatar(ctx,{...peer.profile,facing:peer.facing,mountId:null},o.x,o.y,t,peer.moving,1,false);
+                ctx.restore();
+                plate(ctx,peer.profile.name||'哈奇玩家',o.x,nameY+16,{...PLATE.social,text:'#a5e8ff'});
+                plate(ctx,presenceLanguageLabel(peer.profile.native),o.x,nameY+40,{...PLATE.social,text:'#c5eaf4'});
+            }
             if(o.kind==='social'){
                 const a=o.actor,p=a.profile,fx=o.fx,pose=fx?.poseOut;
                 const gesturePose=socialGesturePose(socialGesture,p.id,gestureAt,reducedMotion.matches);
@@ -492,7 +506,8 @@ export function createRenderer(canvas,assets) {
                 const onBoat=drawEarthBoatRider(ctx,assets,world,o,a.facing,(x,y)=>avatar(ctx,{...p,mountId:null,facing:a.facing},x,y,0,false,1,false,earthBoatRiderPose(pose,a.facing)));
                 const nameY=onBoat?o.y+32:avatar(ctx,{...p,mountId:null,facing:pose?.facing??a.facing},o.x,o.y,t,a.moving,1,false,pose||null);
                 if(graphics.trails&&fx?.motion&&!title&&!motionHidden)drawMotionAccessory(ctx,fx.motion,o,time,reducedMotion.matches,true);
-                plate(ctx,p.sceneLabel || `${tr(p.name)} · ${tr(p.native==='zh'?'中文':'英语')}`,o.x,nameY+16,PLATE.social);
+                plate(ctx,p.sceneLabel || p.name,o.x,nameY+16,PLATE.social);
+                plate(ctx,presenceLanguageLabel(p.native),o.x,nameY+40,PLATE.social);
                 if(gesturePose){const head=socialHeadAnchor(o);text(ctx,gesturePose.icon,head.x,head.y+9,27,'#fff');}ctx.restore();
             }
             if(o.kind==='social-pet'){

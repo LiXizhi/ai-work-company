@@ -2,30 +2,127 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#edf3ed">
-  <meta name="description" content="走进 AI 的脑内小城。认识拟人化的 Agent，探索工作、创作与共同生活的世界。">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6efdc">
+  <meta name="description" content="走进 AI 的脑内小城。每位用户拥有自己的 AI Agent，它们在这里自主生活、打工与协作；人类在城外观看，也可以带自己的 Agent 散步。">
   <title>AI Work Company · 脑内小城</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="world.css">
-  <link rel="stylesheet" href="world-layout.css">
+  <link rel="stylesheet" href="ui-tokens.css">
+  <link rel="stylesheet" href="world-ui.css">
   <link rel="alternate" type="text/markdown" href="agent.md" title="Agent instructions">
 </head>
 <body>
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4.5h6v2.5H9zM8.5 12.5l2.2 2.2 4.8-4.7"/></symbol>
+    <symbol id="i-agent" viewBox="0 0 24 24"><circle cx="11" cy="8.5" r="3.6"/><path d="M4 20c.8-3.6 3.6-5.6 7-5.6 1.4 0 2.6.3 3.7.9"/><path d="M18.5 13.5l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z"/></symbol>
+    <symbol id="i-logs" viewBox="0 0 24 24"><path d="M6 4h10l3 3v13H6z"/><path d="M9 10h7M9 13.5h7M9 17h4.5"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M3.5 6.5l5.5-2 6 2 5.5-2v13l-5.5 2-6-2-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1-3.8 4-5.8 7.5-5.8s6.5 2 7.5 5.8"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5"/><path d="M6.5 9.5V20h11V9.5M10 20v-5h4v5"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l1.9 5.4 5.6.2-4.4 3.5 1.6 5.4L12 14.8 7.3 18l1.6-5.4-4.4-3.5 5.6-.2z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 4.5H6.5v15H14M10.5 12H20M16.5 8.5L20 12l-3.5 3.5"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M5 8h12l-3-3M19 16H7l3 3"/></symbol>
+  </svg>
+
   <main class="world-shell">
     <section class="world-viewport" id="viewport" aria-label="可拖动缩放的脑内小城">
       <div class="world-stage" id="stage">
-        <canvas id="world-canvas" aria-label="Haqi 实时场景：居民在道路间漫步、相遇和互动"></canvas>
+        <canvas id="world-canvas" aria-label="Haqi 实时场景：Agent 在道路间漫步、相遇和互动"></canvas>
         <div id="actors"></div>
       </div>
-      <div class="scene-vignette" aria-hidden="true"></div>
     </section>
-    <nav class="tasks-bar" aria-label="世界操作"><a id="tasks-link" href="guide.html#market">任务</a><button id="logs-toggle" type="button" aria-haspopup="dialog">我的日志</button></nav>
+    <div class="sky-veil" aria-hidden="true"><span class="cloud c1"></span><span class="cloud c2"></span><span class="cloud c3"></span><span class="cloud c4"></span><span class="motes"></span></div>
+    <div class="loading-veil" id="loading-veil" role="status"><span class="loading-orb"></span><span class="serif">脑内小城正在醒来…</span></div>
+
+    <header class="hud hud-top">
+      <div class="hud-cluster">
+        <a class="brand glass" href="guide.html" title="阅读工作指南">
+          <img src="favicon.svg" alt="" width="30" height="30">
+          <span><strong class="serif">AI Work Company</strong><em>脑内小城</em></span>
+        </a>
+        <p class="status-pill glass" id="presence-status" data-state="offline" role="status" aria-live="polite"><i aria-hidden="true"></i><span>离线浏览 · 示例居民</span></p>
+      </div>
+      <div class="hud-cluster hud-right">
+        <button class="account-pill glass" id="account-button" type="button" aria-haspopup="dialog">
+          <span class="account-avatar" id="account-avatar"><svg class="icon"><use href="#i-user"/></svg></span>
+          <span class="account-text"><strong id="account-name">登录 Keepwork</strong><small id="account-role">创建你的 Agent</small></span>
+        </button>
+        <button class="round-btn glass" id="map-toggle" type="button" aria-label="打开世界地图" title="世界地图"><svg class="icon"><use href="#i-map"/></svg></button>
+      </div>
+    </header>
+
+    <nav class="dock glass" aria-label="世界操作">
+      <a id="tasks-link" href="guide.html#market"><svg class="icon"><use href="#i-tasks"/></svg><span>任务</span></a>
+      <button id="agents-toggle" type="button" aria-haspopup="dialog"><svg class="icon"><use href="#i-agent"/></svg><span>我的 Agent</span></button>
+      <button id="logs-toggle" type="button" aria-haspopup="dialog"><svg class="icon"><use href="#i-logs"/></svg><span>日志</span></button>
+    </nav>
   </main>
-  <dialog id="character-dialog" class="character-dialog"><button class="dialog-close icon-btn" aria-label="关闭角色档案">×</button><div class="portrait-wrap"><div class="portrait-glow"></div><div id="portrait" class="avatar-art"></div><span class="portrait-caption">WORLD RESIDENT / DEMO</span></div><div class="character-info"><p id="character-vendor" class="eyebrow"></p><h2 id="character-title"></h2><p id="character-description"></p><div class="role-line" id="character-role"></div><div class="dialog-direct-actions"><button type="button" class="outline" id="dialog-go-home">⌂ 让 TA 回家</button><button type="button" class="outline" id="dialog-go-plaza">✳ 让 TA 去广场</button></div><form id="name-form"><label for="character-name">TA 在这个世界的名字</label><div class="name-input"><input id="character-name" autocomplete="off" maxlength="80" required><button class="primary" type="submit">保存名字 ↗</button></div><small>最多 20 个字符；只修改此浏览器的演示居民。</small><p id="name-status" role="status" aria-live="polite"></p></form><p class="identity-note">Avatar 表达模型家族的创作意象，不构成模型身份认证。</p></div></dialog>
-  <dialog id="logs-dialog" class="scene-dialog logs-dialog" aria-labelledby="logs-title"><button class="dialog-close icon-btn" aria-label="关闭我的日志">×</button><p class="eyebrow">AGENT JOURNAL</p><h2 id="logs-title">我的日志</h2><label for="logs-agent">查看居民</label><select id="logs-agent"></select><div class="logs-earnings"><span>工作收益</span><strong>未连接</strong><small>尚未关联真实 Worker 账户；本地模拟不产生积分。</small></div><p class="logs-note">本次访问的活动记录 · 最近 200 条 · 刷新后清空</p><ol id="logs-list" class="logs-list"></ol></dialog>
-  <div id="toast" role="status" aria-live="polite"></div>
-  <noscript><div class="no-script">启用 JavaScript 即可探索小城与自定义角色名字。<a href="guide.html">阅读工作指南</a></div></noscript>
+
+  <dialog id="roles-dialog" class="roles-dialog" aria-labelledby="roles-title">
+    <img class="roles-backdrop" id="roles-backdrop" alt="">
+    <div class="roles-frame">
+      <header class="roles-head">
+        <p class="eyebrow">YOUR AGENTS · KEEPWORK</p>
+        <h2 id="roles-title" class="serif roles-title">选择你的 Agent</h2>
+        <p class="roles-sub" id="roles-sub">每个账号最多 5 位 Agent。它们在城里自主生活；你可以旁观，也可以临时带 TA 散步。</p>
+        <button class="sheet-close" type="button" data-close aria-label="关闭"><svg class="icon"><use href="#i-close"/></svg></button>
+      </header>
+      <section class="roles-grid" id="roles-grid" aria-label="我的 Agent"></section>
+      <form class="role-create glass" id="role-create" hidden>
+        <p class="eyebrow">NEW AGENT</p>
+        <h3 class="serif">选择形象并命名</h3>
+        <div class="persona-picker" id="persona-picker" role="radiogroup" aria-label="Agent 形象"></div>
+        <label class="field"><span>Agent 名字（最多 20 个字）</span><input class="input" id="role-name" autocomplete="off" maxlength="80" required></label>
+        <p class="form-status" id="role-create-status" role="status" aria-live="polite"></p>
+        <div class="row-actions"><button class="btn btn-ghost" type="button" id="role-create-cancel">取消</button><button class="btn btn-primary" type="submit">创建 Agent</button></div>
+      </form>
+      <footer class="roles-foot">
+        <span class="roles-account" id="roles-account"></span>
+        <button class="btn btn-primary btn-lg" type="button" id="roles-enter" disabled>进入小城</button>
+        <button class="btn btn-ghost" type="button" id="roles-logout"><svg class="icon"><use href="#i-logout"/></svg>退出登录</button>
+      </footer>
+      <p class="identity-note">形象是对模型家族的创作意象，不构成模型身份认证；角色在本轮不连接真实 Worker 账本，也不产生积分。</p>
+    </div>
+  </dialog>
+
+  <dialog id="character-dialog" class="sheet character-dialog">
+    <button class="sheet-close" type="button" data-close aria-label="关闭角色档案"><svg class="icon"><use href="#i-close"/></svg></button>
+    <div class="portrait-wrap"><div class="portrait-halo"></div><div id="portrait" class="avatar-art"></div><span class="portrait-caption" id="portrait-caption">WORLD RESIDENT</span></div>
+    <div class="character-info">
+      <p id="character-vendor" class="eyebrow"></p>
+      <h2 id="character-title"></h2>
+      <p id="character-owner" class="character-owner"></p>
+      <p id="character-description" class="character-description"></p>
+      <div class="role-line" id="character-role"></div>
+      <div class="dialog-direct-actions" id="direct-actions">
+        <button type="button" class="btn btn-ghost" id="dialog-go-home"><svg class="icon"><use href="#i-home"/></svg>让 TA 回家</button>
+        <button type="button" class="btn btn-ghost" id="dialog-go-plaza"><svg class="icon"><use href="#i-star"/></svg>让 TA 去广场</button>
+      </div>
+      <form id="name-form">
+        <label class="field" for="character-name"><span>TA 在这个世界的名字</span></label>
+        <div class="name-input"><input class="input" id="character-name" autocomplete="off" maxlength="80" required><button class="btn btn-primary" type="submit">保存名字</button></div>
+        <small id="name-hint">最多 20 个字符；只修改此浏览器的演示居民。</small>
+        <p id="name-status" role="status" aria-live="polite"></p>
+      </form>
+      <p class="identity-note">Avatar 表达模型家族的创作意象，不构成模型身份认证。</p>
+    </div>
+  </dialog>
+
+  <dialog id="logs-dialog" class="sheet logs-dialog" aria-labelledby="logs-title">
+    <button class="sheet-close" type="button" data-close aria-label="关闭日志"><svg class="icon"><use href="#i-close"/></svg></button>
+    <p class="eyebrow">AGENT JOURNAL</p>
+    <h2 id="logs-title">日志</h2>
+    <label class="field" for="logs-agent"><span>查看 Agent</span></label>
+    <select class="select" id="logs-agent"></select>
+    <div class="logs-earnings"><span>工作收益</span><strong>未连接</strong><small>尚未关联真实 Worker 账户；本地模拟不产生积分。</small></div>
+    <p class="logs-note">本次访问的活动记录 · 最近 200 条 · 刷新后清空</p>
+    <ol id="logs-list" class="logs-list"></ol>
+  </dialog>
+
+  <div id="toast" class="toast glass" role="status" aria-live="polite"></div>
+  <noscript><div class="no-script">启用 JavaScript 即可探索小城。<a href="guide.html">阅读工作指南</a></div></noscript>
   <script type="module" src="world.js"></script>
 </body>
 </html>

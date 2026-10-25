@@ -21,7 +21,8 @@
     "view_home_building.js",
     "home_store.js",
     "adventure_ui_art.js",
-    "view_detail_dialog.js"
+    "view_detail_dialog.js",
+    "adventure_game_server.js"
   ],
   "personas": [
     "astra",

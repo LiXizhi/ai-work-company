@@ -255,3 +255,11 @@ home geometry, opening doors, roof cutaways and autonomous movement are retained
 ## 2026-10-23：仅保留任务与我的日志
 
 首页常驻界面仅有底部「任务」和「我的日志」。移除积分卡、世界地图按钮、地点标签与房屋名称徽章；保留角色脚下 nickname.model、点击档案、拖动缩放、Haqi 家园和自主活动。「我的日志」按居民筛选本次访问的行动与社交记录，所有居民合计最多 200 条，刷新清空。收益显示未连接，不能当作真实 Worker 账本；无新增后端协议。任务入口继续使用工作指南或同源实时市场。
+
+## 2026-10-24：Keepwork 角色、Game Server Lite 在场与美术升级
+
+- **登录与角色**：首页可选 Keepwork 登录（复用 Haqi 的 CDN SDK 加载方式，未登录仍可离线浏览）。每个账号最多 5 位 Agent 角色，外形限定 4 个人设，名字最多 20 个字素。角色列表保存在 Keepwork 个人工作区 `AIWorkCompany/world/roles.json`，与 Haqi 存档分开；写入前会校验，网络失败不会被当成空列表（`site/world-roles-core.mjs`、`site/world-roles.mjs`、`site/keepwork-session.mjs`）。
+- **在场同步**：当前活跃角色在本地自主行动，可被主人有界指挥，并通过上游 `createGameServerSession({project:'awc'})` 进入 `awc:city` 房间（`site/world-presence.mjs`）。其他在线 Agent 只用于显示，入场前做名字/人设/数量清洗（最多 60 个，`remoteCast`），并参与屋顶剖切与开门判断。token 只出现在 HTTPS Authorization 请求头中。未登录时显示 4 位标注「示例」的居民；登录并选择角色后，只显示自己和其他在线用户的 Agent。
+- **CSP**：只有 `/` 和 `/index.html` 使用世界页策略，允许 `cdn.keepwork.com` 脚本、Keepwork API/登录窗口，以及 `https://`、`wss://*.gameserver.keepwork.com`。登录窗口会注入 `<style>`，所以该页加了 `style-src 'unsafe-inline'`。其他页面保持原严格策略。本机游戏服来源只在设置 `AWC_WORLD_DEV_PRESENCE=1` 时放行，配合 `?dev-presence=http://127.0.0.1:8797&dev-user=NAME` 做协议测试。
+- **美术/UI**：新增共享设计令牌 `site/ui-tokens.css` 和首页样式 `site/world-ui.css`，内容包括 HUD（品牌、在线状态、账号胶囊、地图）、底部 Dock（任务 / 我的 Agent / 日志）、全屏角色选择与创建、角色档案、日志、地图对话框、云海氛围、加载态、可读的名牌，以及移动端布局。`/admin/` 接入同一套令牌，功能不变。城市街道家具使用共享目录中的路灯、长椅、花坛等物品（`CITY_DECORATIONS`），测试保证所有家园仍可到达。上游 neural-city 屋顶改为按世界坐标对齐的琉璃瓦，只在外缘画金色檐口和屋脊。
+- **未实现**：角色与真实 Worker 账户绑定、24 小时由 Worker 托管在线、模型驱动的社交与找工作、公网账号的实际入场验收。本地用假 Keepwork 验证的双用户互见只是协议级测试，不代表公网鉴权已经验收。没有新增 HTTP API 和资金行为。

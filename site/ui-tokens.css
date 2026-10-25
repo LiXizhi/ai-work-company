@@ -1,0 +1,65 @@
+/* AI Work Company design tokens: floating neural city storybook.
+   Ivory paper, thin gold lines, jade/teal accents. Shared by the world page and admin. */
+:root{
+  --ivory-50:#fffdf6;--ivory-100:#fbf7ea;--ivory-200:#f3ecd8;--ivory-300:#e7dcc0;
+  --gold-300:#e6cf96;--gold-400:#d4b46c;--gold-500:#bf9a4c;--gold-600:#9c7a35;
+  --teal-300:#8fd0c8;--teal-400:#4fb0a7;--teal-500:#23877f;--teal-600:#1b6c66;--teal-700:#15504d;
+  --ink-900:#20393a;--ink-700:#3a5552;--ink-500:#64786f;--ink-400:#8a9a90;
+  --rose-400:#d98a73;--ok:#3faa6c;--warn:#d9a13b;--bad:#c9604f;
+  --persona-astra:#5c9e8b;--persona-claude:#d0895e;--persona-deepseek:#4f8fc0;--persona-gemini:#9a7fc4;
+  --glass:rgba(255,252,242,.86);--glass-strong:rgba(255,252,242,.95);
+  --line:rgba(191,154,76,.45);--line-soft:rgba(191,154,76,.22);
+  --shadow-1:0 2px 8px rgba(40,62,52,.08),0 1px 0 rgba(255,255,255,.7) inset;
+  --shadow-2:0 10px 30px rgba(32,57,58,.14),0 1px 0 rgba(255,255,255,.8) inset;
+  --shadow-3:0 30px 90px rgba(21,56,58,.28);
+  --radius-s:10px;--radius-m:16px;--radius-l:24px;--radius-pill:999px;
+  --font-sans:"Inter","Avenir Next","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  --font-serif:"Songti SC","Noto Serif SC","Source Han Serif SC","STSong","Georgia",serif;
+  --ease:cubic-bezier(.2,.8,.2,1);--fast:.16s;--mid:.28s;--slow:.6s;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--font-sans);color:var(--ink-900);background:var(--ivory-100);font-synthesis:none;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+a{color:inherit;text-decoration:none}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--teal-400);outline-offset:3px;border-radius:6px}
+
+/* Glass panel: translucent ivory with a fine gold hairline. */
+.glass{background:var(--glass);border:1px solid var(--line);box-shadow:var(--shadow-2);backdrop-filter:blur(14px) saturate(1.15);-webkit-backdrop-filter:blur(14px) saturate(1.15)}
+.serif{font-family:var(--font-serif);font-weight:600;letter-spacing:.02em}
+.eyebrow{margin:0;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-600)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 18px;border-radius:var(--radius-pill);font-size:14px;font-weight:600;letter-spacing:.02em;transition:transform var(--fast) var(--ease),background var(--fast),box-shadow var(--fast),color var(--fast);white-space:nowrap}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn-primary{color:#fffbea;background:linear-gradient(180deg,var(--teal-400),var(--teal-600));border:1px solid var(--gold-400);box-shadow:0 0 0 3px rgba(230,207,150,.35),0 8px 20px rgba(27,108,102,.3),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn-primary:hover{background:linear-gradient(180deg,#5cbdb3,var(--teal-500))}
+.btn-ghost{color:var(--ink-700);background:var(--glass-strong);border:1px solid var(--line);box-shadow:var(--shadow-1)}
+.btn-ghost:hover{background:#fff;color:var(--teal-700)}
+.btn-danger{color:var(--bad);background:transparent;border:1px solid rgba(201,96,79,.35)}
+.btn-danger:hover{background:rgba(201,96,79,.08)}
+.btn-lg{min-height:52px;padding:0 34px;font-size:16px}
+
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:var(--radius-pill);font-size:11px;font-weight:600;letter-spacing:.06em;color:#fff;background:var(--chip,var(--teal-500))}
+
+.field{display:grid;gap:8px}
+.field>span{font-size:12px;color:var(--ink-500)}
+.input,.select{width:100%;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--ivory-300);background:var(--ivory-50);color:var(--ink-900);transition:border-color var(--fast),box-shadow var(--fast)}
+.input:focus,.select:focus{outline:none;border-color:var(--teal-400);box-shadow:0 0 0 3px rgba(79,176,167,.2)}
+
+/* Dialog shell shared by all modals. */
+.sheet{border:1px solid var(--line);border-radius:var(--radius-l);background:var(--ivory-50);background-image:radial-gradient(120% 80% at 0% 0%,rgba(230,207,150,.18),transparent 60%),radial-gradient(90% 70% at 100% 100%,rgba(143,208,200,.16),transparent 60%);color:var(--ink-900);box-shadow:var(--shadow-3);padding:28px;max-width:calc(100vw - 24px);max-height:calc(100svh - 24px);overflow:auto}
+.sheet::backdrop{background:rgba(21,56,58,.38);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.sheet[open]{animation:sheet-in var(--mid) var(--ease)}
+.sheet h2{margin:6px 0 10px;font-family:var(--font-serif);font-size:28px;font-weight:600;line-height:1.25}
+.sheet-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--ink-500);background:var(--ivory-100);border:1px solid var(--line-soft);transition:background var(--fast),color var(--fast)}
+.sheet-close:hover{background:#fff;color:var(--teal-700)}
+.sheet-close svg{width:18px;height:18px}
+@keyframes sheet-in{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+
+.icon{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}

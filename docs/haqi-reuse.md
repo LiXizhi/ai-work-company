@@ -97,3 +97,15 @@ receive the same theme. Tree rendering optionally uses ivory planters and the
 existing cypress/blossom WebP sprites. Default Haqi styling remains unchanged.
 This changes presentation only: home footprints, water/bridge queries, door
 opening, roof cutaway, furniture and autonomous/directed navigation are unchanged.
+
+## Game Server Lite presence (2026-10-24)
+
+`adventure_game_server.js` (plus its `adventure_presence_core.js` dependency) is in the
+subset. Upstream added a `project` option (default `haqi`, validated, and rooms must keep
+the `${project}:` prefix), so AI Work Company joins `awc:city` through the same
+authenticated session: HTTPS ticket, then WSS `welcome`, heartbeat, backoff and
+remote interpolation. No session code is copied into this app. Upstream also gained
+roof-neighbour masks (`buildingConnectionMask` for roofs) and world-aligned glazed
+roof tiles for the `neural-city` theme. Only presentation changed; footprints,
+collision and roof cut-away are the same. Server code stays in the separate
+HaqiGameServerLite repository. No server change was required.

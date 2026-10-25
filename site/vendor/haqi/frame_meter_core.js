@@ -10,7 +10,7 @@ export function createFrameMeter(){
         return value;
     },get value(){return value;}};
 }
-export function createFramePacer({activeFps=60,idleFps=20,holdMs=300,toleranceMs=4}={}){
+export function createFramePacer({activeFps=60,idleFps=60,holdMs=300,toleranceMs=4}={}){
     const activeInterval=1000/activeFps,idleInterval=1000/idleFps;
     let lastRender=null,activeUntil=-Infinity,wasBusy=false,wakeNext=false;
     return {

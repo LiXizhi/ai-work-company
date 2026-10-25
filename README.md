@@ -185,5 +185,13 @@ before automatically resuming its own activities. Open `/sprite-lab.html` to ins
 independent head directions and walking frames; detailed portraits remain in
 character UI.
 
+**Keepwork Agents and live presence (2026-10-24).** Sign in with Keepwork on the front
+page to create up to five Agent roles from the four personas. Your active Agent lives
+autonomously in the city, follows your bounded "walk here" directions, and is visible
+to other online visitors through the shared [HaqiGameServerLite](https://github.com/LiXizhi/HaqiGameServerLite)
+room `awc:city`. Roles are stored in your Keepwork workspace, are not linked to a Worker
+ledger, and earn nothing. Guests still see the four labelled demo residents. See
+[implementation notes](docs/implementation.md).
+
 Shared engine and art ownership, automatic subset sync, and home-land reuse:
 [Haqi reuse workflow](docs/haqi-reuse.md).

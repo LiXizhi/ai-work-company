@@ -49,19 +49,42 @@ export function paintNeuralHomeTerrain(c,seed,rect){
 }
 
 // Repeating materials for the existing connected building mesh. No new footprint.
-export function paintNeuralMaterial(c,type,x,y,w,h){
+// Roof tiles are world-aligned so adjacent cells read as one glazed roof; `mask`
+// (N=1,E=2,S=4,W=8 neighbours) adds gold eaves/ridges only on the outer edges.
+export function paintNeuralMaterial(c,type,x,y,w,h,mask=15){
  c.save();c.beginPath();c.rect(x,y,w,h);c.clip();
- const roof=type==='roof';
+ if(type==='roof'){paintGlazedRoof(c,x,y,w,h,mask);c.restore();return;}
  const gradient=c.createLinearGradient(x,y,x+w,y+h);
- gradient.addColorStop(0,roof?'#9dd5c8':'#fff8e5');gradient.addColorStop(.42,roof?'#5aa9a4':'#f1e4c8');gradient.addColorStop(1,roof?'#2e777d':'#dacaab');
+ gradient.addColorStop(0,'#fff8e5');gradient.addColorStop(.42,'#f1e4c8');gradient.addColorStop(1,'#dacaab');
  c.fillStyle=gradient;c.fillRect(x,y,w,h);
- if(roof){
-  for(let yy=y;yy<y+h;yy+=10){line(c,[[x,yy],[x+w,yy]],1,'#d6bd7c');line(c,[[x,yy+2],[x+w,yy+2]],.7,'#daf6df55');}
-  line(c,[[x+1,y],[x+1,y+h]],1.4,'#e5c77e');line(c,[[x+w-1,y],[x+w-1,y+h]],1.4,'#b09350');
-  line(c,[[x+6,y+2],[x+w*.6,y+h-2]],2,'#d2f5e738');
- }else{
-  if(type==='floor'){c.strokeStyle='#bca573';c.lineWidth=.8;c.strokeRect(x+2,y+2,w-4,h-4);}
-  else{line(c,[[x,y+h-5],[x+w,y+h-5]],2,'#c4a366');line(c,[[x,y+5],[x+w,y+5]],1,'#e7cc8f');}
- }
+ if(type==='floor'){c.strokeStyle='#bca573';c.lineWidth=.8;c.strokeRect(x+2,y+2,w-4,h-4);}
+ else{line(c,[[x,y+h-5],[x+w,y+h-5]],2,'#c4a366');line(c,[[x,y+5],[x+w,y+5]],1,'#e7cc8f');}
  c.restore();
+}
+const ROW=15,TILE=19;
+function paintGlazedRoof(c,x,y,w,h,mask){
+ c.fillStyle='#3f9893';c.fillRect(x,y,w,h);
+ const top=Math.floor(y/ROW)*ROW;
+ for(let ry=top;ry<y+h;ry+=ROW){
+  const row=Math.round(ry/ROW),offset=row%2?TILE/2:0;
+  const band=c.createLinearGradient(0,ry,0,ry+ROW);
+  band.addColorStop(0,'#9fdccf');band.addColorStop(.35,'#5fb3aa');band.addColorStop(.85,'#2f8582');band.addColorStop(1,'#246b6c');
+  c.fillStyle=band;
+  const left=Math.floor((x-offset)/TILE)*TILE+offset;
+  for(let tx=left;tx<x+w;tx+=TILE){
+   // Rounded tile lip at the bottom of each course.
+   c.beginPath();c.moveTo(tx,ry);c.lineTo(tx+TILE,ry);c.lineTo(tx+TILE,ry+ROW-3);
+   c.quadraticCurveTo(tx+TILE/2,ry+ROW+2,tx,ry+ROW-3);c.closePath();c.fill();
+   c.fillStyle='rgba(235,255,246,.5)';c.fillRect(tx+3,ry+2.5,TILE*.38,2);c.fillStyle=band;
+  }
+  line(c,[[x,ry+ROW-.5],[x+w,ry+ROW-.5]],1.2,'rgba(20,66,66,.45)');
+ }
+ // Gentle light falloff across the whole roof (world-space, so seams stay hidden).
+ const shade=c.createLinearGradient(0,y,0,y+h);shade.addColorStop(0,'rgba(255,248,220,.10)');shade.addColorStop(1,'rgba(10,50,52,.10)');
+ c.fillStyle=shade;c.fillRect(x,y,w,h);
+ const gold='#d9b45e',goldDark='#9c7a35';
+ if(!(mask&1)){c.fillStyle=goldDark;c.fillRect(x,y,w,6);c.fillStyle=gold;c.fillRect(x,y,w,4);c.fillStyle='#fff1c2';c.fillRect(x,y,w,1.4);}
+ if(!(mask&4)){c.fillStyle='rgba(18,56,56,.5)';c.fillRect(x,y+h-10,w,4);c.fillStyle=goldDark;c.fillRect(x,y+h-6,w,6);c.fillStyle=gold;c.fillRect(x,y+h-6,w,3.4);c.fillStyle='#fff1c2';c.fillRect(x,y+h-6,w,1);}
+ if(!(mask&8)){c.fillStyle=gold;c.fillRect(x,y,3.6,h);c.fillStyle='rgba(255,241,194,.75)';c.fillRect(x+3.6,y,1.4,h);}
+ if(!(mask&2)){c.fillStyle=goldDark;c.fillRect(x+w-3.6,y,3.6,h);c.fillStyle='rgba(16,52,52,.28)';c.fillRect(x+w-9,y,5.4,h);}
 }

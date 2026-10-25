@@ -16,3 +16,32 @@ export function installCityLandmarks(world,items){
   const old=world.landmarks.find(m=>m.id===p.id);if(old)Object.assign(old,landmark);else world.landmarks.push(landmark);
  }
 }
+
+// Street furniture from the shared home catalogue (lamps, benches, beds of flowers).
+// Positions were chosen to keep every home reachable; see test/world-roles.test.mjs.
+export const CITY_DECORATIONS=[
+ ['street-lamp',-20,-2.9],
+ ['rose-bush',-20,8],
+ ['garden-bench',-20,11.6],
+ ['flower-bed',-17,11.6],
+ ['flower-bed',-14,8],
+ ['rose-bush',-14,11.6],
+ ['street-lamp',-11,11.6],
+ ['street-lamp',13,8],
+ ['flower-bed',13,11.6],
+ ['garden-bench',16,1.4],
+ ['street-lamp',19,-2.9],
+ ['flower-bed',19,11.6],
+ ['street-lamp',-17,-10],
+ ['flower-bed',17,-10],
+ ['flower-bed',-17,14],
+ ['street-lamp',17,14],
+ ['flower-bed',-17,17],
+ ['rose-bush',17,17],
+ ['street-lamp',17,20]
+];
+export function installCityDecorations(world){
+ CITY_DECORATIONS.forEach(([itemId,x,y],i)=>{
+  if(world.catalog.some(item=>item.id===itemId))world.objects.push({id:`city-deco-${i}`,itemId,x,y,rotation:0,sizeScale:.7});
+ });
+}

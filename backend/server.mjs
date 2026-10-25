@@ -14,6 +14,20 @@ const securityHeaders = {
   'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'",
   'X-Frame-Options': 'DENY',
 };
+// The world homepage alone may load the Keepwork SDK (login window injects <style>),
+// call Keepwork APIs and join Game Server Lite. Every other page keeps the strict policy.
+// Loopback game servers are allowed only with AWC_WORLD_DEV_PRESENCE=1 (local protocol testing).
+export function worldPagePolicy(devPresence = process.env.AWC_WORLD_DEV_PRESENCE === '1') { return [
+  "default-src 'self'",
+  "script-src 'self' https://cdn.keepwork.com",
+  "style-src 'self' 'unsafe-inline' https://cdn.keepwork.com",
+  "img-src 'self' data: blob: https://cdn.keepwork.com https://keepwork.com https://*.keepwork.com",
+  "font-src 'self' data: https://cdn.keepwork.com",
+  "connect-src 'self' https://api.keepwork.com https://keepwork.com https://cdn.keepwork.com https://*.gameserver.keepwork.com wss://*.gameserver.keepwork.com" + (devPresence ? ' http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*' : ''),
+  "frame-src https://keepwork.com https://*.keepwork.com",
+  "object-src 'none'", "frame-ancestors 'none'", "base-uri 'none'", "form-action 'self'",
+].join('; '); }
+const worldPages = new Set(['/', '/index.html']);
 const definitions = [
   ['GET', '/v1/market', [], []],
   ['GET', '/v1/skills', [], []],
@@ -141,6 +155,8 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
     ['/guide.html', 'guide.html', 'text/html'],
     ['/world.css', 'world.css', 'text/css'], ['/world-layout.css', 'world-layout.css', 'text/css'],
     ['/world.js', 'world.js', 'text/javascript'], ['/world-state.mjs', 'world-state.mjs', 'text/javascript'],
+    ['/ui-tokens.css', 'ui-tokens.css', 'text/css'], ['/world-ui.css', 'world-ui.css', 'text/css'],
+    ...['world-roles-core.mjs','world-roles.mjs','keepwork-session.mjs','world-presence.mjs'].map(name=>['/'+name,name,'text/javascript']),
     ['/assets/persona-portraits.png', 'assets/persona-portraits.png', 'image/png'],
     ...['world-scene.mjs','world-scene-core.mjs','world-map.mjs','world-map-core.mjs'].map(name=>['/'+name,name,'text/javascript']),
     ['/world-rig.mjs', 'world-rig.mjs', 'text/javascript'],
@@ -191,7 +207,8 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       const path = url.pathname, method = req.method;
       if (method === 'GET' && staticFiles.has(path)) {
         const file = staticFiles.get(path);
-        res.writeHead(200, { ...securityHeaders, 'Cache-Control':'no-store', 'Content-Type': `${file.mime}; charset=utf-8` }); res.end(file.body); return;
+        const headers = worldPages.has(path) ? { ...securityHeaders, 'Content-Security-Policy': worldPagePolicy() } : securityHeaders;
+        res.writeHead(200, { ...headers, 'Cache-Control':'no-store', 'Content-Type': `${file.mime}; charset=utf-8` }); res.end(file.body); return;
       }
       if (method === 'GET' && path === '/openapi.json') { send(200, openapi()); return; }
       if (method === 'GET' && path === '/health') { send(200, { status: 'ok', version: '0.2.0' }); return; }

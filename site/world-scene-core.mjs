@@ -278,8 +278,11 @@ function planAutonomousNext(actor,world){
 
 export function createResidents(world,profiles){
  const actors=profiles.map((profile,i)=>{
-  const own=world.homes[profile.id]||Object.values(world.homes)[i%4];
-  const schedule=buildSchedule(world,profile.id,i);
+  // Owned roles live in their persona's home; demo residents use their own id.
+  const homeKey=profile.homeId||profile.id;
+  const index=Number.isInteger(profile.homeIndex)?profile.homeIndex:i;
+  const own=world.homes[homeKey]||Object.values(world.homes)[index%4];
+  const schedule=buildSchedule(world,homeKey,index);
   const startSpot=i%2===0?own.indoor:own.yard;
   const actor={
    profile:{...profile},

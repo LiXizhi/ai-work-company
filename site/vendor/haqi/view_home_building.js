@@ -27,7 +27,7 @@ export function drawBuilding(c,item,o,image,connections=0,ao=[]){
  const fill=(dx,dy,dw,dh)=>{
   if(dw<=0||dh<=0)return;
   c.fillStyle=baseColor;c.fillRect(dx,dy,dw,dh);
-  if(neural)paintNeuralMaterial(c,type,dx,dy,dw,dh);
+  if(neural)paintNeuralMaterial(c,type,dx,dy,dw,dh,typeof connections==='number'?connections&15:15);
   else if(hasImg)c.drawImage(image,...crop,dx,dy,dw,dh);
  };
  if(!wall){

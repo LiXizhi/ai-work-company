@@ -7,10 +7,14 @@ import {buildingItem,buildingBounds,buildingConnectionMask,homeDoorIsOpen,isRoof
 import {drawBuilding} from './vendor/haqi/view_home_building.js';
 import {collectHomeWorldTrees,drawHomeWorldTree,drawHomeObject} from './vendor/haqi/view_home_art.js';
 import {sceneResolution} from './vendor/haqi/scene_resolution_core.js';
-import {installCityLandmarks} from './world-map-core.mjs';
+import {installCityLandmarks,installCityDecorations} from './world-map-core.mjs';
 import {createPlaza,createResidents,stepResidents,directResident,CELL_PX} from './world-scene-core.mjs';
 
-export async function createWorldScene(canvas,rig,names){
+const ACTOR_SCALE=1.08;
+
+// `labelFor(profile)` supplies display names; profiles carry `persona` (renderer)
+// and `kind` ('demo' | 'mine' | 'remote'). Remote Agents are display-only.
+export async function createWorldScene(canvas,rig,labelFor){
  const art=await loadEnvironmentArt('local',async()=>{
   const response=await fetch(new URL('./assets/haqi-scene.json',import.meta.url));
   if(!response.ok)throw Error('Scene manifest unavailable');
@@ -38,34 +42,30 @@ export async function createWorldScene(canvas,rig,names){
  const city=await cityResponse.json();
  const world=createPlaza([...catalogData.items.map(item=>item.building?{...item,building:{...item.building,theme:'neural-city'}}:item),...city.homeItems]);
  installCityLandmarks(world,city.homeItems);
+ installCityDecorations(world);
  for(const obj of world.objects){
   const item=buildingItem(obj,world.catalog);
   if(item?.art)imageFor(item.art);
  }
 
- const profiles=rig.entries.map(({resident:r,appearance})=>({
-  id:r.id,
-  name:names(r),
-  appearance:'girl',
-  headId:r.id,
-  bodyId:appearance.bodyId,
-  color:r.color,
-  native:'zh',
-  level:1,
-  school:'life',
-  equipmentGuids:{},
-  equipmentInstances:[],
- }));
- const state=createResidents(world,profiles);
  const entries=new Map(rig.entries.map(e=>[e.resident.id,e]));
+ function profileFor({id,persona,kind,name,homeId,homeIndex,ownerName}){
+  const entry=entries.get(persona)||rig.entries[0];
+  return {id,persona:entry.resident.id,kind,name,homeId,homeIndex,ownerName,
+   appearance:'girl',headId:entry.resident.id,bodyId:entry.appearance.bodyId,color:entry.resident.color,
+   native:'zh',level:1,school:'life',equipmentGuids:{},equipmentInstances:[]};
+ }
+ const demoCast=()=>rig.entries.map(({resident:r})=>({id:r.id,persona:r.id,kind:'demo',name:r.name}));
+ const state=createResidents(world,demoCast().map(profileFor));
+ let remote=[];
  const terrainCache=createHomeTerrainCache({theme:'neural-city'});
  const buildingCache=createHomeBuildingCache({imageFor});
  void createRenderer;
 
- const camera={x:world.center.x,y:0,zoom:0.70};
+ const camera={x:world.center.x,y:60,zoom:0.80};
  let viewport={width:canvas.clientWidth||1280,height:canvas.clientHeight||800,scale:1,pixelRatio:1};
  let last=null;
- let selectedAgentId='astra';
+ let selectedAgentId=state.actors[0]?.profile.id||null;
 
  function updateViewport(){
   const dpr=typeof window!=='undefined'?window.devicePixelRatio||1:1;
@@ -157,7 +157,8 @@ export async function createWorldScene(canvas,rig,names){
    drawDirectedRoute(c,actor,state.elapsed);
   }
 
-  const actorCells=state.actors.map(a=>a.cell);
+  const occupants=[...state.actors.map(a=>a.cell),...remote.map(r=>({x:r.position.x/CELL_PX,y:r.position.y/CELL_PX}))];
+  const actorCells=occupants;
   const drawables=[];
   for(const g of visibleGroups){
    if(g.ground||g.roof)continue;
@@ -197,16 +198,22 @@ export async function createWorldScene(canvas,rig,names){
   }
 
   const nowMs=state.elapsed*1000;
+  for(const r of remote){
+   const entry=entries.get(r.persona)||rig.entries[0];
+   const profile=r.profile;
+   drawables.push({depth:r.position.y,draw(){
+    entry.renderer.drawSave(c,profile,r.position.x,r.position.y,state.elapsed,r.moving&&!paused,ACTOR_SCALE,{facing:r.facing,hideLabel:true});
+   }});
+  }
   for(const a of state.actors){
-   const entry=entries.get(a.profile.id);
-   a.profile.name=names(entry.resident);
-   a.profile.sceneLabel=`${a.profile.name}.${a.profile.id==='astra'?'gpt':a.profile.id}`;
+   const entry=entries.get(a.profile.persona)||rig.entries[0];
+   a.profile.name=labelFor(a.profile);
    drawables.push({
     depth:a.position.y,
     draw(){
-     if(a.profile.id===selectedAgentId||a.mode==='directed'){
+     if(a.profile.id===selectedAgentId||a.mode==='directed'||a.profile.kind==='mine'){
       c.save();
-      c.strokeStyle=a.profile.color||'#356f59';
+      c.strokeStyle=a.profile.kind==='mine'?'#c9a24f':a.profile.color||'#356f59';
       c.lineWidth=a.mode==='directed'?2.6:1.8;
       c.fillStyle='rgba(255,253,240,0.28)';
       c.beginPath();
@@ -216,7 +223,7 @@ export async function createWorldScene(canvas,rig,names){
       c.restore();
      }
      const gesturePose=state.gesture?.ids?.includes(a.profile.id)?socialGesturePose(state.gesture,a.profile.id,nowMs):null;
-     entry.renderer.drawSave(c,a.profile,a.position.x,a.position.y,state.elapsed,a.moving&&!paused,0.92,{
+     entry.renderer.drawSave(c,a.profile,a.position.x,a.position.y,state.elapsed,a.moving&&!paused,ACTOR_SCALE,{
       facing:a.facing,
       gesturePose,
       hideLabel:true,
@@ -234,8 +241,8 @@ export async function createWorldScene(canvas,rig,names){
    if(!g.roof)continue;
    for(const row of g.rows){
     if(row.item.building?.type!=='roof')continue;
-    for(const a of state.actors){
-     if(Math.floor(a.cell.x)===Math.floor(row.o.x)&&Math.floor(a.cell.y)===Math.floor(row.o.y)){
+    for(const cell of occupants){
+     if(Math.floor(cell.x)===Math.floor(row.o.x)&&Math.floor(cell.y)===Math.floor(row.o.y)){
       const sec=sections.get(row.o.id)?.[0]?.id;
       if(sec)occupiedSections.add(sec);
      }
@@ -250,7 +257,8 @@ export async function createWorldScene(canvas,rig,names){
 
   c.restore();
 
-  return state.actors.map(actor=>({actor,point:worldToScreen(actor.position)}));
+  return [...state.actors.map(actor=>({actor,point:worldToScreen(actor.position)})),
+   ...remote.map(actor=>({actor,point:worldToScreen(actor.position)}))];
  }
 
  return {
@@ -259,17 +267,29 @@ export async function createWorldScene(canvas,rig,names){
   render,
   project:worldToScreen,
   unproject:screenToWorld,
-  selectAgent(id){if(entries.has(id))selectedAgentId=id;return selectedAgentId;},
+  selectAgent(id){if(state.actors.some(a=>a.profile.id===id))selectedAgentId=id;return selectedAgentId;},
+  /** Replace local cast: demo residents (guest) or the owner's active Agent. */
+  setCast(cast){
+   const next=createResidents(world,(cast||demoCast()).map(profileFor));
+   for(const key of Object.keys(state))delete state[key];
+   Object.assign(state,next);
+   selectedAgentId=state.actors[0]?.profile.id||null;
+  },
+  demoCast,
+  /** Remote rows are already sanitized by remoteCast(). */
+  setRemote(rows){
+   remote=rows.map(r=>({...r,profile:profileFor({id:r.id,persona:r.persona,kind:'remote',name:r.name})}));
+  },
+  remote:()=>remote,
   selectedAgent:()=>selectedAgentId,
   direct(agentId,targetPoint,options){
    const id=agentId||selectedAgentId;
-   if(entries.has(id))selectedAgentId=id;
+   if(state.actors.some(a=>a.profile.id===id))selectedAgentId=id;
    return directResident(state,world,id,targetPoint,options);
   },
-  focusHome(agentId){
-   const h=world.homes[agentId];
+  focusHome(homeId){
+   const h=world.homes[homeId];
    if(!h)return false;
-   selectedAgentId=agentId;
    camera.x=h.indoor.worldX;
    camera.y=h.indoor.worldY+40;
    camera.zoom=Math.max(camera.zoom,0.98);
@@ -304,25 +324,20 @@ export async function createWorldScene(canvas,rig,names){
   reset(){
    camera.x=world.center.x;
    camera.y=0;
-   camera.zoom=0.70;
+   camera.zoom=0.80;
    updateViewport();
   },
   eventText(){
    const directedActor=state.actors.find(a=>a.mode==='directed');
-   if(directedActor){
-    const name=names(entries.get(directedActor.profile.id).resident);
-    return `${name} · ${directedActor.activityLabel}（随后恢复自主活动）`;
-   }
+   if(directedActor)return `${labelFor(directedActor.profile)} · ${directedActor.activityLabel}（随后恢复自主活动）`;
    const e=state.event;
    if(e?.type==='gesture'){
     const act=socialActions.find(a=>a.id===e.action);
-    return `${e.ids.map(id=>names(entries.get(id).resident)).join(' 与 ')} · ${act?act.label:e.action}`;
+    const label=id=>labelFor(state.actors.find(a=>a.profile.id===id)?.profile||{name:id});
+    return `${e.ids.map(label).join(' 与 ')} · ${act?act.label:e.action}`;
    }
    const activeActor=state.actors[Math.floor(state.elapsed/4)%state.actors.length];
-   if(activeActor){
-    const name=names(entries.get(activeActor.profile.id).resident);
-    return `${name} · ${activeActor.activityLabel}`;
-   }
+   if(activeActor)return `${labelFor(activeActor.profile)} · ${activeActor.activityLabel}`;
    return '居民正在各自家园与广场间自主漫步';
   },
  };
