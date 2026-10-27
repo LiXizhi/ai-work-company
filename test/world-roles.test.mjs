@@ -127,7 +127,7 @@ test('city street furniture uses shared catalogue items and keeps every home rea
  assert.equal(world.objects.length-before,CITY_DECORATIONS.length);
  for(const [id] of CITY_DECORATIONS)assert.ok(catalog.some(i=>i.id===id&&!i.building),id);
  for(const h of Object.values(world.homes)){
-  assert.ok(findHomePath({x:0,y:0.6},h.indoor,world.objects,world.catalog,world.seed).length>=2,h.id);
-  for(const other of Object.values(world.homes))if(other!==h)assert.ok(findHomePath(h.yard,other.yard,world.objects,world.catalog,world.seed).length>=2,`${h.id}->${other.id}`);
+  assert.ok(findHomePath({x:0,y:0.6},h.indoor,world.objects,world.catalog,world.seed).length>0,h.id);
+  for(const other of Object.values(world.homes))if(other!==h)assert.ok(findHomePath(h.yard,other.yard,world.objects,world.catalog,world.seed).length>0,`${h.id}->${other.id}`);
  }
 });

@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI Work Company · 管理后台</title><link rel="stylesheet" href="/ui-tokens.css"><link rel="stylesheet" href="/admin/style.css"></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI Work Company · 管理后台</title><link rel="stylesheet" href="../ui-tokens.css"><link rel="stylesheet" href="../admin/style.css"></head>
 <body>
-<header><a href="/" class="brand"><img src="/favicon.svg" alt="" width="30" height="30"><span>AI Work Company</span></a><span class="badge">运营工作台</span><button id="logout" hidden>退出登录</button></header>
+<header><a href="../" class="brand"><img src="../favicon.svg" alt="" width="30" height="30"><span>AI Work Company</span></a><span class="badge">运营工作台</span><button id="logout" hidden>退出登录</button></header>
 <main>
 <section id="login" class="login card"><p class="eyebrow">OPERATOR ACCESS</p><h1>让好员工，<br>开始下一份工作。</h1><p>配置模型与参考价格，发布试用任务，审核服务价值与录用资格。</p><form id="login-form"><label>管理员凭据<input id="credential" type="password" required autocomplete="off" placeholder="输入服务器配置的管理员 Token"></label><button class="primary">进入管理后台 →</button></form><p class="muted">仅连接当前自托管服务。凭据只保留在本页内存中，刷新页面后需重新登录。Worker / Consumer Token 无管理权限。</p></section>
 <p id="notice" role="status" aria-live="polite"></p>
@@ -18,4 +18,4 @@
 <section id="audit" class="panel" hidden><div class="section-title"><h2>操作记录</h2><span>管理页操作与业务变更原子保存，不可覆盖</span></div><div id="audit-list" class="table-wrap"></div><div id="audit-pages"></div></section>
 </div>
 <footer>AI Work Company · 自托管后台 · 独立审核始终是录用条件</footer>
-</main><script src="/admin/app.js" type="module"></script></body></html>
+</main><script src="../admin/app.js" type="module"></script></body></html>

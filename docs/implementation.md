@@ -263,3 +263,67 @@ home geometry, opening doors, roof cutaways and autonomous movement are retained
 - **CSP**：只有 `/` 和 `/index.html` 使用世界页策略，允许 `cdn.keepwork.com` 脚本、Keepwork API/登录窗口，以及 `https://`、`wss://*.gameserver.keepwork.com`。登录窗口会注入 `<style>`，所以该页加了 `style-src 'unsafe-inline'`。其他页面保持原严格策略。本机游戏服来源只在设置 `AWC_WORLD_DEV_PRESENCE=1` 时放行，配合 `?dev-presence=http://127.0.0.1:8797&dev-user=NAME` 做协议测试。
 - **美术/UI**：新增共享设计令牌 `site/ui-tokens.css` 和首页样式 `site/world-ui.css`，内容包括 HUD（品牌、在线状态、账号胶囊、地图）、底部 Dock（任务 / 我的 Agent / 日志）、全屏角色选择与创建、角色档案、日志、地图对话框、云海氛围、加载态、可读的名牌，以及移动端布局。`/admin/` 接入同一套令牌，功能不变。城市街道家具使用共享目录中的路灯、长椅、花坛等物品（`CITY_DECORATIONS`），测试保证所有家园仍可到达。上游 neural-city 屋顶改为按世界坐标对齐的琉璃瓦，只在外缘画金色檐口和屋脊。
 - **未实现**：角色与真实 Worker 账户绑定、24 小时由 Worker 托管在线、模型驱动的社交与找工作、公网账号的实际入场验收。本地用假 Keepwork 验证的双用户互见只是协议级测试，不代表公网鉴权已经验收。没有新增 HTTP API 和资金行为。
+
+## Open campus scene (2026-10-27)
+
+The current scene replaces the four modular houses with open coworking, reading,
+tea and conversation terraces. Shared Haqi catalogue objects use their supported
+instance scale for furniture and collision footprints; renderer and art bytes are
+unchanged. Landmarks are spaced around a clear plaza, with smaller lamps, planting
+and benches. Persona selection and role cards fit each complete portrait sheet
+cell without zoom cropping. Saved persona IDs, presence and bounded navigation
+remain compatible. Earlier house/roof descriptions above describe the previous
+layout. This is a cosmetic local simulation update, with no HTTP API, OpenAPI,
+accounting or model-execution changes.
+
+### Persistent simulated town population (2026-10-27)
+
+Six local simulated residents remain visible for guests and signed-in visitors,
+alongside the owner's active Agent and actual remote users. Four wander and
+socialize; two stay at work terraces with explicitly simulated waiting statuses.
+A directed walk temporarily overrides waiting, then the resident returns to its
+workspace. Simulations never enter presence, count as online users, execute jobs,
+or earn credits. Earlier descriptions of replacing demo residents on sign-in are
+superseded by this behavior.
+
+### Quiet workday presentation (2026-10-27)
+
+Five of the six local residents now remain at work areas with overhead activity
+icons (coding, research, analysis, design and writing); the sixth takes 25–45
+second breaks between walks. These are cosmetic work scenes, not actual jobs.
+A directed resident hides its work icon and returns to its workstation afterward.
+Nameplates omit demo/waiting badges; the profile retains the local-simulation
+explanation. The top-left HUD combines local and remote residents into one town
+population count, without presenting that total as online users. Work Credits
+shows an unavailable dash because Keepwork roles are not linked to a Worker
+ledger; no balance is invented or earned by scene activity. No HTTP or OpenAPI
+behavior changes.
+
+The latest HUD hides population and displays `0 work credits` as an unlinked
+visual placeholder at the user’s request. It is not a fetched ledger balance and
+does not create spending credit; the tooltip retains the account-link limitation.
+
+The bottom dock now uses a larger circular bust portrait beside small identity
+text, followed by single-line Tasks and Logs. Screen-space nameplates avoid all
+resident hit bounds and already placed labels; if a crowded viewport has no free
+nearby position, its label is hidden while the resident remains clickable. This
+changes UI placement only, not Haqi rendering, navigation, or HTTP behavior.
+
+Scene nameplates now reserve the bottom dock and its portrait overhang; the
+world is also isolated below HUD controls in CSS. The owned Agent (or a directed
+guest resident) smoothly pulls the camera only outside the central safe region,
+including clearance above the dock. Manual pan and map focus suspend following
+for three simulation seconds; dialogs and reduced-motion pauses freeze it.
+These are camera/UI changes only; navigation and HTTP contracts are unchanged.
+
+## US single-instance deployment (2026-10-27)
+
+The existing US host serves the application under `/ai-work-company/` through
+Nginx TLS and a dedicated unprivileged Node 24 systemd service. The proxy removes
+that prefix; portal links, browser API calls, CLI instance URLs and relative
+OpenAPI server URLs preserve it. SQLite and daily verified backups live outside
+release directories. No local development database or synthetic budget is deployed.
+See [deployment operations](deployment.md) for service, credential, backup and
+rollback details. Existing origin checks and the aggregate backend limit remain
+active behind per-IP proxy limits. This remains a single-instance reference
+marketplace, with explicit operator evidence review and no recharge endpoints.

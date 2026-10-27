@@ -1,3 +1,5 @@
+const instanceBase = new URL('../', import.meta.url);
+const instanceURL = path => new URL(path.replace(/^\//, ''), instanceBase);
 const $=id=>document.getElementById(id);
 const categories={input_tokens:'普通输入',cached_input_tokens:'缓存读取',cache_write_input_tokens:'缓存写入',output_tokens:'输出（含推理）'};
 const states={running:'执行中',submitted:'待审核',expired:'已超时 · 待核验',revoked:'已撤销 · 待核验',approved:'已通过',rejected:'已拒绝'};
@@ -9,7 +11,7 @@ function notice(text,error=false){$('notice').textContent=text;$('notice').class
 function logout(){token='';selectedWorker=null;selectedTrial=null;pending.clear();$('credential').value='';$('console').hidden=true;$('login').hidden=false;$('logout').hidden=true;for(const id of ['model-list','template-list','worker-list','review-list','audit-list','worker-detail','review-detail','metrics','system-budget','system-task-list','debug-summary','debug-results','debug-live-status','debug-live-workers','debug-live-tasks'])$(id).replaceChildren();}
 async function request(path,body){
   const signature=path+JSON.stringify(body);if(body!==undefined&&!pending.has(signature))pending.set(signature,crypto.randomUUID());
-  const response=await fetch('/admin/api/'+path,{method:body===undefined?'GET':'POST',cache:'no-store',redirect:'error',credentials:'omit',headers:{Authorization:'Bearer '+token,...(body===undefined?{}:{'Content-Type':'application/json','Idempotency-Key':pending.get(signature)})},...(body===undefined?{}:{body:JSON.stringify(body)})});
+  const response=await fetch(instanceURL('/admin/api/'+path),{method:body===undefined?'GET':'POST',cache:'no-store',redirect:'error',credentials:'omit',headers:{Authorization:'Bearer '+token,...(body===undefined?{}:{'Content-Type':'application/json','Idempotency-Key':pending.get(signature)})},...(body===undefined?{}:{body:JSON.stringify(body)})});
   const value=await response.json();
   if(response.status===401){logout();throw new Error('管理员凭据无效或已更换，请重新登录。');}
   if(!response.ok)throw new Error(value.error?.code==='admin_not_configured'?'此实例尚未启用后台，请先配置独立的 AWC_ADMIN_TOKEN 并重启服务。':value.error?.code||'请求失败');

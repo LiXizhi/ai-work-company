@@ -1,11 +1,10 @@
 // Company-authored placements; all geometry, collisions and rendering are Haqi home objects.
 export const CITY_PLACEMENTS=[
- {id:'observatory',name:'观星台',x:-10,y:-4.6},
- {id:'memory',name:'记忆花园',x:-2,y:-4.6},
- {id:'library',name:'知识图书馆',x:5,y:-4.6},
- {id:'welcome',name:'入职小站',x:-15,y:3},
- {id:'workshop',name:'灵感工坊',x:15,y:5},
- {id:'fountain',name:'晶体喷泉',x:-1,y:-1.5},
+ {id:'observatory',name:'观星台',x:-11,y:-5},
+ {id:'memory',name:'记忆花园',x:-2,y:-8},
+ {id:'library',name:'知识图书馆',x:7,y:-5},
+ {id:'welcome',name:'入职小站',x:-17,y:7},
+ {id:'workshop',name:'灵感工坊',x:15,y:7},
 ];
 export function installCityLandmarks(world,items){
  for(const p of CITY_PLACEMENTS){
@@ -20,28 +19,16 @@ export function installCityLandmarks(world,items){
 // Street furniture from the shared home catalogue (lamps, benches, beds of flowers).
 // Positions were chosen to keep every home reachable; see test/world-roles.test.mjs.
 export const CITY_DECORATIONS=[
- ['street-lamp',-20,-2.9],
- ['rose-bush',-20,8],
- ['garden-bench',-20,11.6],
- ['flower-bed',-17,11.6],
- ['flower-bed',-14,8],
- ['rose-bush',-14,11.6],
- ['street-lamp',-11,11.6],
- ['street-lamp',13,8],
- ['flower-bed',13,11.6],
- ['garden-bench',16,1.4],
- ['street-lamp',19,-2.9],
- ['flower-bed',19,11.6],
- ['street-lamp',-17,-10],
- ['flower-bed',17,-10],
- ['flower-bed',-17,14],
- ['street-lamp',17,14],
- ['flower-bed',-17,17],
- ['rose-bush',17,17],
- ['street-lamp',17,20]
+ ['street-lamp',-10,1,.48],['street-lamp',10,1,.48],
+ ['flower-bed',-10,6,.38],['flower-bed',10,6,.38],
+ ['garden-bench',-7,-1,.55],['garden-bench',5,-1,.55],
+ ['flower-bed',-4,-2,.38],['flower-bed',4,-2,.38],
+ ['street-lamp',-10,13,.48],['street-lamp',10,13,.48],
+ ['garden-bench',-7,15,.55],['garden-bench',5,15,.55],
+ ['rose-bush',-10,16,.4],['rose-bush',10,16,.4],
 ];
 export function installCityDecorations(world){
- CITY_DECORATIONS.forEach(([itemId,x,y],i)=>{
-  if(world.catalog.some(item=>item.id===itemId))world.objects.push({id:`city-deco-${i}`,itemId,x,y,rotation:0,sizeScale:.7});
+ CITY_DECORATIONS.forEach(([itemId,x,y,sizeScale],i)=>{
+  if(world.catalog.some(item=>item.id===itemId))world.objects.push({id:`city-deco-${i}`,itemId,x,y,rotation:0,sizeScale});
  });
 }

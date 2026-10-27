@@ -3,7 +3,7 @@
 body{overflow:hidden;background:#cfe6e2}
 .world-shell{position:relative;height:100svh;overflow:hidden;background:
   radial-gradient(120% 90% at 50% 45%,#fbf6e4 0%,#eef0dc 45%,#cfe5df 80%,#b9d9d6 100%)}
-.world-viewport{position:absolute;inset:0;overflow:hidden;cursor:grab;touch-action:none}
+.world-viewport{position:absolute;z-index:0;inset:0;overflow:hidden;cursor:grab;touch-action:none}
 .world-viewport.dragging{cursor:grabbing}
 .world-stage{position:absolute;inset:0}
 #world-canvas{display:block;width:100%;height:100%;opacity:0;transition:opacity var(--slow) var(--ease)}
@@ -73,8 +73,8 @@ body{overflow:hidden;background:#cfe6e2}
 .round-btn .icon{width:24px;height:24px}
 .round-btn:hover{color:var(--teal-700)}
 
-.dock{position:absolute;z-index:6;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:4px;padding:6px;border-radius:20px}
-.dock a,.dock button{display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:14px;font-size:15px;font-weight:600;color:var(--ink-700);transition:background var(--fast),color var(--fast)}
+.dock{position:fixed;z-index:6;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:min(480px,calc(100% - 24px));gap:4px;padding:6px;border-radius:20px}
+.dock a,.dock button{display:flex;align-items:center;justify-content:center;min-width:0;white-space:nowrap;gap:8px;padding:12px 8px;border-radius:14px;font-size:15px;font-weight:600;color:var(--ink-700);transition:background var(--fast),color var(--fast)}
 .dock a:hover,.dock button:hover{background:rgba(255,255,255,.9);color:var(--teal-700)}
 .dock .icon{color:var(--teal-500)}
 
@@ -180,8 +180,9 @@ body{overflow:hidden;background:#cfe6e2}
   .account-text{display:none}.account-pill{padding:4px}
   .round-btn{width:46px;height:46px}
   .hud-right{gap:8px}
-  .dock{left:12px;right:12px;transform:none;display:grid;grid-template-columns:repeat(3,1fr)}
-  .dock a,.dock button{justify-content:center;flex-direction:column;gap:3px;padding:9px 4px;font-size:12.5px}
+  .dock{gap:2px;padding:5px}
+  .dock a,.dock button{flex-direction:row;gap:5px;padding:11px 2px;font-size:12px}
+  .dock .icon{width:18px;height:18px}
   .toast{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 86px)}
   .roles-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .role-card{min-height:280px}.role-card .avatar-art{min-height:170px}
@@ -191,4 +192,52 @@ body{overflow:hidden;background:#cfe6e2}
   .portrait-wrap{min-height:240px}
   .name-input{flex-direction:column}
   .nameplate{font-size:11.5px}
+}
+
+/* Fit a complete 519.75 × 756 portrait cell at every card width. */
+.persona-option .avatar-art,.role-card .avatar-art{
+  flex:none;width:min(100%,165px);height:auto;min-height:0;
+  aspect-ratio:519.75 / 756;background-size:400% 100%;
+}
+.portrait-wrap .avatar-art{
+  inset:12px 0 30px;margin:auto;width:auto;height:calc(100% - 42px);
+  max-width:100%;aspect-ratio:519.75 / 756;background-size:400% 100%;
+}
+
+/* Display-only credits; the Worker ledger remains unconnected. */
+.town-stats{display:flex;align-items:center;gap:16px;padding:12px 16px;border-radius:18px}
+.town-stats p{display:flex;align-items:center;gap:8px;margin:0;white-space:nowrap;font-size:14px;color:var(--ink-700)}
+.town-stats .icon{color:var(--teal-600);width:20px;height:20px}
+.town-credits{padding:0}
+.town-credits>span{color:var(--gold-600);font-size:22px}
+.town-credits strong{font-size:20px;font-variant-numeric:tabular-nums}
+.town-credits small{font-size:10px;color:var(--ink-500)}
+.work-indicator{position:absolute;left:50%;top:0;transform:translate(-50%,-65%);display:grid;place-items:center;width:30px;height:30px;font-size:18px;border-radius:10px;background:rgba(255,253,241,.96);border:1px solid var(--gold-300);box-shadow:0 3px 10px #20393a20;pointer-events:none}
+.work-indicator::after{content:'';position:absolute;bottom:-4px;width:6px;height:6px;background:var(--teal-500);border:2px solid #fff;border-radius:50%}
+@media(max-width:640px){.town-stats{padding:9px 11px;gap:10px}.town-stats p{font-size:12px}.town-credits{padding:0}.town-credits small{font-size:10px}}
+
+/* Ivory ribbon and inset portrait medallion, kept in one quiet horizontal row. */
+.hud-right{align-items:flex-start}
+.dock{grid-template-columns:minmax(0,1.8fr) repeat(2,minmax(0,1fr));width:min(500px,calc(100% - 48px));align-items:stretch;padding:7px 10px 7px 7px;gap:4px;border-radius:25px;border:1px solid #cfb575;background:linear-gradient(110deg,#fffaf0 0%,#fbf7ea 58%,#edf3e8 100%);box-shadow:inset 0 0 0 3px #fffdf4,0 8px 26px #254c3b24;overflow:visible}
+.dock::before{content:'';position:absolute;inset:6px;border:1px solid #cbb77955;border-radius:19px;pointer-events:none}
+.dock::after{content:'✦';position:absolute;right:12px;top:-8px;padding:0 5px;font-size:12px;line-height:14px;color:#b99a55;background:#fbf8ee;pointer-events:none}
+.dock .dock-resident{position:relative;display:flex;flex-direction:row;justify-content:flex-start;align-items:center;gap:8px;min-height:66px;padding:8px 10px 8px 84px;border-radius:18px;background:linear-gradient(90deg,#e7eddf88,transparent)}
+.dock .dock-resident:hover{background:linear-gradient(90deg,#d9e8d9bb,transparent)}
+.dock-resident .account-avatar{position:absolute;left:-20px;top:50%;transform:translateY(-50%);width:88px;height:88px;border:2px solid #c6a153;border-radius:50%;overflow:hidden;background-color:#eee7d2;box-shadow:0 0 0 4px #fffaf0,0 0 0 5px #ccb779,0 5px 12px #3b4a3828;transition:box-shadow var(--fast)}
+.dock-resident:hover .account-avatar{box-shadow:0 0 0 4px #fffaf0,0 0 0 5px #b49142,0 5px 16px #3b4a3838}
+.dock-resident.has-role .account-avatar{background-image:url('assets/persona-portraits.png');background-repeat:no-repeat;background-size:600% auto}
+.dock .dock-resident .account-text{display:grid;gap:5px;line-height:1.2;text-align:left;min-width:0}
+.dock-resident .account-text strong{font-family:var(--font-serif);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dock-resident .account-text small{font-size:9px;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dock #tasks-link,.dock #logs-toggle{position:relative;gap:9px;padding:12px 4px;border-radius:16px;font-size:14px}
+.dock #tasks-link::before{content:'';position:absolute;left:0;top:22%;bottom:22%;width:1px;background:linear-gradient(transparent,#bfa66c66,transparent)}
+.dock #tasks-link:hover,.dock #logs-toggle:hover{background:#e2ebe266}
+.dock .icon{color:#538a7f}
+@media(max-width:640px){
+ .dock{padding:6px 8px 6px 6px;gap:2px;border-radius:22px}
+ .dock .dock-resident{min-height:60px;padding:6px 5px 6px 65px}
+ .dock-resident .account-avatar{left:-17px;width:72px;height:72px}
+ .dock-resident .account-text strong{font-size:12px}
+ .dock-resident .account-text small{font-size:8px;letter-spacing:0}
+ .dock #tasks-link,.dock #logs-toggle{font-size:12px;gap:5px}
 }

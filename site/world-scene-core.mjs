@@ -1,6 +1,5 @@
 import {socialFacing} from './vendor/haqi/adventure_social_motion_core.js';
-import {createHome,chunkKey,canPlace,validateHomePart,homeRoadAt,homeBridgeAt} from './vendor/haqi/home_core.js';
-import {roofAt,buildingItem} from './vendor/haqi/home_building_core.js';
+import {createHome,canPlace,validateHomePart,homeRoadAt,homeBridgeAt} from './vendor/haqi/home_core.js';
 import {applyHomeAction,homeObjects} from './vendor/haqi/home_actions_core.js';
 import {findHomePath,isHomePassable,stepHomeWalk,surfaceAtHome} from './vendor/haqi/home_walk_core.js';
 
@@ -39,75 +38,21 @@ export const DEFAULT_HOME_CATALOG=[
  {id:'stone-chimney',zh:'石烟囱',en:'stone chimney',category:'outdoor',layer:'solid',size:[1,1]},
 ];
 
+// Open campus destinations retain persona IDs for saved roles and presence.
+// These are shared terraces, not private houses or persistent property.
 export const AGENT_HOME_BLUEPRINTS=[
- {
-  id:'astra',name:'钟楼画室',templateId:'wood',x:-9,y:2,w:7,h:6,
-  door:{x:-5.5,y:7.2,label:'画室门前'},
-  indoor:{x:-5.5,y:5.5,label:'钟楼画室'},
-  yard:{x:-5.5,y:8.6,label:'画室花院'},
-  roof:[
-   {id:'astra-chimney',itemId:'brick-chimney',x:-8,y:3},
-   {id:'astra-windmill',itemId:'roof-windmill',x:-4,y:3},
-  ],
-  items:[
-   {id:'astra-bed',itemId:'bed',x:-8,y:3,color:'green'},
-   {id:'astra-desk',itemId:'desk',x:-5,y:3},
-   {id:'astra-chair',itemId:'chair',x:-4.5,y:4.2},
-   {id:'astra-lamp',itemId:'floor-lamp',x:-8,y:5.5},
-   {id:'astra-flower',itemId:'flower',x:-9,y:8.2},
-   {id:'astra-lantern',itemId:'garden-lantern',x:-4,y:8.2},
-  ],
- },
- {
-  id:'claude',name:'白鸽书屋',templateId:'wood',x:2,y:2,w:7,h:6,
-  door:{x:5.5,y:7.2,label:'书屋门前'},
-  indoor:{x:5.5,y:5.5,label:'白鸽书屋'},
-  yard:{x:5.5,y:8.6,label:'向日葵院'},
-  roof:[
-   {id:'claude-chimney',itemId:'brick-chimney',x:3,y:3},
-  ],
-  items:[
-   {id:'claude-bed',itemId:'bed',x:3,y:3,color:'orange'},
-   {id:'claude-desk',itemId:'desk',x:6,y:3},
-   {id:'claude-chair',itemId:'chair',x:6.5,y:4.2},
-   {id:'claude-fire',itemId:'fireplace',x:6,y:5.5},
-   {id:'claude-sunflower',itemId:'sunflower',x:6.8,y:8.2},
-   {id:'claude-mailbox',itemId:'mailbox',x:2,y:8.2},
-  ],
- },
- {
-  id:'deepseek',name:'深海食坊',templateId:'wood',x:-9,y:12,w:7,h:6,
-  door:{x:-5.5,y:17.2,label:'食坊门前'},
-  indoor:{x:-5.5,y:15.5,label:'深海食坊'},
-  yard:{x:-5.5,y:18.6,label:'喷泉庭院'},
-  roof:[
-   {id:'deepseek-windmill',itemId:'roof-windmill',x:-4,y:13},
-  ],
-  items:[
-   {id:'deepseek-bed',itemId:'bed',x:-8,y:13,color:'blue'},
-   {id:'deepseek-table',itemId:'table',x:-5.8,y:13},
-   {id:'deepseek-oven',itemId:'oven',x:-8,y:15.5},
-   {id:'deepseek-chair',itemId:'chair',x:-4,y:15.5},
-   {id:'deepseek-fountain',itemId:'fountain',x:-9,y:18.2},
-  ],
- },
- {
-  id:'gemini',name:'双子星居',templateId:'stone',x:2,y:12,w:8,h:8,
-  door:{x:5.5,y:18.2,label:'星居门前'},
-  indoor:{x:5.5,y:16,label:'双子星居'},
-  yard:{x:5.5,y:19.6,label:'星灯庭院'},
-  roof:[
-   {id:'gemini-chimney',itemId:'stone-chimney',x:3,y:13},
-  ],
-  items:[
-   {id:'gemini-bed',itemId:'bed',x:3,y:13,color:'purple'},
-   {id:'gemini-sofa',itemId:'sofa',x:6.5,y:13,color:'purple'},
-   {id:'gemini-piano',itemId:'piano',x:6.5,y:15.5},
-   {id:'gemini-tv',itemId:'television',x:3,y:16},
-   {id:'gemini-lantern',itemId:'garden-lantern',x:7.5,y:20.2},
-   {id:'gemini-swing',itemId:'swing',x:1.5,y:20.2},
-  ],
- },
+ {id:'astra',name:'共创工作台',x:-9,y:2,w:6,h:4,
+  door:{x:-3,y:5,label:'共创入口'},indoor:{x:-5.5,y:4.5,label:'共创工作台'},yard:{x:-4,y:7,label:'灵感步道'},
+  items:[{id:'astra-desk',itemId:'desk',x:-8,y:2.5,sizeScale:.8},{id:'astra-chair',itemId:'chair',x:-7.5,y:3.7,sizeScale:.8},{id:'astra-desk-2',itemId:'desk',x:-5,y:2.5,sizeScale:.8}]},
+ {id:'claude',name:'露天阅览室',x:3,y:2,w:6,h:4,
+  door:{x:3,y:5,label:'阅览入口'},indoor:{x:5.5,y:4.5,label:'露天阅览室'},yard:{x:4,y:7,label:'阅读花园'},
+  items:[{id:'claude-desk',itemId:'desk',x:6,y:2.5,sizeScale:.8},{id:'claude-chair',itemId:'chair',x:6.5,y:3.7,sizeScale:.8},{id:'claude-sofa',itemId:'sofa',x:3.5,y:2.5,sizeScale:.8}]},
+ {id:'deepseek',name:'午后茶庭',x:-9,y:9,w:6,h:4,
+  door:{x:-3,y:11,label:'茶庭入口'},indoor:{x:-5.5,y:11.5,label:'午后茶庭'},yard:{x:-4,y:14,label:'河岸散步'},
+  items:[{id:'deepseek-table',itemId:'table',x:-8,y:9.5,sizeScale:.7},{id:'deepseek-chair',itemId:'chair',x:-7.4,y:11,sizeScale:.8}]},
+ {id:'gemini',name:'星光会客厅',x:3,y:9,w:6,h:4,
+  door:{x:3,y:11,label:'会客入口'},indoor:{x:5.5,y:11.5,label:'星光会客厅'},yard:{x:4,y:14,label:'星光步道'},
+  items:[{id:'gemini-sofa',itemId:'sofa',x:6,y:9.5,sizeScale:.8},{id:'gemini-table',itemId:'table',x:6,y:11.5,sizeScale:.55}]},
 ];
 
 function emptyChunkParts(){
@@ -115,13 +60,9 @@ function emptyChunkParts(){
 }
 
 function applyBlueprint(parts,bp,catalog,seed){
- const tplReceipt=`tpl-${bp.id}`;
- parts[`receipt:${tplReceipt}`]={completed:false};
- applyHomeAction(parts,{type:'template',receipt:tplReceipt,templateId:bp.templateId,x:bp.x,y:bp.y,prefix:`${bp.id}-house`,seed},catalog);
- const current=homeObjects(parts);
- for(const deco of bp.roof){
-  const roof=roofAt(deco,current,catalog);
-  applyHomeAction(parts,{type:'place',object:{...deco,parentId:roof.id,properties:{surface:'roof'}}},catalog);
+ // Shared floor tiles give each activity terrace a quiet, walkable footprint.
+ for(let y=bp.y;y<bp.y+bp.h;y++)for(let x=bp.x;x<bp.x+bp.w;x++){
+  applyHomeAction(parts,{type:'place',object:{id:`${bp.id}-terrace-${x}-${y}`,itemId:'build-stone-floor',x,y}},catalog);
  }
  for(const item of bp.items){
   applyHomeAction(parts,{type:'place',object:item},catalog);
@@ -183,9 +124,9 @@ export function createPlaza(catalog=DEFAULT_HOME_CATALOG){
   {id:'welcome',name:'入职小站',cellX:0,cellY:-5.2,x:0,y:-5.2*CELL_PX},
   {id:'workshop',name:'灵感工坊',cellX:-0.5,cellY:9.6,x:-0.5*CELL_PX,y:9.6*CELL_PX},
   {id:'memory',name:'记忆花园',cellX:9.2,cellY:0,x:9.2*CELL_PX,y:0},
-  {id:'observatory',name:'观星台 · 钟楼画室',cellX:-5.5,cellY:5.5,x:-5.5*CELL_PX,y:5.5*CELL_PX},
-  {id:'library',name:'图书馆 · 白鸽书屋',cellX:5.5,cellY:5.5,x:5.5*CELL_PX,y:5.5*CELL_PX},
-  {id:'home',name:'我的家园',cellX:-0.5,cellY:5.2,x:-0.5*CELL_PX,y:5.2*CELL_PX},
+  {id:'observatory',name:'共创工作台',cellX:-5.5,cellY:5.5,x:-5.5*CELL_PX,y:5.5*CELL_PX},
+  {id:'library',name:'露天阅览室',cellX:5.5,cellY:5.5,x:5.5*CELL_PX,y:5.5*CELL_PX},
+  {id:'home',name:'共享校园',cellX:-0.5,cellY:5.2,x:-0.5*CELL_PX,y:5.2*CELL_PX},
   ...Object.values(homes).map(h=>({
    id:`home-${h.id}`,
    residentId:h.id,
@@ -261,6 +202,12 @@ function syncActorWorldPosition(actor,world){
 }
 
 function planAutonomousNext(actor,world){
+ if(actor.profile.workSpot){
+  const spot=actor.profile.workSpot;
+  actor.route=Math.hypot(actor.cell.x-spot.x,actor.cell.y-spot.y)>.15?findHomePath(actor.cell,spot,world.objects,world.catalog,world.seed):[];
+  actor.activityLabel=actor.profile.workLabel;
+  return true;
+ }
  const schedule=actor.schedule||[];
  for(let tries=0;tries<schedule.length;tries++){
   actor.routineIndex=(actor.routineIndex+1)%schedule.length;
@@ -276,6 +223,19 @@ function planAutonomousNext(actor,world){
  return false;
 }
 
+// Always local: these residents are never registered or published as online users.
+export function createTownCast(personas,owned=[]){
+ const jobs=[
+  {workSpot:{x:-7.5,y:4.8},workLabel:'编写代码',workIcon:'💻'},
+  {workSpot:{x:5.5,y:4.5},workLabel:'整理资料',workIcon:'📚'},
+  {workSpot:{x:-5.5,y:11.5},workLabel:'分析数据',workIcon:'📊'},
+ ];
+ return [...owned,...personas.map((r,i)=>({id:r.id,persona:r.id,kind:'demo',name:r.name,homeId:r.id,homeIndex:i,...jobs[i]})),
+  {id:'demo-waiting-astra',persona:'astra',kind:'demo',name:'小禾',homeId:'astra',homeIndex:0,workSpot:{x:-4,y:5.5},workLabel:'绘制设计',workIcon:'🎨'},
+  {id:'demo-waiting-claude',persona:'claude',kind:'demo',name:'书言',homeId:'gemini',homeIndex:3,workSpot:{x:5.5,y:11.5},workLabel:'撰写文稿',workIcon:'✍️'},
+ ];
+}
+
 export function createResidents(world,profiles){
  const actors=profiles.map((profile,i)=>{
   // Owned roles live in their persona's home; demo residents use their own id.
@@ -283,7 +243,7 @@ export function createResidents(world,profiles){
   const index=Number.isInteger(profile.homeIndex)?profile.homeIndex:i;
   const own=world.homes[homeKey]||Object.values(world.homes)[index%4];
   const schedule=buildSchedule(world,homeKey,index);
-  const startSpot=i%2===0?own.indoor:own.yard;
+  const startSpot=profile.workSpot?{...profile.workSpot,label:profile.workLabel}:(i%2===0?own.indoor:own.yard);
   const actor={
    profile:{...profile},
    homeId:own.id,
@@ -408,10 +368,11 @@ function stepSingleActor(actor,world,dt,held){
   }
   return;
  }
+ if(actor.profile.workSpot){actor.activityLabel=actor.profile.workLabel;return;}
  actor.wait-=dt;
  if(actor.wait<=0){
   if(planAutonomousNext(actor,world)){
-   actor.wait=1.1+(actor.routineIndex%3)*0.45;
+   actor.wait=actor.profile.kind==='demo'?25+(actor.routineIndex%3)*10:1.1+(actor.routineIndex%3)*0.45;
   }else{
    actor.wait=1.5;
   }
@@ -444,7 +405,7 @@ export function stepResidents(state,world,dt,{paused=false}={}){
  for(let i=0;i<state.actors.length;i++){
   for(let j=i+1;j<state.actors.length;j++){
    const a=state.actors[i],b=state.actors[j];
-   if(a.mode==='directed'||b.mode==='directed')continue;
+   if(a.mode==='directed'||b.mode==='directed'||a.profile.workSpot||b.profile.workSpot)continue;
    const distCells=Math.hypot(a.cell.x-b.cell.x,a.cell.y-b.cell.y);
    if(distCells>=1.1&&distCells<=6.5){
     pairs.push({a,b,distCells});
@@ -457,4 +418,16 @@ export function stepResidents(state,world,dt,{paused=false}={}){
  state.gesture={ids:[a.profile.id,b.profile.id],action,at:state.elapsed*1000,until:(state.elapsed+3.2)*1000};
  state.event={type:'gesture',ids:state.gesture.ids,action,sequence:++state.meetings};
  state.nextMeet=state.elapsed+9.5;
+}
+
+// Company camera framing only; world movement still uses shared Haqi navigation.
+export function followCameraEdge(camera,point,viewport,dt,usableBottom=viewport.height-120){
+ const {width,height,scale}=viewport;
+ const padX=Math.min(140,width*.2),top=Math.min(150,height*.3);
+ const bottom=Math.max(top+40,usableBottom-44);
+ const sx=width/2+(point.x-camera.x)*scale,sy=height/2+(point.y-camera.y)*scale;
+ const dx=sx<padX?sx-padX:sx>width-padX?sx-(width-padX):0;
+ const dy=sy<top?sy-top:sy>bottom?sy-bottom:0;
+ const blend=1-Math.exp(-Math.max(0,dt)*7);
+ return {...camera,x:camera.x+dx/scale*blend,y:camera.y+dy/scale*blend};
 }

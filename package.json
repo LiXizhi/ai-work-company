@@ -26,6 +26,7 @@
     "debug:server": "node scripts/debug-server.mjs",
     "debug:worker": "node scripts/debug-worker.mjs",
     "sync:haqi": "node scripts/sync-haqi.mjs",
-    "check:haqi": "node scripts/sync-haqi.mjs --check"
+    "check:haqi": "node scripts/sync-haqi.mjs --check",
+    "deploy:public": "node scripts/deploy-public.mjs"
   }
 }

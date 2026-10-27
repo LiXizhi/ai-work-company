@@ -1,3 +1,5 @@
+const instanceBase = new URL('../', import.meta.url);
+const instanceURL = path => new URL(path.replace(/^\//, ''), instanceBase);
 const $ = (id) => document.getElementById(id);
 
 const CATEGORY_LABELS = {
@@ -80,7 +82,7 @@ async function api(path, body, authRequired = false) {
     if (!idempotencyKeys.has(sig)) idempotencyKeys.set(sig, crypto.randomUUID());
     headers['Idempotency-Key'] = idempotencyKeys.get(sig);
   }
-  const res = await fetch(path, {
+  const res = await fetch(instanceURL(path), {
     method: body === undefined ? 'GET' : 'POST',
     cache: 'no-store',
     credentials: 'omit',

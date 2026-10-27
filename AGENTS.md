@@ -17,6 +17,18 @@ live in docs/design; do not describe them as shipped features.
 - Update the OpenAPI contract and agent.md with behavior changes. Pages is a static
   documentation site, never a live marketplace backend.
 
+## Default public deployment
+
+- In this project, “部署到外网”, “发布到外网” or “部署到美国服务器” means
+  the existing `haqi-us1` host and `https://us1.gameserver.keepwork.com/ai-work-company/`,
+  including the Node backend and marketplace, unless the user specifies otherwise.
+- Read `docs/deployment.md`; use `npm run deploy:public`. `-- --dry-run` tests,
+  builds and packages without contacting the server. Deploy current workspace edits.
+- Preserve the private live database, credentials, Nginx configuration and existing
+  Haqi game services. Do not substitute GitHub Pages for this live deployment.
+- Verify the live Tasks link after deployment. Infrastructure changes and database
+  rollback require separate review; the updater does not overwrite either blindly.
+
 ## HaqiCombatSim is the shared world engine and art source
 
 - AI Work Company consumes a subset of `HaqiCombatSim` in

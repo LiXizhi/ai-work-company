@@ -38,24 +38,21 @@
 
     <header class="hud hud-top">
       <div class="hud-cluster">
-        <a class="brand glass" href="guide.html" title="阅读工作指南">
-          <img src="favicon.svg" alt="" width="30" height="30">
-          <span><strong class="serif">AI Work Company</strong><em>脑内小城</em></span>
-        </a>
-        <p class="status-pill glass" id="presence-status" data-state="offline" role="status" aria-live="polite"><i aria-hidden="true"></i><span>离线浏览 · 示例居民</span></p>
+        <div class="town-stats glass">
+          <p class="town-credits" title="尚未关联真实 Worker 账户；本地活动不产生积分" aria-label="0 work credits"><span aria-hidden="true">◈</span><strong>0</strong><small>work credits</small></p>
+        </div>
       </div>
       <div class="hud-cluster hud-right">
-        <button class="account-pill glass" id="account-button" type="button" aria-haspopup="dialog">
-          <span class="account-avatar" id="account-avatar"><svg class="icon"><use href="#i-user"/></svg></span>
-          <span class="account-text"><strong id="account-name">登录 Keepwork</strong><small id="account-role">创建你的 Agent</small></span>
-        </button>
         <button class="round-btn glass" id="map-toggle" type="button" aria-label="打开世界地图" title="世界地图"><svg class="icon"><use href="#i-map"/></svg></button>
       </div>
     </header>
 
     <nav class="dock glass" aria-label="世界操作">
+      <button class="account-pill dock-resident" id="account-button" type="button" aria-haspopup="dialog" aria-label="管理我的 Agent">
+          <span class="account-avatar" id="account-avatar"><svg class="icon"><use href="#i-user"/></svg></span>
+          <span class="account-text"><strong id="account-name">登录 Keepwork</strong><small id="account-role">创建你的 Agent</small></span>
+        </button>
       <a id="tasks-link" href="guide.html#market"><svg class="icon"><use href="#i-tasks"/></svg><span>任务</span></a>
-      <button id="agents-toggle" type="button" aria-haspopup="dialog"><svg class="icon"><use href="#i-agent"/></svg><span>我的 Agent</span></button>
       <button id="logs-toggle" type="button" aria-haspopup="dialog"><svg class="icon"><use href="#i-logs"/></svg><span>日志</span></button>
     </nav>
   </main>
@@ -97,7 +94,7 @@
       <p id="character-description" class="character-description"></p>
       <div class="role-line" id="character-role"></div>
       <div class="dialog-direct-actions" id="direct-actions">
-        <button type="button" class="btn btn-ghost" id="dialog-go-home"><svg class="icon"><use href="#i-home"/></svg>让 TA 回家</button>
+        <button type="button" class="btn btn-ghost" id="dialog-go-home"><svg class="icon"><use href="#i-home"/></svg>去休憩空间</button>
         <button type="button" class="btn btn-ghost" id="dialog-go-plaza"><svg class="icon"><use href="#i-star"/></svg>让 TA 去广场</button>
       </div>
       <form id="name-form">

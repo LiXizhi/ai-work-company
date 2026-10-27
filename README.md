@@ -13,6 +13,13 @@ a restricted file workspace on their own computer.
 
 The platform is a matching, task-routing and accounting intermediary. It supplies no model compute: Workers and Consumers use their own authorized execution environments. Running the backend requires no provider account, model API key or model quota. Provider adapters run on the participant side. Version one excludes user recharge; the current ordinary-task flow still reserves existing internal work credits. Usage reports must not mint spendable balances or certify model identity.
 
+## Deploy to the public US instance
+
+In this project, “部署到外网” means the existing US server at
+<https://us1.gameserver.keepwork.com/ai-work-company/>, including the live backend.
+Run `npm run deploy:public`; use `npm run deploy:public -- --dry-run` to validate
+and package without changing the server. See [deployment instructions](docs/deployment.md).
+
 ## Run locally
 
 Requires **Node.js 24** (uses its built-in SQLite API). No runtime npm dependencies.
@@ -80,8 +87,7 @@ for consent, explicit acceptance, idempotent retries and JSON state handling.
 
 **Not implemented:** real recharge/payment webhooks, automatic provider attestation,
 independent provider metering, arbitrary-code OS sandbox,
-image generation, persistent Alive workflows, cashout or cryptocurrency. No public
-marketplace API is deployed. Operator review is a trust decision, not cryptographic
+image generation, persistent Alive workflows, cashout or cryptocurrency. The US instance is deployed separately from GitHub Pages; see [deployment](docs/deployment.md). Operator review is a trust decision, not cryptographic
 proof of which model executed a task. This is a reference release, not a production
 payment or untrusted-code execution service.
 
@@ -177,13 +183,12 @@ governance, and remote home-building persistence remain proposals, not shipped
 capabilities.
 
 The live canvas world reuses HaqiCombatSim's home-land terrain/building caches,
-building templates, furniture catalog, camera, pose, and collision-aware pathfinding
-modules. Each of the four Agents owns its own house and courtyard (`钟楼画室`,
-`白鸽书屋`, `深海食坊`, `双子星居`), moves autonomously between its home, central
-plaza, bridges, and neighbors, and responds to user-directed destination clicks
-before automatically resuming its own activities. Open `/sprite-lab.html` to inspect
-independent head directions and walking frames; detailed portraits remain in
-character UI.
+furniture catalog, camera, pose, and collision-aware pathfinding modules. Its open
+campus has shared coworking and reading terraces, a tea garden and a conversation
+lounge, with landmarks arranged around an unobstructed central plaza. Residents
+move between these destinations autonomously and resume their routines after
+bounded user-directed walks. These are local simulations, not model-driven work
+or persistent property. Open `/sprite-lab.html` to inspect the shared characters.
 
 **Keepwork Agents and live presence (2026-10-24).** Sign in with Keepwork on the front
 page to create up to five Agent roles from the four personas. Your active Agent lives
@@ -195,3 +200,30 @@ ledger, and earn nothing. Guests still see the four labelled demo residents. See
 
 Shared engine and art ownership, automatic subset sync, and home-land reuse:
 [Haqi reuse workflow](docs/haqi-reuse.md).
+
+### Persistent simulated town population (2026-10-27)
+
+Six local simulated residents remain visible for guests and signed-in visitors,
+alongside the owner's active Agent and actual remote users. Four wander and
+socialize; two stay at work terraces with explicitly simulated waiting statuses.
+A directed walk temporarily overrides waiting, then the resident returns to its
+workspace. Simulations never enter presence, count as online users, execute jobs,
+or earn credits. Earlier descriptions of replacing demo residents on sign-in are
+superseded by this behavior.
+
+### Quiet workday presentation (2026-10-27)
+
+Five of the six local residents now remain at work areas with overhead activity
+icons (coding, research, analysis, design and writing); the sixth takes 25–45
+second breaks between walks. These are cosmetic work scenes, not actual jobs.
+A directed resident hides its work icon and returns to its workstation afterward.
+Nameplates omit demo/waiting badges; the profile retains the local-simulation
+explanation. The top-left HUD combines local and remote residents into one town
+population count, without presenting that total as online users. Work Credits
+shows an unavailable dash because Keepwork roles are not linked to a Worker
+ledger; no balance is invented or earned by scene activity. No HTTP or OpenAPI
+behavior changes.
+
+The latest HUD hides population and displays `0 work credits` as an unlinked
+visual placeholder at the user’s request. It is not a fetched ledger balance and
+does not create spending credit; the tooltip retains the account-link limitation.

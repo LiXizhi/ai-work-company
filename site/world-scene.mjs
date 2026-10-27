@@ -8,7 +8,7 @@ import {drawBuilding} from './vendor/haqi/view_home_building.js';
 import {collectHomeWorldTrees,drawHomeWorldTree,drawHomeObject} from './vendor/haqi/view_home_art.js';
 import {sceneResolution} from './vendor/haqi/scene_resolution_core.js';
 import {installCityLandmarks,installCityDecorations} from './world-map-core.mjs';
-import {createPlaza,createResidents,stepResidents,directResident,CELL_PX} from './world-scene-core.mjs';
+import {followCameraEdge,createPlaza,createTownCast,createResidents,stepResidents,directResident,CELL_PX} from './world-scene-core.mjs?v=20261027-camera';
 
 const ACTOR_SCALE=1.08;
 
@@ -49,22 +49,22 @@ export async function createWorldScene(canvas,rig,labelFor){
  }
 
  const entries=new Map(rig.entries.map(e=>[e.resident.id,e]));
- function profileFor({id,persona,kind,name,homeId,homeIndex,ownerName}){
+ function profileFor({id,persona,kind,name,homeId,homeIndex,ownerName,workSpot,workLabel,workIcon}){
   const entry=entries.get(persona)||rig.entries[0];
-  return {id,persona:entry.resident.id,kind,name,homeId,homeIndex,ownerName,
+  return {id,persona:entry.resident.id,kind,name,homeId,homeIndex,ownerName,workSpot,workLabel,workIcon,
    appearance:'girl',headId:entry.resident.id,bodyId:entry.appearance.bodyId,color:entry.resident.color,
    native:'zh',level:1,school:'life',equipmentGuids:{},equipmentInstances:[]};
  }
- const demoCast=()=>rig.entries.map(({resident:r})=>({id:r.id,persona:r.id,kind:'demo',name:r.name}));
+ const demoCast=(owned=[])=>createTownCast(rig.entries.map(e=>e.resident),owned);
  const state=createResidents(world,demoCast().map(profileFor));
  let remote=[];
  const terrainCache=createHomeTerrainCache({theme:'neural-city'});
  const buildingCache=createHomeBuildingCache({imageFor});
  void createRenderer;
 
- const camera={x:world.center.x,y:60,zoom:0.80};
+ const camera={x:world.center.x,y:180,zoom:0.90};
  let viewport={width:canvas.clientWidth||1280,height:canvas.clientHeight||800,scale:1,pixelRatio:1};
- let last=null;
+ let last=null,manualCameraUntil=0;
  let selectedAgentId=state.actors[0]?.profile.id||null;
 
  function updateViewport(){
@@ -75,7 +75,7 @@ export async function createWorldScene(canvas,rig,labelFor){
    canvas.width=metrics.canvasWidth;
    canvas.height=metrics.canvasHeight;
   }
-  const scale=(metrics.width<650?.82:1)*camera.zoom;
+  const scale=Math.max(.38,Math.min(1,metrics.width/1100,metrics.height/900))*camera.zoom;
   viewport={width:metrics.width,height:metrics.height,scale,pixelRatio:metrics.pixelRatio};
   return viewport;
  }
@@ -125,11 +125,15 @@ export async function createWorldScene(canvas,rig,labelFor){
   ctx.restore();
  }
 
- function render(time,{paused=false}={}){
+ function render(time,{paused=false,usableBottom}={}){
   const dt=last===null?0:Math.min(.055,Math.max(0,time-last));
   last=time;
   stepResidents(state,world,dt,{paused});
   const vp=updateViewport();
+  const followed=state.actors.find(a=>a.profile.kind==='mine')||state.actors.find(a=>a.profile.id===selectedAgentId&&a.mode==='directed');
+  if(!paused&&followed&&state.elapsed>=manualCameraUntil){
+   Object.assign(camera,followCameraEdge(camera,followed.position,vp,dt,usableBottom));
+  }
   const c=canvas.getContext('2d');
   c.save();
   c.setTransform(vp.pixelRatio,0,0,vp.pixelRatio,0,0);
@@ -268,9 +272,9 @@ export async function createWorldScene(canvas,rig,labelFor){
   project:worldToScreen,
   unproject:screenToWorld,
   selectAgent(id){if(state.actors.some(a=>a.profile.id===id))selectedAgentId=id;return selectedAgentId;},
-  /** Replace local cast: demo residents (guest) or the owner's active Agent. */
+  /** Keep the local population alongside the owner’s active Agent. */
   setCast(cast){
-   const next=createResidents(world,(cast||demoCast()).map(profileFor));
+   const next=createResidents(world,demoCast(cast||[]).map(profileFor));
    for(const key of Object.keys(state))delete state[key];
    Object.assign(state,next);
    selectedAgentId=state.actors[0]?.profile.id||null;
@@ -288,6 +292,7 @@ export async function createWorldScene(canvas,rig,labelFor){
    return directResident(state,world,id,targetPoint,options);
   },
   focusHome(homeId){
+   manualCameraUntil=state.elapsed+3;
    const h=world.homes[homeId];
    if(!h)return false;
    camera.x=h.indoor.worldX;
@@ -297,6 +302,7 @@ export async function createWorldScene(canvas,rig,labelFor){
    return true;
   },
   focus(point){
+   manualCameraUntil=state.elapsed+3;
    if(!point)return false;
    camera.x=Number(point.x)||0;
    camera.y=Number(point.y)||0;
@@ -304,6 +310,7 @@ export async function createWorldScene(canvas,rig,labelFor){
    return true;
   },
   focusScene(sceneId){
+   manualCameraUntil=state.elapsed+3;
    const lm=world.landmarks.find(l=>l.id===sceneId);
    if(!lm)return false;
    camera.x=lm.x;
@@ -312,6 +319,7 @@ export async function createWorldScene(canvas,rig,labelFor){
    return true;
   },
   pan(dx,dy){
+   manualCameraUntil=state.elapsed+3;
    const a=screenToWorld(0,0),b=screenToWorld(dx,dy);
    camera.x=Math.max(-1100,Math.min(1100,camera.x+a.x-b.x));
    camera.y=Math.max(-800,Math.min(1200,camera.y+a.y-b.y));
@@ -323,8 +331,8 @@ export async function createWorldScene(canvas,rig,labelFor){
   },
   reset(){
    camera.x=world.center.x;
-   camera.y=0;
-   camera.zoom=0.80;
+   camera.y=180;
+   camera.zoom=0.90;
    updateViewport();
   },
   eventText(){

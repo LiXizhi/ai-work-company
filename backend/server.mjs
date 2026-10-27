@@ -117,7 +117,7 @@ export function openapi() {
   paths['/v1/me'].get.responses[200].description='Wallet: available is unfrozen ledger balance; spendable_minor is available only for platform employer or qualifying_minutes >= required_minutes (120). locked_earnings_minor is gated income. trial_locked_minor is permanent non-spendable approved trial contribution. No recharge or withdrawal.';
   return {
     openapi: '3.1.0', info: { title: 'AI Work Company', version: '0.2.0', description: 'Self-hosted reference API. Bounded continuous local Workers reuse existing lease and idempotency endpoints; independent evidence review and Consumer acceptance remain required. No hosted marketplace API is advertised by the documentation site.' },
-    servers: [{ url: 'http://localhost:5003', description: 'Your local reference server' }], paths: {...paths,...adminOpenapiPaths(),...freeOpenapiPaths()},
+    servers: [{ url: './', description: 'This instance, including any reverse-proxy path prefix' }], paths: {...paths,...adminOpenapiPaths(),...freeOpenapiPaths()},
     components: {
       securitySchemes: { adminBearer: {type:'http',scheme:'bearer',description:'Separate operator credential; account and task tokens are not accepted.'}, bearerAuth: { type: 'http', scheme: 'bearer' }, taskCapability: { type: 'http', scheme: 'bearer', description: 'Claim tool_token, scoped to task and lease epoch; cannot access account APIs.' } },
       schemas: { Error: { type: 'object', required: ['error'], properties: { error: { type: 'object', properties: { code: { type: 'string' }, message: { type: 'string' } } } } } },
