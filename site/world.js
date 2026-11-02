@@ -11,6 +11,7 @@ import {createWorldPresence,gatewayFromQuery} from './world-presence.mjs';
 const $=id=>document.getElementById(id);
 let storage;try{storage=window.localStorage;}catch{storage=null;}
 const personaInfo=Object.fromEntries(residents.map(r=>[r.id,r]));
+const personaPortraits={astra:'assets/avatars/gpt.webp',claude:'assets/avatars/claude.webp',deepseek:'assets/ainiang/2d/fullbody/deepseek-chibi.webp',gemini:'assets/avatars/gemini.webp'};
 const personaLabel={astra:'GPT · OPENAI',claude:'CLAUDE · ANTHROPIC',deepseek:'DEEPSEEK',gemini:'GEMINI · GOOGLE'};
 const motionQuery=matchMedia('(prefers-reduced-motion: reduce)');
 let paused=motionQuery.matches;
@@ -73,8 +74,8 @@ function renderAccount(){
  $('account-role').textContent=account.signedIn?(role?`${personaLabel[role.persona].split(' · ')[0]} · ${account.username}`:'尚未选择 Agent'):'创建你的 Agent';
  avatar.classList.toggle('portrait',Boolean(role));
  $('account-button').classList.toggle('has-role',Boolean(role));
- // Center each enlarged sheet cell inside the circular bust crop.
- avatar.style.backgroundPosition=role?`${(PERSONAS.indexOf(role.persona)*1.5+.25)/5*100}% 4%`:'';
+ if(role){portrait(avatar,role.persona);avatar.style.backgroundSize='cover';avatar.style.backgroundPosition='center 35%';}
+ else{avatar.style.backgroundImage='';avatar.style.backgroundSize='';avatar.style.backgroundPosition='';}
 }
 
 async function signIn({interactive=true}={}){
@@ -104,8 +105,8 @@ async function saveCatalog(next,success){
 
 /* ---------- Roles screen ---------- */
 let pendingRoleId=null,pickedPersona=PERSONAS[0];
-// Exact sheet cells preserve the complete portrait without zoom cropping.
-function portrait(el,persona){const i=PERSONAS.indexOf(persona);el.style.backgroundSize='400% 100%';el.style.backgroundPosition=`${i/3*100}% center`;}
+// Partner artwork is UI presentation; persona IDs and shared world rigs stay stable.
+function portrait(el,persona){el.style.backgroundImage=`url("${personaPortraits[persona]||personaPortraits.astra}")`;el.style.backgroundSize='contain';el.style.backgroundPosition='center';}
 
 function renderRoles(){
  const grid=$('roles-grid');grid.replaceChildren();
