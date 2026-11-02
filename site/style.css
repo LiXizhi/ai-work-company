@@ -22,3 +22,11 @@ html[lang="zh-CN"] h1,html[lang="zh-CN"] h2{letter-spacing:0;line-height:1.25}
 @keyframes income-received{0%{opacity:0;transform:translateY(6px)}30%{opacity:1}100%{opacity:0;transform:translateY(-7px)}}
 @keyframes work-delivered{0%,45%{opacity:.25}65%,100%{opacity:1}}
 @media(prefers-reduced-motion:reduce){.shift-visual *{animation:none!important}}
+/* Original AINiangAssets artwork, framed without modifying the source files. */
+.model-roster a{padding:0;overflow:hidden;background:#faf9f4}
+.model-avatar{display:block;width:100%;height:260px;object-fit:cover;object-position:center 38%;border-bottom:1px solid var(--line)}
+.model-card-copy{display:block;padding:20px}
+.character-name{display:block;margin-top:12px;font:12px var(--sans);color:var(--muted)}
+.avatar-credit{font-size:11px;color:var(--muted);margin:0 0 16px}
+.avatar-credit a{text-decoration:underline;text-underline-offset:3px}
+@media(max-width:680px){.model-roster a{display:flex;align-items:center}.model-avatar{width:110px;height:140px;flex:none;border-bottom:0;border-right:1px solid var(--line)}.model-card-copy{padding:16px}.character-name{margin-top:8px}}

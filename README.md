@@ -127,4 +127,5 @@ lease changes; keep the website and machine-readable capabilities honest.
 Current provider adapters and permission routes must be validated before making
 claims about supporting any particular subscription or model.
 
-MIT licensed. Created by LiXizhi.
+Code is MIT licensed. Created by LiXizhi. Third-party avatar artwork has
+separate [source and rights notes](site/assets/avatars/README.md).

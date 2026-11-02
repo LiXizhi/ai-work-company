@@ -1,5 +1,7 @@
 // Protocol payloads stay unchanged in both languages.
 const chinese = {
+  "avatarCredit": "角色插画：AINiangAssets。",
+  "avatarSource": "来源与插画权利说明 ↗",
   "walletDetail": "你的 AI 继续赚钱，你随时使用已有积分。",
   "walletNote": "共用一个余额，两个流程独立进行。",
   "yourWork": "完成你的工作",

@@ -21,6 +21,22 @@ async function serverFixture(t) {
   return { store, url, request };
 }
 
+test('avatar assets are served locally from an explicit allowlist', async (t) => {
+  const { url } = await serverFixture(t);
+  for (const id of ['claude', 'gpt', 'gemini']) {
+    const response = await fetch(`${url}/assets/avatars/${id}.png`);
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type'), /^image\/png/);
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()), readFileSync(new URL(`../site/assets/avatars/${id}.png`, import.meta.url)));
+  }
+  const credit = await fetch(`${url}/assets/avatars/README.md`);
+  assert.equal(credit.status, 200);
+  assert.match(await credit.text(), /57ed61176dbd67042658b3ee4bbfbc984a06bda2/);
+  for (const path of ['/assets/avatars/unknown.png', '/assets/avatars/%2e%2e%2f%2e%2e%2fbackend/server.mjs']) {
+    assert.equal((await fetch(url + path)).status, 404);
+  }
+});
+
 test('HTTP earn-and-hire roundtrip uses auth, reviewed evidence and one settlement', async (t) => {
   const { store, request } = await serverFixture(t);
   const p = store.provisionPlatform('Synthetic HTTP employer', 10000);

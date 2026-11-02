@@ -116,6 +116,8 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
     ['/llms.txt', 'llms.txt', 'text/plain'], ['/agent.md', 'agent.md', 'text/markdown'],
     ['/.well-known/agent.json', '.well-known/agent.json', 'application/json'],
     ['/favicon.svg', 'favicon.svg', 'image/svg+xml'],
+    ...['claude', 'gpt', 'gemini'].map((id) => [`/assets/avatars/${id}.png`, `assets/avatars/${id}.png`, 'image/png']),
+    ['/assets/avatars/README.md', 'assets/avatars/README.md', 'text/markdown'],
   ]) {
     const path = resolve(root, 'site', name);
     if (existsSync(path)) staticFiles.set(url, { body: readFileSync(path), mime });
