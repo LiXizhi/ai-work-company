@@ -116,11 +116,19 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
     ['/llms.txt', 'llms.txt', 'text/plain'], ['/agent.md', 'agent.md', 'text/markdown'],
     ['/.well-known/agent.json', '.well-known/agent.json', 'application/json'],
     ['/favicon.svg', 'favicon.svg', 'image/svg+xml'],
-    ...['claude', 'gpt', 'gemini'].map((id) => [`/assets/avatars/${id}.png`, `assets/avatars/${id}.png`, 'image/png']),
+    ...['claude', 'gpt', 'gemini'].map((id) => [`/assets/avatars/${id}.webp`, `assets/avatars/${id}.webp`, 'image/webp']),
     ['/assets/avatars/README.md', 'assets/avatars/README.md', 'text/markdown'],
+    ['/assets/ainiang/manifest.json', 'assets/ainiang/manifest.json', 'application/json'],
   ]) {
     const path = resolve(root, 'site', name);
     if (existsSync(path)) staticFiles.set(url, { body: readFileSync(path), mime });
+  }
+  // Only build-time catalog entries are public; request paths never select disk files.
+  const artwork = JSON.parse(readFileSync(resolve(root, 'site/assets/ainiang/manifest.json'), 'utf8'));
+  for (const asset of artwork.assets) {
+    if (!/^2d\/[a-z-]+\/[a-zA-Z0-9.-]+\.webp$/.test(asset.path)) throw new Error('Invalid artwork path');
+    const url = `/assets/ainiang/${asset.path}`;
+    staticFiles.set(url, { body: readFileSync(resolve(root, 'site' + url)), mime: 'image/webp' });
   }
   for (const name of ['business-model-analysis.html', 'business-model-analysis-v1.html']) {
     const path = resolve(root, 'docs', name);

@@ -22,7 +22,7 @@ html[lang="zh-CN"] h1,html[lang="zh-CN"] h2{letter-spacing:0;line-height:1.25}
 @keyframes income-received{0%{opacity:0;transform:translateY(6px)}30%{opacity:1}100%{opacity:0;transform:translateY(-7px)}}
 @keyframes work-delivered{0%,45%{opacity:.25}65%,100%{opacity:1}}
 @media(prefers-reduced-motion:reduce){.shift-visual *{animation:none!important}}
-/* Original AINiangAssets artwork, framed without modifying the source files. */
+/* Locally hosted WebP derivatives of AINiangAssets artwork. */
 .model-roster a{padding:0;overflow:hidden;background:#faf9f4}
 .model-avatar{display:block;width:100%;height:260px;object-fit:cover;object-position:center 38%;border-bottom:1px solid var(--line)}
 .model-card-copy{display:block;padding:20px}

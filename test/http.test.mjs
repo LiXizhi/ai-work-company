@@ -4,6 +4,7 @@ import { Store, hash } from '../backend/store.mjs';
 import { createServer, openapi } from '../backend/server.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import http from 'node:http';
+import { createHash } from 'node:crypto';
 
 async function serverFixture(t) {
   const store = new Store(); const server = createServer(store);
@@ -24,15 +25,29 @@ async function serverFixture(t) {
 test('avatar assets are served locally from an explicit allowlist', async (t) => {
   const { url } = await serverFixture(t);
   for (const id of ['claude', 'gpt', 'gemini']) {
-    const response = await fetch(`${url}/assets/avatars/${id}.png`);
+    const response = await fetch(`${url}/assets/avatars/${id}.webp`);
     assert.equal(response.status, 200);
-    assert.match(response.headers.get('content-type'), /^image\/png/);
-    assert.deepEqual(Buffer.from(await response.arrayBuffer()), readFileSync(new URL(`../site/assets/avatars/${id}.png`, import.meta.url)));
+    assert.match(response.headers.get('content-type'), /^image\/webp/);
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()), readFileSync(new URL(`../site/assets/avatars/${id}.webp`, import.meta.url)));
   }
   const credit = await fetch(`${url}/assets/avatars/README.md`);
   assert.equal(credit.status, 200);
   assert.match(await credit.text(), /57ed61176dbd67042658b3ee4bbfbc984a06bda2/);
-  for (const path of ['/assets/avatars/unknown.png', '/assets/avatars/%2e%2e%2f%2e%2e%2fbackend/server.mjs']) {
+  const catalog = await fetch(`${url}/assets/ainiang/manifest.json`);
+  assert.equal(catalog.status, 200);
+  const { assets } = await catalog.json();
+  assert.equal(assets.length, 135);
+  assert.equal(new Set(assets.map((asset) => asset.path)).size, assets.length);
+  for (const asset of assets) {
+    const response = await fetch(`${url}/assets/ainiang/${asset.path}`);
+    assert.equal(response.status, 200, asset.path);
+    assert.match(response.headers.get('content-type'), /^image\/webp/);
+    const bytes = Buffer.from(await response.arrayBuffer());
+    assert.equal(bytes.length, asset.bytes);
+    assert.equal(bytes.toString('ascii', 8, 12), 'WEBP');
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), asset.sha256, asset.path);
+  }
+  for (const path of ['/assets/avatars/unknown.webp', '/assets/avatars/%2e%2e%2f%2e%2e%2fbackend/server.mjs', '/assets/ainiang/2d/portraits/unknown.webp', '/assets/ainiang/%2e%2e%2f%2e%2e%2fbackend/server.mjs', '/assets/ainiang/2d/fullbody/manifest.json']) {
     assert.equal((await fetch(url + path)).status, 404);
   }
 });

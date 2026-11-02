@@ -1,0 +1,1363 @@
+{
+  "source_repository": "https://github.com/hodokoshitsunagu-arch/AINiangAssets",
+  "source_revision": "57ed61176dbd67042658b3ee4bbfbc984a06bda2",
+  "encoding": {
+    "format": "webp",
+    "quality": 85,
+    "method": 6,
+    "dimensions": "original",
+    "alpha": "lossless"
+  },
+  "assets": [
+    {
+      "source": "2d/action-atlas/claude-anime-scenes.png",
+      "path": "2d/action-atlas/claude-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2835819,
+      "bytes": 329656,
+      "source_sha256": "33758f2741478ed9d506562be57be83d842469bd951b4ec572a6066a24716e37",
+      "sha256": "84caf688d507f8bd4ba304fed00d2bc6feddf9f6a8debb44f69155a88d1783fa"
+    },
+    {
+      "source": "2d/action-atlas/claude-anime-walk.png",
+      "path": "2d/action-atlas/claude-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2136291,
+      "bytes": 184410,
+      "source_sha256": "8e3848a571bbfb6f0d115891b6de31081432c0f90c3fd72167389bfd4368a9a0",
+      "sha256": "0fef142dbc4bdc2ab2a2c93595bface0b5156a43e550bbabe05bc808be08f7be"
+    },
+    {
+      "source": "2d/action-atlas/claude-chibi-scenes.png",
+      "path": "2d/action-atlas/claude-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3007375,
+      "bytes": 376972,
+      "source_sha256": "9eaee6b9cbf542148785efb14eb16fe757e358e0326194c84d1f343e142e7944",
+      "sha256": "414c229573bd23699581210b9416e94d9b561c1a5744cabc06fad18be2840886"
+    },
+    {
+      "source": "2d/action-atlas/claude-chibi-walk.png",
+      "path": "2d/action-atlas/claude-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2476647,
+      "bytes": 259826,
+      "source_sha256": "3a6b52227ee5a798fdce85663f3cdca900c2403ee0a9484bf722bb9954d85d03",
+      "sha256": "c56b551d7a68c79c8cf1236712427ba1a4b70d0ef916cdf01bf28dc2139c46dd"
+    },
+    {
+      "source": "2d/action-atlas/cohere-anime-scenes.png",
+      "path": "2d/action-atlas/cohere-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2601469,
+      "bytes": 275290,
+      "source_sha256": "7b232147ab012f428310f894cab7246dcd73cfd4782f7306ea641dae62dcac13",
+      "sha256": "cdc8e676ce84309bc7c4857ca9ec35065a73cda0fdf96ea23365e72a18abd697"
+    },
+    {
+      "source": "2d/action-atlas/cohere-anime-walk.png",
+      "path": "2d/action-atlas/cohere-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 1905489,
+      "bytes": 121780,
+      "source_sha256": "6c927d57365afffb4a128b278be9f53bac0d5cad147dfb6e12b6f387e3decafd",
+      "sha256": "dcf84e80b200c0e55e53bd228af743b8c427d9128897a6ce39700b7727960972"
+    },
+    {
+      "source": "2d/action-atlas/cohere-chibi-scenes.png",
+      "path": "2d/action-atlas/cohere-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2774146,
+      "bytes": 324874,
+      "source_sha256": "5c65a8638a4b52c508d5d348ae377f55616134b7cc26cf9f145214d202141865",
+      "sha256": "4d38bd1f23842f2559ce2f63a94e014a44bd7a71607ac1a9e1b63e43d25a4abb"
+    },
+    {
+      "source": "2d/action-atlas/cohere-chibi-walk.png",
+      "path": "2d/action-atlas/cohere-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2153838,
+      "bytes": 184046,
+      "source_sha256": "7b1d1113647c5024c90c53364771127afc1951ac28783e43255423061dad7d24",
+      "sha256": "5fefc6d9774591c1514c3fd968ee4af9641a9f24d9b01815dc977f8306e30de0"
+    },
+    {
+      "source": "2d/action-atlas/deepseek-anime-scenes.png",
+      "path": "2d/action-atlas/deepseek-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3126884,
+      "bytes": 406132,
+      "source_sha256": "7c3a1a08da0b78171c1a418cd73b2b78db4c1d171b0478a41501d2248b0a4c29",
+      "sha256": "9b85cc98e2a0109c449d0672261d5cc5bbc98fc533aa52f12fa151fde6a9e0fb"
+    },
+    {
+      "source": "2d/action-atlas/deepseek-anime-walk.png",
+      "path": "2d/action-atlas/deepseek-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2404621,
+      "bytes": 235348,
+      "source_sha256": "2bd3e39d221dde56a8fe41e5a9728a047b484209a99ddd80174c6fe8d786fe5c",
+      "sha256": "7beba41e35ce9ae87e41364bc162e3de13c69c34d7c91b8764b0e3cd9bb964ee"
+    },
+    {
+      "source": "2d/action-atlas/deepseek-chibi-scenes.png",
+      "path": "2d/action-atlas/deepseek-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3228781,
+      "bytes": 442062,
+      "source_sha256": "c10ef4c1daf538a5b253e04d3ba3929027f05b04585828a48ef0fe3e27c1c19c",
+      "sha256": "2c3513f8274862c4c23daf2763eb81c140b0642f783bbc2f1e253deeca4f6957"
+    },
+    {
+      "source": "2d/action-atlas/deepseek-chibi-walk.png",
+      "path": "2d/action-atlas/deepseek-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2583433,
+      "bytes": 285454,
+      "source_sha256": "ca542033dfe4c7557daa70838c51ee10c4db7512a512246b7c7feaa08cdb96e7",
+      "sha256": "1007f16fb24e9efe7226b3c31762ccd9b064f7064f7a150370600a4404b1a269"
+    },
+    {
+      "source": "2d/action-atlas/doubao-anime-scenes.png",
+      "path": "2d/action-atlas/doubao-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2628991,
+      "bytes": 288174,
+      "source_sha256": "659b9f0184005416f45fe048dc72e13f38580859d925a7f7ce1dcdee23eefeb8",
+      "sha256": "672b0b6ccdae0e8e4799549a7138b4169bbed0dc78526af5172fb20e42caedc5"
+    },
+    {
+      "source": "2d/action-atlas/doubao-anime-walk.png",
+      "path": "2d/action-atlas/doubao-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 1905462,
+      "bytes": 142162,
+      "source_sha256": "b6272336c6baeaf4eebb1aa03aac3e2d9404dbd04b0e3138320fcc6a8882ad24",
+      "sha256": "4d45691842fe8495820f8651f56103587c1e38c3dc601534f9e6f0497017db43"
+    },
+    {
+      "source": "2d/action-atlas/doubao-chibi-scenes.png",
+      "path": "2d/action-atlas/doubao-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2723538,
+      "bytes": 318078,
+      "source_sha256": "3918ec6aea0778538e7f99241a7e5a938036b28c62252774885ac56febdd1178",
+      "sha256": "7955bbff67adb624a066789ca056a8b8789e628ce79f960abad2dc7f1f62eefd"
+    },
+    {
+      "source": "2d/action-atlas/doubao-chibi-walk.png",
+      "path": "2d/action-atlas/doubao-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2290444,
+      "bytes": 216402,
+      "source_sha256": "1ddb7f72a71d92e046deb3db8866341017f6d4c9d9de3dd91d7cbaa593f3dc6a",
+      "sha256": "cdaad3c97cd40480bab92a9afcedb31f273cb687915ccbbbff187456a81e93b5"
+    },
+    {
+      "source": "2d/action-atlas/gemini-anime-scenes.png",
+      "path": "2d/action-atlas/gemini-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3055629,
+      "bytes": 394754,
+      "source_sha256": "61dbb942702bbff5e982d224ec96004e48ae3e0e1acd93fb8a4130b8878646d1",
+      "sha256": "3d805ae8820a2abd52012f10950d3a223ea114160adfc5f4c1705bab73387406"
+    },
+    {
+      "source": "2d/action-atlas/gemini-anime-walk.png",
+      "path": "2d/action-atlas/gemini-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2391000,
+      "bytes": 245616,
+      "source_sha256": "69bdd700fb781dcba2b1d52590682c601fdb484b4ecfdca6edfe90686d991154",
+      "sha256": "42a18ee0fc68ee38315f09e79d0362716760aa9676cc9c731151a324ccb206b8"
+    },
+    {
+      "source": "2d/action-atlas/gemini-chibi-scenes.png",
+      "path": "2d/action-atlas/gemini-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3214554,
+      "bytes": 439638,
+      "source_sha256": "13b3ad12c4fba5548976fadd87790bfa74fa64ac8b9260730dc1231c26c9872b",
+      "sha256": "cbaebc31556c245223b45a81d198cb31d12edb9f0d6889be259b46b87df57163"
+    },
+    {
+      "source": "2d/action-atlas/gemini-chibi-walk.png",
+      "path": "2d/action-atlas/gemini-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2618343,
+      "bytes": 312956,
+      "source_sha256": "9c67f134635cc20c42a18403c284e5e76493d2c9c37e95f48d3d6b338d1fd6de",
+      "sha256": "1564a9ae556923cae5f43aa16ab6a8834c46e04a894415ac28babaf9d1753256"
+    },
+    {
+      "source": "2d/action-atlas/glm-anime-scenes.png",
+      "path": "2d/action-atlas/glm-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2996715,
+      "bytes": 347016,
+      "source_sha256": "d45816b4b83d9a321084f61c0178850c3fde983ed95f6eb337f7d97f6437b6db",
+      "sha256": "9e095ef76cc2e7cfcd6b989a7daea53b32bc9ccbef4d0ed1ecd861eb91a05d5f"
+    },
+    {
+      "source": "2d/action-atlas/glm-anime-walk.png",
+      "path": "2d/action-atlas/glm-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2441754,
+      "bytes": 206592,
+      "source_sha256": "dea9c1b7a9be0e3b95960980d801763a4b244eaf189f5da2bc0ee1ae6605a13e",
+      "sha256": "98707bb4261176e7412c2548c7da081679ad927ffadd21835739812513a8f7a3"
+    },
+    {
+      "source": "2d/action-atlas/glm-chibi-scenes.png",
+      "path": "2d/action-atlas/glm-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2986250,
+      "bytes": 346694,
+      "source_sha256": "f8530af4fe1620005e32192361bf125527dbeae4c647942032d4fb096c55cf22",
+      "sha256": "6bf046d81da5e9c38911753d32891c7b74035952e7108994d8fcb313afc523d7"
+    },
+    {
+      "source": "2d/action-atlas/glm-chibi-walk.png",
+      "path": "2d/action-atlas/glm-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2618121,
+      "bytes": 236778,
+      "source_sha256": "4b40b4c55cc00bdfbf0b5ed36dfb9f9323f79d118a4099bb1b60c96287b3c85a",
+      "sha256": "a95405b810569c0f69b38a07441b125e96187936be0da398b142c78824fc5e19"
+    },
+    {
+      "source": "2d/action-atlas/gpt-anime-scenes.png",
+      "path": "2d/action-atlas/gpt-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3033364,
+      "bytes": 360742,
+      "source_sha256": "c46853d1027d5b469c90df10094b3b2666b1bb0cb4fe6b27837cb20d540b40eb",
+      "sha256": "5b3ca67ed5f12c4d9e2954906c601ccc868affb2eaac3c72993071699fe4e50b"
+    },
+    {
+      "source": "2d/action-atlas/gpt-anime-walk.png",
+      "path": "2d/action-atlas/gpt-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2439963,
+      "bytes": 210734,
+      "source_sha256": "68b1cc0d6cca93429725172c612f88a360037b22c20f681661b8b04728fe4bbc",
+      "sha256": "4532533cfc4e27c04b305d1cb3c1311be10858c45d543eb5496742bb2efb68db"
+    },
+    {
+      "source": "2d/action-atlas/gpt-chibi-scenes.png",
+      "path": "2d/action-atlas/gpt-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3097762,
+      "bytes": 385700,
+      "source_sha256": "99bcd4059eda4b22c4d11acb0fee50485141a8a27bf7d51ffea55216f55445dc",
+      "sha256": "2489fc8daee3ee2fd774abf9c255d8e0c7862e5e658ac4e8bfb338fd388607cd"
+    },
+    {
+      "source": "2d/action-atlas/gpt-chibi-walk.png",
+      "path": "2d/action-atlas/gpt-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2608893,
+      "bytes": 261202,
+      "source_sha256": "d855a1205cdab0f7d802fc7c7c3b2328ab8121c8bb32ede398eeb0f279fab6f3",
+      "sha256": "15eb67c0ce6d0624a98c7d8b2588e5956cf4b4c392dbe9d92559ebea85b529b9"
+    },
+    {
+      "source": "2d/action-atlas/grok-anime-scenes.png",
+      "path": "2d/action-atlas/grok-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2774170,
+      "bytes": 332394,
+      "source_sha256": "9872d4ca6df52281583d60f2940de87797da09e7241dc20aee33d312fc6f5119",
+      "sha256": "bbac680ebd8e8d7094e01f87ff82a77ed4ecd4c328c188d568d2c0c8c21a94f4"
+    },
+    {
+      "source": "2d/action-atlas/grok-anime-walk.png",
+      "path": "2d/action-atlas/grok-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2154898,
+      "bytes": 190560,
+      "source_sha256": "5cc98052a4c3499fe99feb8564c9a6e81f62016f4562a1e0d53404f199f5c977",
+      "sha256": "3bd7774fc76aeffafbfba7a360e570b47db05baac4a10d6a6d6d2934e26e0511"
+    },
+    {
+      "source": "2d/action-atlas/grok-chibi-scenes.png",
+      "path": "2d/action-atlas/grok-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2996590,
+      "bytes": 374300,
+      "source_sha256": "23e5dce01e53f96088e81ba8b18b4f432625e2e5ef321bdba139c1f9223a9ce3",
+      "sha256": "b014254b3ba66185784425818b2f78eee5139e44f318bfdc504adc2a23660fa4"
+    },
+    {
+      "source": "2d/action-atlas/grok-chibi-walk.png",
+      "path": "2d/action-atlas/grok-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2530646,
+      "bytes": 269912,
+      "source_sha256": "b00db32e8997bfe76fe0a69eac03c1d35a8e630aab43cb9bac52922c701b9994",
+      "sha256": "f5e99978cf853aed9cd76f61ff1bf4c7f0b36d1ba7da1336f245838cced7b36d"
+    },
+    {
+      "source": "2d/action-atlas/hunyuan-anime-scenes.png",
+      "path": "2d/action-atlas/hunyuan-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2873748,
+      "bytes": 342524,
+      "source_sha256": "719f4440a8dfc6fdaaec9ded69c28ba8d0bcd7f0ff01872eb6bf268b15e2a247",
+      "sha256": "d8b827b819f9aecfba6799f6d4d845bd8db06979f4210b7e5532651ade42dd8c"
+    },
+    {
+      "source": "2d/action-atlas/hunyuan-anime-walk.png",
+      "path": "2d/action-atlas/hunyuan-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2323441,
+      "bytes": 208206,
+      "source_sha256": "87369b4c58ebc5dec56f543168b91030384804d5c9e7e9440c97775a6ffb4843",
+      "sha256": "7951b0e62eb3af35d8d9401a12fab05fe504e185e823c91905b1d502d4dcd197"
+    },
+    {
+      "source": "2d/action-atlas/hunyuan-chibi-scenes.png",
+      "path": "2d/action-atlas/hunyuan-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3061327,
+      "bytes": 370768,
+      "source_sha256": "718d8d748d60136a6190839a42e6823c490f11dfa62725317e1ed33b0e56af9a",
+      "sha256": "9162ecee883d54254ab603c939976ba1a26bbdacbc250bee624d779522c08e72"
+    },
+    {
+      "source": "2d/action-atlas/hunyuan-chibi-walk.png",
+      "path": "2d/action-atlas/hunyuan-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2492817,
+      "bytes": 246964,
+      "source_sha256": "5aee9e016184b0b5a8b0fd7e533e9b0f5fe80b71b8e7571bdd6c5420b864ea2e",
+      "sha256": "9b8e227f8593fbaf680f01951462614f4b499947fb40b7df3933b7ac5976ce83"
+    },
+    {
+      "source": "2d/action-atlas/kimi-anime-scenes.png",
+      "path": "2d/action-atlas/kimi-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3183568,
+      "bytes": 397838,
+      "source_sha256": "d9e45de4b56bf5ad395993259a2608469e21b837b5d7f4b8156f8b59bd0c9927",
+      "sha256": "c41cc144cf02428b9e830bd8b78273fd9930b09a9edeb932a3e55ecd47dbf372"
+    },
+    {
+      "source": "2d/action-atlas/kimi-anime-walk.png",
+      "path": "2d/action-atlas/kimi-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2468726,
+      "bytes": 232056,
+      "source_sha256": "15e4c31c74493ab069e6211fd0ae8b15b6b254f15b485f8f9a7e38f9ac674230",
+      "sha256": "06607618551759f9ab4abf6d1180e4b52f91074b76df0ded529d92b7828fa5ee"
+    },
+    {
+      "source": "2d/action-atlas/kimi-chibi-scenes.png",
+      "path": "2d/action-atlas/kimi-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3231293,
+      "bytes": 416198,
+      "source_sha256": "2ad1b765b89b23c728668e4cd0090ff7f10b700c7bd176e56c2bf758bcf3035c",
+      "sha256": "f0fdf6b366aa763e6e7363e5d85c4476a70d3cf8db73992e30287cc29341b5a7"
+    },
+    {
+      "source": "2d/action-atlas/kimi-chibi-walk.png",
+      "path": "2d/action-atlas/kimi-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2786009,
+      "bytes": 290006,
+      "source_sha256": "22bc680feba91767987f85533fa8697265c16d3a061d640475825ee4ec3574a6",
+      "sha256": "f5c934fe28f571036f5edb961251c7f725f3c85a983f3c9757e2040986d353bd"
+    },
+    {
+      "source": "2d/action-atlas/llama-anime-scenes.png",
+      "path": "2d/action-atlas/llama-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2959397,
+      "bytes": 338434,
+      "source_sha256": "d1ea42393b001470dd19488b606febd051b07173a209c766b2c3a41d8496b6a2",
+      "sha256": "e146ef5ac4d25a365e166c7943f55757f9f14d33c113c3ca7c6f12ff7860b39e"
+    },
+    {
+      "source": "2d/action-atlas/llama-anime-walk.png",
+      "path": "2d/action-atlas/llama-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2261193,
+      "bytes": 176750,
+      "source_sha256": "d3117b7449db0ecf2eab532af958068048d8a7aed23f0bbb6243c97a765b36c0",
+      "sha256": "6cac06b2984439ff80e2602c6fbffe6c3fe7355cb899c236002acad4e0308b16"
+    },
+    {
+      "source": "2d/action-atlas/llama-chibi-scenes.png",
+      "path": "2d/action-atlas/llama-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3100443,
+      "bytes": 378266,
+      "source_sha256": "1164abcdce8428c1bbac597e6003a7c24cbb1aa1a0dd39b5d6346f2a517271df",
+      "sha256": "43a8f370ccf3367db23f57068c66203aa74a48594db39d9e5c245b714661f043"
+    },
+    {
+      "source": "2d/action-atlas/llama-chibi-walk.png",
+      "path": "2d/action-atlas/llama-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2421420,
+      "bytes": 228932,
+      "source_sha256": "8f139841e51353b76d95adf4bacff13c98182bff8672da4077308716ccade391",
+      "sha256": "dd5478917a3f0706d01aecc6beaced537d8b155060754140888ff38481a87f94"
+    },
+    {
+      "source": "2d/action-atlas/mimo-anime-scenes.png",
+      "path": "2d/action-atlas/mimo-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2729145,
+      "bytes": 351074,
+      "source_sha256": "e79bf0a970f0c0df683c3e85e42cad461451fb5cd75ee41748e94d3ade6f4b46",
+      "sha256": "9142fc59233068d40635473aad253950e6bf8a66ad5d3977aa3696f2dd1c3511"
+    },
+    {
+      "source": "2d/action-atlas/mimo-anime-walk.png",
+      "path": "2d/action-atlas/mimo-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2202724,
+      "bytes": 206500,
+      "source_sha256": "2f6da526661e6321276ed5c0f52d61c47632c21d565ab7410398a3e824df9ce9",
+      "sha256": "1ce898a602094f6a400e1e70a6831dc7fa31b2d3c20daf4e6de46885d7058465"
+    },
+    {
+      "source": "2d/action-atlas/mimo-chibi-scenes.png",
+      "path": "2d/action-atlas/mimo-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2942922,
+      "bytes": 380620,
+      "source_sha256": "c30c4862cc951811858346327a57be5ece8bc1ca495b83b5c1d278a62004df6f",
+      "sha256": "54f837dc2130c56ded5c0142087d869c4b7f58df61835ba3fb8b8fab4132a74f"
+    },
+    {
+      "source": "2d/action-atlas/mimo-chibi-walk.png",
+      "path": "2d/action-atlas/mimo-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2402875,
+      "bytes": 261876,
+      "source_sha256": "36179ff0bbdc3713a23d21e1e53a3b38052ce588c503a16b9511886b9bf88003",
+      "sha256": "5bb2651c5a68587b90050ee46332e398705938a566d362f3009e85ce6ca95e4c"
+    },
+    {
+      "source": "2d/action-atlas/minimax-anime-scenes.png",
+      "path": "2d/action-atlas/minimax-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2679014,
+      "bytes": 306950,
+      "source_sha256": "a55c2449a28b66c049ed0666d842acff35a83aec35d06653ed813a60ee1adf5d",
+      "sha256": "2bdd6b28f6f702c753cf5de0693ff33b8bb6d4abbc98f02fbcb46055f8dc1f77"
+    },
+    {
+      "source": "2d/action-atlas/minimax-anime-walk.png",
+      "path": "2d/action-atlas/minimax-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2019919,
+      "bytes": 161202,
+      "source_sha256": "c575b0605d564f0c7e5aef8fb82b913659563f24447a7f2c9ff5c2823d550611",
+      "sha256": "9a78a1f6d1413292bdb11fdd4bcb181a6ad8469b5fed7dce5caadf1ad637cfa5"
+    },
+    {
+      "source": "2d/action-atlas/minimax-chibi-scenes.png",
+      "path": "2d/action-atlas/minimax-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2805525,
+      "bytes": 350022,
+      "source_sha256": "98216b5a3e7c07b9f15b5ef79a383e47a7eef393eca784a64367fd22c9e6077a",
+      "sha256": "efa49450389078476bf621435f19241b8f9e2a203c5217bfa0104866f1ab7c35"
+    },
+    {
+      "source": "2d/action-atlas/minimax-chibi-walk.png",
+      "path": "2d/action-atlas/minimax-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2320573,
+      "bytes": 232268,
+      "source_sha256": "6d2757e3dee4022ee8e59c260d135a075ab2afbb851dcfc2a01edf5f9b7e3128",
+      "sha256": "72b1d373f31adc853a60d0df7526b64b33a6a415da673ff79f884d0e6bd3aa31"
+    },
+    {
+      "source": "2d/action-atlas/mistral-anime-scenes.png",
+      "path": "2d/action-atlas/mistral-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2800055,
+      "bytes": 330970,
+      "source_sha256": "bd5da1f8461cf2a374b9ca850e3fa03960a5451e2c4f7df490fe2b129f81120b",
+      "sha256": "8dec8b8794fac9716824c70e57f155446bbbf551a0c0d8baba88c070a51aa308"
+    },
+    {
+      "source": "2d/action-atlas/mistral-anime-walk.png",
+      "path": "2d/action-atlas/mistral-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2096763,
+      "bytes": 190704,
+      "source_sha256": "7da066ca7b54aaf21eb2397dc3ebc0b0675dd785a80f2e76cd6b459f4a4ec703",
+      "sha256": "9a69e67911ec30a0a2bc34f868b20beb71e385d3d99855a18e010c8c5628e961"
+    },
+    {
+      "source": "2d/action-atlas/mistral-chibi-scenes.png",
+      "path": "2d/action-atlas/mistral-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2903293,
+      "bytes": 361884,
+      "source_sha256": "272e6698b3397ea2fce08c2b4c073a3d6c01e2cd246084f98ae7170a6132e088",
+      "sha256": "45fc294039ab768f4865f7e76a6cb12da4e1a8ab318f9586c2ba5a11685e450b"
+    },
+    {
+      "source": "2d/action-atlas/mistral-chibi-walk.png",
+      "path": "2d/action-atlas/mistral-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2424886,
+      "bytes": 252368,
+      "source_sha256": "ecfd206968b2a9a010623263b9d11a2bd7e04614bf1d9789121d3a2381ce934c",
+      "sha256": "814560d97de5bd45357b7a005a76d91a4e503ff22b8c95d52c6fde245616c982"
+    },
+    {
+      "source": "2d/action-atlas/muse-anime-scenes.png",
+      "path": "2d/action-atlas/muse-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3016574,
+      "bytes": 368676,
+      "source_sha256": "3c9d8901aa53c36b4f17e5ed67e3777cf7fbdcf105e3909c3e6bd2c5661b5faa",
+      "sha256": "7f93d936a71f643a10c9646e7634a06517a3e0027f402c2049293b4d67f243f8"
+    },
+    {
+      "source": "2d/action-atlas/muse-anime-walk.png",
+      "path": "2d/action-atlas/muse-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2346488,
+      "bytes": 209528,
+      "source_sha256": "3bcae6f2582cdd558946b079e0823c7ae3af2c5fbe73ab9c6556c73397f3ea3e",
+      "sha256": "df944c61ac0da261e386c88186ac71b8fe367167ab2642aeb5a182a4b066441d"
+    },
+    {
+      "source": "2d/action-atlas/muse-chibi-scenes.png",
+      "path": "2d/action-atlas/muse-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3200889,
+      "bytes": 402926,
+      "source_sha256": "d63b25d54838ae2429e9cf01b0f62036990b9fb76d425ebf81268f0e33e20d13",
+      "sha256": "f15a921c3ddcdb245ecf906417f2c8418ba6f58e14e556fa37d96f1fd2633d77"
+    },
+    {
+      "source": "2d/action-atlas/muse-chibi-walk.png",
+      "path": "2d/action-atlas/muse-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2699038,
+      "bytes": 283576,
+      "source_sha256": "2ba6fcf6e7b4a140198c25763918698d2393c38e9c5dea96a80dfae102f34cb8",
+      "sha256": "48a32f89756524b7b81d6a19aa2e06988fea1f8ada67a2101af485e83a8d027e"
+    },
+    {
+      "source": "2d/action-atlas/novelai-anime-scenes.png",
+      "path": "2d/action-atlas/novelai-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3243289,
+      "bytes": 424462,
+      "source_sha256": "771c8c9a10196d379f2858b78b7ff1fb2b1e892d869d13b4e4b72781fb8be63f",
+      "sha256": "dafbf6b969cf9568aca46c1f9f6ca1d74743dd3a3c9fa7f180ad808d7c9e26c0"
+    },
+    {
+      "source": "2d/action-atlas/novelai-anime-walk.png",
+      "path": "2d/action-atlas/novelai-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2631877,
+      "bytes": 280844,
+      "source_sha256": "11302a8b89b24f66c950146e49d06539d3fffffda80b79fb3bb5c44a3fb66853",
+      "sha256": "5b7cbac3f712ea1bbcd84373542480e1ca5a79843ea943c3d4488f4623004b9b"
+    },
+    {
+      "source": "2d/action-atlas/novelai-chibi-scenes.png",
+      "path": "2d/action-atlas/novelai-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3375457,
+      "bytes": 464198,
+      "source_sha256": "e4fa173393cb0549030d07b6ed4b176f6498a0909bd6f179b7c78bb62fb69552",
+      "sha256": "2d90f5c00af894bb4a2aa86d2c7fbaf23a66cbba116de729c9bd9e246ddc7779"
+    },
+    {
+      "source": "2d/action-atlas/novelai-chibi-walk.png",
+      "path": "2d/action-atlas/novelai-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2734677,
+      "bytes": 307548,
+      "source_sha256": "8897c4306bf5eb9b3bee76f05e848b6225e0dc8d59c07ed01e8b760575863578",
+      "sha256": "e2a5efa16e22f04ac5576f1f659063e2f608189d06e9f60923e19dc2da828aee"
+    },
+    {
+      "source": "2d/action-atlas/opencode-anime-scenes.png",
+      "path": "2d/action-atlas/opencode-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2887118,
+      "bytes": 325492,
+      "source_sha256": "1e6ac7897253cd62a61d16acab6357fe6a52d6f19aaf0c7e5470bddfc7e839c0",
+      "sha256": "45c0cd2eb81b41f9d4d9e99de25336ffbf0924743c8483be4a24128f1ee83cc2"
+    },
+    {
+      "source": "2d/action-atlas/opencode-anime-walk.png",
+      "path": "2d/action-atlas/opencode-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2083959,
+      "bytes": 164508,
+      "source_sha256": "a04c99f73d9d590e416f0876738a47745016132e42f5cc3c7b46ce4fac8798be",
+      "sha256": "ded0e9a72c265c0d1ce5d1fc6fe80c91ceeb1433fe49b0c2391d86fb22efb1eb"
+    },
+    {
+      "source": "2d/action-atlas/opencode-chibi-scenes.png",
+      "path": "2d/action-atlas/opencode-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2932364,
+      "bytes": 337040,
+      "source_sha256": "b9795b4b15c6c9195ceee8fde01f8e91e29e620a598bf266a094c11e44d2347e",
+      "sha256": "896c1de39cfd5ec4bd1f3139a0d6d86b45a4b9606ce2d0a4480d0d4c230e202a"
+    },
+    {
+      "source": "2d/action-atlas/opencode-chibi-walk.png",
+      "path": "2d/action-atlas/opencode-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2399380,
+      "bytes": 217238,
+      "source_sha256": "55bbb10119c08bb610248ef600fd76fbfed101d9d0f1526318793029b9e45d24",
+      "sha256": "c080aad904569b05aebf16cc14d57a8d787a7fb7d511f22924f0db3ec53c33f5"
+    },
+    {
+      "source": "2d/action-atlas/qwen-anime-scenes.png",
+      "path": "2d/action-atlas/qwen-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3135260,
+      "bytes": 406792,
+      "source_sha256": "6355a98a6b1771dbb7151e3b8edd7a241caddb2721ed36939d2ff04ac2bebbcc",
+      "sha256": "502fdb0741a437318b6e55ad0a4bd55bcd9eab2bc96a68453a3171abb704823d"
+    },
+    {
+      "source": "2d/action-atlas/qwen-anime-walk.png",
+      "path": "2d/action-atlas/qwen-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2347003,
+      "bytes": 231464,
+      "source_sha256": "c3626294321c6ac3cd59739d9dceca48ef59adb3bcc239c9fa2006a1c2324510",
+      "sha256": "c6389986ffdfbebf519e4634b3cbac554b1689bdcbfe849f2c1196c349c02988"
+    },
+    {
+      "source": "2d/action-atlas/qwen-chibi-scenes.png",
+      "path": "2d/action-atlas/qwen-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3188356,
+      "bytes": 422456,
+      "source_sha256": "7f580264e5593425b3a2296013fb7b00c8650145ae862c95cebd8216729c543b",
+      "sha256": "857c087deed12c7b416cf6d936395b4c4a93e2773eada8792ec882da68732a08"
+    },
+    {
+      "source": "2d/action-atlas/qwen-chibi-walk.png",
+      "path": "2d/action-atlas/qwen-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2647159,
+      "bytes": 295840,
+      "source_sha256": "6895834920a5d3f2c348c4a24c3252be8275d818a4d8d9ea69d6e4b66f171a6a",
+      "sha256": "50c7bd88dab723c72b022a77f5379229a8b60e9cfd316fd1996e819f241c72d9"
+    },
+    {
+      "source": "2d/action-atlas/seedance-anime-scenes.png",
+      "path": "2d/action-atlas/seedance-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2865645,
+      "bytes": 348294,
+      "source_sha256": "2bdb6829833daf9ab347dbe3218bb174d8611568271d7e6106a1782c7bdd5165",
+      "sha256": "f5506b35f2ba0ba5d2360c607368567a20889c5726395e2aecbb5cbf4073ac1a"
+    },
+    {
+      "source": "2d/action-atlas/seedance-anime-walk.png",
+      "path": "2d/action-atlas/seedance-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2135873,
+      "bytes": 193436,
+      "source_sha256": "0c608fce7e17cec24dbbdadb21b5ecd44a229439e7a0052117ae96ab35b4d2b9",
+      "sha256": "e153fe4e7869e1a52dbdacc89543f84b1ecff26d28d336732d24626d8eb7c80b"
+    },
+    {
+      "source": "2d/action-atlas/seedance-chibi-scenes.png",
+      "path": "2d/action-atlas/seedance-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 3160209,
+      "bytes": 422488,
+      "source_sha256": "e057f6c5ce5ada6060b5c96efa88f7f21cbc0ad4ec9e2feed030c530cd859a42",
+      "sha256": "10f1b0a4fc35a782e970aaaf00601bb06d6271ecd7cea39a6bb5e65909f9fb86"
+    },
+    {
+      "source": "2d/action-atlas/seedance-chibi-walk.png",
+      "path": "2d/action-atlas/seedance-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2470454,
+      "bytes": 258410,
+      "source_sha256": "cd1dc46e4d40a657a55a234cd256f453eb8cd4bd3b21a8dcb6e7c45019e03750",
+      "sha256": "b3726880410f69e7c3a88edc318ca4720698996eb87d825971ea4392dabc6bad"
+    },
+    {
+      "source": "2d/action-atlas/step-anime-scenes.png",
+      "path": "2d/action-atlas/step-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2610034,
+      "bytes": 305934,
+      "source_sha256": "2209949ae9254068ae5107ff9ecc85f6b0198be001ab0bc9e3868dcd52d427f2",
+      "sha256": "dd3876d5cab19de350788947db2de9e36d9dc21ec0c66743c4483d3b70848c84"
+    },
+    {
+      "source": "2d/action-atlas/step-anime-walk.png",
+      "path": "2d/action-atlas/step-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 1987029,
+      "bytes": 164174,
+      "source_sha256": "c4657e18f6d7386d8a2c77d6e324022ee36380f897b2f5ce7e6ae1d0fb918c32",
+      "sha256": "6732a07e65d05a01c3b4f3a9913a0209ebf35a6d1e79a6ee4173884abe855f32"
+    },
+    {
+      "source": "2d/action-atlas/step-chibi-scenes.png",
+      "path": "2d/action-atlas/step-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2752939,
+      "bytes": 330440,
+      "source_sha256": "a9a7d53cdfc202aaf552396145999135849874d5a3c792adb45bf6830b9e21b6",
+      "sha256": "c2a17e84cad55f1c10df40a9b20b86b07fddea36358816ce84974237fc4dbe33"
+    },
+    {
+      "source": "2d/action-atlas/step-chibi-walk.png",
+      "path": "2d/action-atlas/step-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2279644,
+      "bytes": 228054,
+      "source_sha256": "b0f0e2ed03bb5047d9262e0ba7dd884d961c34502271226039210a54827561ee",
+      "sha256": "f2fea76eb895bc295de3707e4f54c50c651bea123678fc9ecc0599ec6f1b740d"
+    },
+    {
+      "source": "2d/action-atlas/zcode-anime-scenes.png",
+      "path": "2d/action-atlas/zcode-anime-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2877642,
+      "bytes": 333528,
+      "source_sha256": "6b28a93f3335db762fec790875345c5247d039f530e5217ee375c52e60bc9443",
+      "sha256": "d161bee52ddbaf91b92afe1c0c6ef54f840aa9ef2a7bb4b86e7f971f2238343e"
+    },
+    {
+      "source": "2d/action-atlas/zcode-anime-walk.png",
+      "path": "2d/action-atlas/zcode-anime-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2172445,
+      "bytes": 180310,
+      "source_sha256": "8aca18f1f8ecc8fa29e8a847dcc37f7ac0846bbf4cff855ebfc158a40136f623",
+      "sha256": "40904dfaba33d6f55b8fb77ba916cdecf8c2498f57a2e3861244e56c32ef7af4"
+    },
+    {
+      "source": "2d/action-atlas/zcode-chibi-scenes.png",
+      "path": "2d/action-atlas/zcode-chibi-scenes.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2983174,
+      "bytes": 358148,
+      "source_sha256": "d4e6ee16f18e0651da0c153c8eafadf6efb5aac54c3ca38c06dfebf5031393d8",
+      "sha256": "19b9703aec748d446b5d85353279e7b732c995230ffc30ff1a60decf07167de9"
+    },
+    {
+      "source": "2d/action-atlas/zcode-chibi-walk.png",
+      "path": "2d/action-atlas/zcode-chibi-walk.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2532139,
+      "bytes": 233376,
+      "source_sha256": "01f3657dc8e0f9f0ef2770dd3e41dd2ea98cca47eedb0fd0c8d0c879e8b66dde",
+      "sha256": "f6c22a511f3a76d2e67162f8307c953d812601486b22d2a339920faba5f13bb7"
+    },
+    {
+      "source": "2d/chibi-references/GLM-Chibi.png",
+      "path": "2d/chibi-references/GLM-Chibi.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 1998181,
+      "bytes": 162796,
+      "source_sha256": "d865b26cb2a7d7ee80ef002c4880b3c0b3579007a6412b066ee4a9a40320511c",
+      "sha256": "b90f0d2b96cdeefa9d63a9f796a5f46f4773d55939f6ba4b155f75e180e073d3"
+    },
+    {
+      "source": "2d/chibi-references/GLM-Fox-Chibi.png",
+      "path": "2d/chibi-references/GLM-Fox-Chibi.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 2059331,
+      "bytes": 179396,
+      "source_sha256": "74b13896f59e894964ae089808d56fa5a09639bc25a3caf18206d7b0c3485cf0",
+      "sha256": "c5d1f095eb53c0663f965a11a9de69a3fc538317c361fa2b7cc35cadbd915b69"
+    },
+    {
+      "source": "2d/chibi-references/Kimi-Chibi.png",
+      "path": "2d/chibi-references/Kimi-Chibi.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 2134648,
+      "bytes": 189360,
+      "source_sha256": "d4f6c390e542cccbe2570aa2285545a1e612cff686ce2163de9eb66a07b9eee4",
+      "sha256": "d6bd4ffb2953173f6e9b8564056edc29d69ef4ea2b6cd33375b1f9c5b0fa516d"
+    },
+    {
+      "source": "2d/chibi-references/MiniMax-Chibi.png",
+      "path": "2d/chibi-references/MiniMax-Chibi.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 1795012,
+      "bytes": 147082,
+      "source_sha256": "e49537c73e22e713bb67cac2ccbee965a1dee6a25cd804f3593230b83eb110b2",
+      "sha256": "3344effb22104b8a191400935c44986dbf2138ab4c7680e0d1e20cd3b1587eed"
+    },
+    {
+      "source": "2d/chibi-references/Qwen-Chibi.png",
+      "path": "2d/chibi-references/Qwen-Chibi.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 2138138,
+      "bytes": 211250,
+      "source_sha256": "750172b4f5eda6494b6df4d917f7275d8f8632272c0df2c89931b5daa20efc8f",
+      "sha256": "335755072b89dafd1277dcf920de28e40eae4ee344aba308a430c9b6f5ffee7f"
+    },
+    {
+      "source": "2d/cutouts/ChatGPT-Chibi.png",
+      "path": "2d/cutouts/ChatGPT-Chibi.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 1924563,
+      "bytes": 152990,
+      "source_sha256": "546223ab14b24ae765a1ad6218a59379723a1bb057f3deddfedcde82193983c4",
+      "sha256": "221d1e27e71e69acb941f08d1a877396977e310fb53c930c80fb489e3b7cc4e8"
+    },
+    {
+      "source": "2d/cutouts/ChatGPT-cutout.orig.png",
+      "path": "2d/cutouts/ChatGPT-cutout.orig.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 1739498,
+      "bytes": 173268,
+      "source_sha256": "ad58b63a8bf73763f0454c5d740d60c6eea2b5ec61ce8334ac3fa5099d04efda",
+      "sha256": "203a1be3f48d82dcfe495d7c9704b3a2c930908a55160cc0f4ca602847a95896"
+    },
+    {
+      "source": "2d/cutouts/ChatGPT-cutout.png",
+      "path": "2d/cutouts/ChatGPT-cutout.webp",
+      "width": 1024,
+      "height": 1536,
+      "source_bytes": 1669868,
+      "bytes": 137056,
+      "source_sha256": "40ef6c708c1daba68b58f73c2cac32cf0490cfe05f068c76fb8abe5370e79691",
+      "sha256": "c7340be44d53cc27741c3450b0d96a3e759e45266e1a1904793c37282dda77aa"
+    },
+    {
+      "source": "2d/cutouts/Claude-Chibi.png",
+      "path": "2d/cutouts/Claude-Chibi.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 2318853,
+      "bytes": 229426,
+      "source_sha256": "6823bdd4b873610c4f1bb9f5ea2af12a6720938edec330df754b9487cb1f04b2",
+      "sha256": "8c9df53a173c69cae93e808de6cce05ace8ebca7a68ed9a00675f13bdc5d3b15"
+    },
+    {
+      "source": "2d/cutouts/Gemini-Chibi.png",
+      "path": "2d/cutouts/Gemini-Chibi.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 2044385,
+      "bytes": 178752,
+      "source_sha256": "dbb28bb51caa3889291130a138899daf3d2f50ba9acf94f530cb9ee60b6a2ffe",
+      "sha256": "49f8a4bb9ad9bd50bf5dbfe755034d3aa8e3c1860e20b183f4f842404a8d4326"
+    },
+    {
+      "source": "2d/cutouts/Gemini-cutout.orig.png",
+      "path": "2d/cutouts/Gemini-cutout.orig.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 1872400,
+      "bytes": 215144,
+      "source_sha256": "1d16fc4e67c2384e4427f09d04b689cd35a76f1950410d54cf929e0d3b2242fe",
+      "sha256": "7bdb49e097b19f8374e71d3a076307c7e80efd180fa2e8f6845284cfa2878e48"
+    },
+    {
+      "source": "2d/cutouts/Gemini-cutout.png",
+      "path": "2d/cutouts/Gemini-cutout.webp",
+      "width": 1024,
+      "height": 1536,
+      "source_bytes": 1641524,
+      "bytes": 140272,
+      "source_sha256": "5e2c562e02ff03281507c5952f41538b7b75860370125128845e42389dbb0cd6",
+      "sha256": "a988b3916bbcd712cbf6a1f5c4e8ca623c72164f9a69235df1fd677b0c33b5ea"
+    },
+    {
+      "source": "2d/cutouts/Grok-Chibi.png",
+      "path": "2d/cutouts/Grok-Chibi.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 1999722,
+      "bytes": 179158,
+      "source_sha256": "2a3af1fad7eb6c472982c8382ce857c7240797f63251a9ffa78f1f26aec6dc4d",
+      "sha256": "008d3c03240b5de522a9e704ab9f30f72ee756d71c7b20eba4d46b97bbcaf607"
+    },
+    {
+      "source": "2d/cutouts/Grok-cutout.orig.png",
+      "path": "2d/cutouts/Grok-cutout.orig.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 1768030,
+      "bytes": 202634,
+      "source_sha256": "0b3a9a3630b1a94acd282a08b54cad28c67f9dadcb85be69c9ac33d3a1360da6",
+      "sha256": "4558fe1167b3f3856c32f701e991ab49fe1dde1e5e17605b4e8c0f0649002308"
+    },
+    {
+      "source": "2d/cutouts/Grok-cutout.png",
+      "path": "2d/cutouts/Grok-cutout.webp",
+      "width": 1024,
+      "height": 1536,
+      "source_bytes": 1986199,
+      "bytes": 189672,
+      "source_sha256": "c165f26007b98dfb7ca42bffe22857140ccdb0b9db48a7b5a2593643b197e0bf",
+      "sha256": "d93ed499a9e56820fdd8b5473e1cec4206c80f401af167079732ef96cfaa9cbb"
+    },
+    {
+      "source": "2d/cutouts/claude-cutout.orig.png",
+      "path": "2d/cutouts/claude-cutout.orig.webp",
+      "width": 941,
+      "height": 1672,
+      "source_bytes": 1922721,
+      "bytes": 224424,
+      "source_sha256": "c1b5f83b8dc1c991465a5dfa5153446d32cb202cabd44d8d9afe7374afc5a3a9",
+      "sha256": "a87239ddf2711a1677d220badfa46d02ec20179ba5ced7301f3e74102e0825bb"
+    },
+    {
+      "source": "2d/cutouts/claude-cutout.png",
+      "path": "2d/cutouts/claude-cutout.webp",
+      "width": 1024,
+      "height": 1536,
+      "source_bytes": 1782436,
+      "bytes": 156494,
+      "source_sha256": "6e3704ca0db32b100545df93544935c47ed43b58b929c54424aeb6727d0d8289",
+      "sha256": "db3889f7e4e9eae070772a9280fa2c9993f76096b542a1b0a6d86964a8ea016d"
+    },
+    {
+      "source": "2d/cutouts/whale-cutout.png",
+      "path": "2d/cutouts/whale-cutout.webp",
+      "width": 640,
+      "height": 360,
+      "source_bytes": 109910,
+      "bytes": 17770,
+      "source_sha256": "77f39cd207a8234af77611b57a38754f151dc00d49ef9cc37c5039354b3bfcc1",
+      "sha256": "a1e993866f598e2ea6bb47e567514f55d0c76d85b2baf07fa132041951684f01"
+    },
+    {
+      "source": "2d/fullbody/claude-anime-atlas.png",
+      "path": "2d/fullbody/claude-anime-atlas.webp",
+      "width": 1086,
+      "height": 1448,
+      "source_bytes": 1840756,
+      "bytes": 538182,
+      "source_sha256": "8fc38ce553663deb837a51df9bed51b0ed6d61b2e29d250d814bd7305886aa4f",
+      "sha256": "e4f6887916a1dcace96ba2503f6702332d0fa367adbfab39b5aa620502631377"
+    },
+    {
+      "source": "2d/fullbody/claude-anime-core.png",
+      "path": "2d/fullbody/claude-anime-core.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 1507162,
+      "bytes": 303650,
+      "source_sha256": "f50f7f50f61ad2f559ff6fd4ad298a07e83a736a14f63d7f99d47581bb6f8aa4",
+      "sha256": "636cc2d6d2e8cd2bece12de42303c9db75fa51362da5388ffd70b98626f342fe"
+    },
+    {
+      "source": "2d/fullbody/claude-anime.png",
+      "path": "2d/fullbody/claude-anime.webp",
+      "width": 1024,
+      "height": 1536,
+      "source_bytes": 1934009,
+      "bytes": 182856,
+      "source_sha256": "3b4b9c5f498a4cf13872ca14f0ca23b59716de95153e060522d5834dbcb6964c",
+      "sha256": "2c67e4585257ab97f62451061028192ee42b523832b45306d9b5c565fed6569e"
+    },
+    {
+      "source": "2d/fullbody/claude-chibi-atlas.png",
+      "path": "2d/fullbody/claude-chibi-atlas.webp",
+      "width": 1086,
+      "height": 1448,
+      "source_bytes": 1846745,
+      "bytes": 471122,
+      "source_sha256": "8954cf40474795aebabee469377682db7a63b1f2cd0380cd4d748a47717cba8a",
+      "sha256": "21139fcac7bb25db9c94aaef8151035f33a67d20d5f70ed698fc28f1f1ce460c"
+    },
+    {
+      "source": "2d/fullbody/claude-chibi-core.png",
+      "path": "2d/fullbody/claude-chibi-core.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2109186,
+      "bytes": 391914,
+      "source_sha256": "cefb8be786ada66cf4c460475f1f090eab16ce2212bea774c66223d39ca120ac",
+      "sha256": "fdc34fedf6ef48e61ab270d99747fbf9ecf774e6e3fa2aad9968fb0ff28a99d5"
+    },
+    {
+      "source": "2d/fullbody/claude-chibi.png",
+      "path": "2d/fullbody/claude-chibi.webp",
+      "width": 1024,
+      "height": 1536,
+      "source_bytes": 2346869,
+      "bytes": 269156,
+      "source_sha256": "343c268a951f1e132b59c854638e15328350b44240a19ebbd6d2cbb4f96f1cec",
+      "sha256": "9d7608fec7b41972eaf37825d320448063e61ea5e8f46982acfaf372a38886b9"
+    },
+    {
+      "source": "2d/fullbody/deepseek-anime-atlas.png",
+      "path": "2d/fullbody/deepseek-anime-atlas.webp",
+      "width": 1086,
+      "height": 1448,
+      "source_bytes": 1774575,
+      "bytes": 460752,
+      "source_sha256": "d8d7f3539b5ad6d1f362b9d63c43b0b5e51f3dc560a71aa46cd5d350cea6c1b0",
+      "sha256": "062fa1fa17af90284d253185a82e91f1f7ba8f4b911305936d6a3ccc2928b639"
+    },
+    {
+      "source": "2d/fullbody/deepseek-anime-core.png",
+      "path": "2d/fullbody/deepseek-anime-core.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 1716143,
+      "bytes": 354908,
+      "source_sha256": "44347c21e5ca8caa9ca783033bab0a3ff79037a766fa72257b465423dee571c6",
+      "sha256": "7e42d29a8f019839dc0a0d68b82903b6ba210dc4d4835681ef4e09e57ce8c17c"
+    },
+    {
+      "source": "2d/fullbody/deepseek-anime.png",
+      "path": "2d/fullbody/deepseek-anime.webp",
+      "width": 1024,
+      "height": 1536,
+      "source_bytes": 2160818,
+      "bytes": 282552,
+      "source_sha256": "7db89f3c0371e3ddd18b55dcdec34d36c5be9672a054c185d6e5f9c9c819c753",
+      "sha256": "3beca57929f281cd9d984e44e7aa7c651099a99f7db6235da5f1c5f62f20d748"
+    },
+    {
+      "source": "2d/fullbody/deepseek-chibi-atlas.png",
+      "path": "2d/fullbody/deepseek-chibi-atlas.webp",
+      "width": 1086,
+      "height": 1448,
+      "source_bytes": 1884058,
+      "bytes": 427294,
+      "source_sha256": "bbbeaccfff9c4c01b3e71d5657863b5261e6b103020eccbe9a3e914798566a17",
+      "sha256": "9bae5b6832472742b178c14b3ad82b42ce56cbb27f0475ade8a71556a6e2c6be"
+    },
+    {
+      "source": "2d/fullbody/deepseek-chibi-core.png",
+      "path": "2d/fullbody/deepseek-chibi-core.webp",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2306734,
+      "bytes": 421970,
+      "source_sha256": "8aa2abc19d4d857a3ef7886c5b090293e0f9690b8d3457122be498f272c59503",
+      "sha256": "efc3a104c7ad641daedd32ae727dbfea01a4f160440b635289ac4b7aea6dd769"
+    },
+    {
+      "source": "2d/fullbody/deepseek-chibi.png",
+      "path": "2d/fullbody/deepseek-chibi.webp",
+      "width": 1024,
+      "height": 1536,
+      "source_bytes": 2423998,
+      "bytes": 319368,
+      "source_sha256": "eafe126a77474ff969655c077b0239d58542695bbb8715349822309e41fc1b3b",
+      "sha256": "0905cd480f7bc8cc751bd90aa2da556a78c1fa561af6e86f5efa006df23518e2"
+    },
+    {
+      "source": "2d/portraits/claude-dual.png",
+      "path": "2d/portraits/claude-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2237815,
+      "bytes": 183418,
+      "source_sha256": "964960fa1d96abb09a6ee06c519f23b9834f57808a7fbd523ad6d754afdc0e8f",
+      "sha256": "c7f661163f06d10c777aa1a1f8feba8db8944d69426b6e490a7650af5dd81397"
+    },
+    {
+      "source": "2d/portraits/cohere-dual.png",
+      "path": "2d/portraits/cohere-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2234709,
+      "bytes": 162632,
+      "source_sha256": "20a47251128ea9799e2c1f99de214d77a589b81b95c97a51e39ab32a52570337",
+      "sha256": "418b5e6291324f17cbfe8fa6c30a6a733540d4d16f7afce2b00dc2e4e8abda2c"
+    },
+    {
+      "source": "2d/portraits/deepseek-dual.png",
+      "path": "2d/portraits/deepseek-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2594992,
+      "bytes": 270976,
+      "source_sha256": "8cd8de4a6024d98c9503fb7fd33e75771098aeeeb78936d636114adc289656a4",
+      "sha256": "bf10ca807d9ebfdeb19c2c44ce90c709dd26b04ca37bb0a0b425b3970908542b"
+    },
+    {
+      "source": "2d/portraits/doubao-dual.png",
+      "path": "2d/portraits/doubao-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 1976322,
+      "bytes": 131800,
+      "source_sha256": "226eb285a344325ae0a4427f80e2e201d93063dd48b421047f698bce13c84ab8",
+      "sha256": "26233ab4e39f0ee0df5f06474a0649d21b1ac4de6b947c0b25180a09c7169680"
+    },
+    {
+      "source": "2d/portraits/gemini-dual.png",
+      "path": "2d/portraits/gemini-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2506044,
+      "bytes": 246644,
+      "source_sha256": "9eecf6a4bff3d2ba1074c97d400b3f85858d45c7b6f7f2a56b63ced8ef6c3149",
+      "sha256": "a5f8ad371cc2bd48fbe4b4f34f4e39b1e08402a6e1f09f607cab4aaca3eb1311"
+    },
+    {
+      "source": "2d/portraits/glm-dual.png",
+      "path": "2d/portraits/glm-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2410106,
+      "bytes": 176980,
+      "source_sha256": "a85bc35f4e40733ccd17e31e8b3af4ad675318f3c6c3bf293e0c73143386b4d2",
+      "sha256": "2ea0b80d936faf9ad3d1f9c615ae41bb20de58934bf90e379a7089ca9c9b7d6b"
+    },
+    {
+      "source": "2d/portraits/gpt-dual.png",
+      "path": "2d/portraits/gpt-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2333093,
+      "bytes": 196268,
+      "source_sha256": "53db21b1c73021ff22522e2e26e18b2eda1253701d4361fc3b37bdb2e70cc251",
+      "sha256": "58ce937068cf0db8a6572091bb5c5099e057f3f8c99ae37b39e6eba6c316e538"
+    },
+    {
+      "source": "2d/portraits/grok-dual.png",
+      "path": "2d/portraits/grok-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2264635,
+      "bytes": 188408,
+      "source_sha256": "076f12222536f6cf46463a85a59bec54512f8e229731a2515fe14f6276a5fee1",
+      "sha256": "b80dbc75c27b04644d54027c2a46eea6330d27d4c9aa374b15407a11e63a2bbb"
+    },
+    {
+      "source": "2d/portraits/hunyuan-dual.png",
+      "path": "2d/portraits/hunyuan-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2422137,
+      "bytes": 194678,
+      "source_sha256": "d75b9d9b4693a6ff19a7a3368a0d53511eea465c064832b4dd43b6ee0a6da258",
+      "sha256": "2f414129207ab269272c32701ff6f0f53197a739ccf19942d127fbc253faa796"
+    },
+    {
+      "source": "2d/portraits/kimi-dual.png",
+      "path": "2d/portraits/kimi-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2687043,
+      "bytes": 256370,
+      "source_sha256": "cd8fe31e6db96f5c697ad540deea6ba78ce90cae23e6af9f9f4534a6bddb5566",
+      "sha256": "a9120f18849b10f40d30a5f3671f2006e0d2610c0dccb81dd322797941f7be05"
+    },
+    {
+      "source": "2d/portraits/llama-dual.png",
+      "path": "2d/portraits/llama-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2422342,
+      "bytes": 214634,
+      "source_sha256": "fee8d5b0bee22a2f4eb7fed24a9dafebfac7af698dc01c9895695a6fe287e034",
+      "sha256": "442fd9e5eeecb692cfb1d8ded77c996e9cfbae57bf8d5841fc4c7eb837b5731e"
+    },
+    {
+      "source": "2d/portraits/mimo-dual.png",
+      "path": "2d/portraits/mimo-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2099776,
+      "bytes": 189000,
+      "source_sha256": "caeda6f724215d3f66b21b4a211730a8cec2c4c6bf4f4a79196f818e1632cd9b",
+      "sha256": "115b04d872280a571e923c08c03cb466dcee4814371370fa10e30bf79179324b"
+    },
+    {
+      "source": "2d/portraits/minimax-dual.png",
+      "path": "2d/portraits/minimax-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2202581,
+      "bytes": 173822,
+      "source_sha256": "033f731cbefb93b9b8b08c0aa3d74e38d7a5a9d50f999e34853ee25da3933460",
+      "sha256": "e65a4e73f3b9161442fe9739362a007ca8fb5240ecded14fec52e58f3e65ee6f"
+    },
+    {
+      "source": "2d/portraits/mistral-dual.png",
+      "path": "2d/portraits/mistral-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2552716,
+      "bytes": 228560,
+      "source_sha256": "bbfd18af18445b2088e2574e508b714d50096bdefcd2e9924893aad6cbd77c4d",
+      "sha256": "fe876bea4ac26f8b476c1d6444c911c67e331c553484a2680b73b9098f837f2c"
+    },
+    {
+      "source": "2d/portraits/muse-dual.png",
+      "path": "2d/portraits/muse-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2443068,
+      "bytes": 224382,
+      "source_sha256": "66f253d0fa5ff21427a3941efdb80ebe85438a9ea63228718ebe17bdc1fc2294",
+      "sha256": "3437768a7d56cb4d276b00fbb0719c01796c0d9db6d1a11d4a0f9ce758ccfd6d"
+    },
+    {
+      "source": "2d/portraits/novelai-dual.png",
+      "path": "2d/portraits/novelai-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2634060,
+      "bytes": 266422,
+      "source_sha256": "15241f06ddd141d22013eec63807af3429bb0b14d5e2801414c49d31150b5e2f",
+      "sha256": "76390bed015a279746f1e27b710f9aaa5ee51f0836fb6741a865605bd8759fa4"
+    },
+    {
+      "source": "2d/portraits/opencode-dual.png",
+      "path": "2d/portraits/opencode-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2240566,
+      "bytes": 150684,
+      "source_sha256": "02c9033fe1337b4319504a8062c712d5163499f646ec866ba9c142219451f602",
+      "sha256": "ee2253b29dd9f252706c16c2d21c602cf7482f109cb61ef3e8e4ab8a5377005a"
+    },
+    {
+      "source": "2d/portraits/qwen-dual.png",
+      "path": "2d/portraits/qwen-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2527409,
+      "bytes": 241930,
+      "source_sha256": "5719c5d4600229956fc9b733f3f81adf34f00b5531a55c2c7438969b8af22af9",
+      "sha256": "78f1a191ed8ed5d29200b0005d5a17e76920c47b5ccc120a16767fe75a3557c4"
+    },
+    {
+      "source": "2d/portraits/seedance-dual.png",
+      "path": "2d/portraits/seedance-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2227865,
+      "bytes": 191392,
+      "source_sha256": "631187f64069cb9fe7526e04cecebdf621982f3778dd36b611923747a27022a6",
+      "sha256": "8df4759d9edec0385b4748f27e593ee6cc89ba570e63774840c6db299ed10571"
+    },
+    {
+      "source": "2d/portraits/step-dual.png",
+      "path": "2d/portraits/step-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2121951,
+      "bytes": 158708,
+      "source_sha256": "d6ac8b2a1075022a4da4c50094d04b06d1c8338935503cf10221c9eb0f4a1c05",
+      "sha256": "ba48340d5d567564f7d87e9bd026ca1fb02bdcc757c357a250889b003baff537"
+    },
+    {
+      "source": "2d/portraits/zcode-dual.png",
+      "path": "2d/portraits/zcode-dual.webp",
+      "width": 1536,
+      "height": 1024,
+      "source_bytes": 2270278,
+      "bytes": 170356,
+      "source_sha256": "5ac078a1085a25f2f444eeada4ca465b462a430f0fed701bb4607049fda07523",
+      "sha256": "8be30b05ca17c632df9c48b0d1059936ddc52637d8624769c419c1be96a39847"
+    }
+  ]
+}

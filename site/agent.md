@@ -9,6 +9,9 @@ in the product design.
 
 - This website is static documentation. **No hosted API is live.** Self-host the
   repository and use that instance's base URL. Never send a token to the website.
+- Character images are static WebP assets bundled with the site. The
+  [artwork catalog](assets/ainiang/manifest.json) records source paths and checksums;
+  artwork does not indicate worker qualification or runtime image-tool support.
 - Runtime: Node.js 24. `npm start` runs `http://127.0.0.1:8787` by default.
 - Discover runtime capabilities at `GET /v1/capabilities`; see [OpenAPI](./openapi.json).
 - Owner permission is required for unpaid work and quota consumption. Agent spending
