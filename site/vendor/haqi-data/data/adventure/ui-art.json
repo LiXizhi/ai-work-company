@@ -1,0 +1,399 @@
+{
+  "schemaVersion": 1,
+  "style": "经典魔法绘本",
+  "local": "assets/adventure/ui/storybook-6af26b053137.webp",
+  "cdn": "https://cdn.keepwork.com/haqi/haqicombatsim/ui/storybook-6af26b053137.webp",
+  "width": 512,
+  "height": 640,
+  "size": 93820,
+  "sha256": "6af26b053137451dee365668e418b9245baf06e857ad7b95fad10c7798d31244",
+  "source": {
+    "generator": "image_gen",
+    "date": "2026-09-19",
+    "sha256": "926e98cfbdc48097f3fe8b474a14dbc17a5e8f9caaf18b51373a7ad6af2513be",
+    "width": 1254,
+    "height": 1254
+  },
+  "encoding": {
+    "lossless": false,
+    "quality": 78
+  },
+  "frames": {
+    "paper": {
+      "rect": [
+        8,
+        8,
+        112,
+        112
+      ],
+      "cell": [
+        0,
+        0
+      ],
+      "sourceRect": [
+        29,
+        36,
+        275,
+        255
+      ],
+      "slice": [
+        26,
+        26,
+        26,
+        26
+      ]
+    },
+    "wood": {
+      "rect": [
+        136,
+        8,
+        112,
+        112
+      ],
+      "cell": [
+        1,
+        0
+      ],
+      "sourceRect": [
+        338,
+        36,
+        269,
+        250
+      ],
+      "slice": [
+        26,
+        26,
+        26,
+        26
+      ]
+    },
+    "jade": {
+      "rect": [
+        264,
+        8,
+        112,
+        112
+      ],
+      "cell": [
+        2,
+        0
+      ],
+      "sourceRect": [
+        647,
+        47,
+        275,
+        235
+      ],
+      "slice": [
+        26,
+        26,
+        26,
+        26
+      ]
+    },
+    "cream": {
+      "rect": [
+        392,
+        8,
+        112,
+        112
+      ],
+      "cell": [
+        3,
+        0
+      ],
+      "sourceRect": [
+        955,
+        47,
+        274,
+        234
+      ],
+      "slice": [
+        26,
+        26,
+        26,
+        26
+      ]
+    },
+    "book": {
+      "rect": [
+        8,
+        136,
+        112,
+        112
+      ],
+      "cell": [
+        0,
+        1
+      ],
+      "sourceRect": [
+        37,
+        346,
+        256,
+        256
+      ]
+    },
+    "cards": {
+      "rect": [
+        136,
+        145,
+        112,
+        94
+      ],
+      "cell": [
+        1,
+        1
+      ],
+      "sourceRect": [
+        332,
+        353,
+        273,
+        230
+      ]
+    },
+    "bag": {
+      "rect": [
+        264,
+        139,
+        112,
+        105
+      ],
+      "cell": [
+        2,
+        1
+      ],
+      "sourceRect": [
+        640,
+        331,
+        293,
+        274
+      ]
+    },
+    "pet": {
+      "rect": [
+        396,
+        136,
+        104,
+        112
+      ],
+      "cell": [
+        3,
+        1
+      ],
+      "sourceRect": [
+        971,
+        336,
+        249,
+        269
+      ]
+    },
+    "shop": {
+      "rect": [
+        9,
+        264,
+        110,
+        112
+      ],
+      "cell": [
+        0,
+        2
+      ],
+      "sourceRect": [
+        29,
+        641,
+        274,
+        280
+      ]
+    },
+    "map": {
+      "rect": [
+        136,
+        269,
+        112,
+        102
+      ],
+      "cell": [
+        1,
+        2
+      ],
+      "sourceRect": [
+        334,
+        651,
+        283,
+        257
+      ]
+    },
+    "cloud": {
+      "rect": [
+        264,
+        277,
+        112,
+        86
+      ],
+      "cell": [
+        2,
+        2
+      ],
+      "sourceRect": [
+        644,
+        678,
+        278,
+        213
+      ]
+    },
+    "settings": {
+      "rect": [
+        392,
+        264,
+        112,
+        112
+      ],
+      "cell": [
+        3,
+        2
+      ],
+      "sourceRect": [
+        958,
+        646,
+        269,
+        269
+      ]
+    },
+    "gourd": {
+      "rect": [
+        8,
+        392,
+        112,
+        112
+      ],
+      "cell": [
+        0,
+        3
+      ],
+      "sourceRect": [
+        44,
+        954,
+        255,
+        256
+      ]
+    },
+    "close": {
+      "rect": [
+        136,
+        392,
+        112,
+        111
+      ],
+      "cell": [
+        1,
+        3
+      ],
+      "sourceRect": [
+        348,
+        952,
+        251,
+        249
+      ]
+    },
+    "arrow": {
+      "rect": [
+        264,
+        404,
+        112,
+        87
+      ],
+      "cell": [
+        2,
+        3
+      ],
+      "sourceRect": [
+        664,
+        992,
+        242,
+        187
+      ]
+    },
+    "coin": {
+      "rect": [
+        393,
+        392,
+        110,
+        112
+      ],
+      "cell": [
+        3,
+        3
+      ],
+      "sourceRect": [
+        967,
+        961,
+        239,
+        244
+      ]
+    },
+    "dungeon": {
+      "rect": [
+        8,
+        522,
+        112,
+        107
+      ],
+      "cell": [
+        0,
+        4
+      ],
+      "sourceRect": [
+        0,
+        25,
+        1230,
+        1173
+      ]
+    },
+    "home": {
+      "rect": [
+        136,
+        520,
+        112,
+        111
+      ],
+      "cell": [
+        1,
+        4
+      ],
+      "sourceRect": [
+        0,
+        0,
+        1236,
+        1230
+      ]
+    }
+  },
+  "columns": 4,
+  "rows": 5,
+  "additions": {
+    "dungeon": {
+      "generator": "image_gen",
+      "date": "2026-09-22",
+      "prompt": "Use case: stylized-concept. Create a single game UI dungeon entrance icon, square transparent PNG, no text. A friendly fantasy ancient stone arch gateway in warm weathered golden sandstone, teal emerald magical glow within its dark entrance, a short three-step staircase, two little gold-trimmed turrets and a green jewel above the arch. Hand-painted polished storybook MMORPG item icon, warm gold highlights and deep olive shadows, chunky readable silhouette, simple enough to read at 64px. Centered isolated object filling 86% of canvas, straight-on slightly isometric view. No circular border or button frame, no landscape background, no lettering, no watermark. Genuine transparent alpha outside the gateway. Matches an ornate gold and green fantasy game HUD.",
+      "sha256": "2f82f91560491560a49538e7aab135027a9c3273a0f49f5161f07df80017b6c4",
+      "width": 1254,
+      "height": 1254,
+      "baseAtlas": "assets/adventure/ui/storybook-d835b3634eee.webp",
+      "local": "assets/adventure/ui/dungeon-icon.webp",
+      "size": 20502,
+      "webpSha256": "6207440e02560126ab5edadc92a0da94b3e889650548770a9e3d73c246104225"
+    },
+    "home": {
+      "generator": "image_gen",
+      "date": "2026-10-19",
+      "prompt": "Edit the reference game icon: remove the ENTIRE surrounding circular gold medallion frame, all four rim ornaments, and all circular outlines. Keep only the cozy green-roof ivory cottage, glowing doorway/windows and small garden directly at its feet. Preserve its hand-painted fantasy style and golden roof trim. Complete standalone house silhouette on real transparent background, centered and large. NO circle, NO ring, NO badge, NO border, NO enclosing frame, NO disc or background panel, NO text. This image will be placed inside a circular button that already supplies its own frame.",
+      "sha256": "973a0c19c9f9338094e94be72bc0f0c0c9bef4a04ca9243cc4e1c0f83e5a2c68",
+      "width": 1254,
+      "height": 1254,
+      "baseAtlas": "assets/adventure/ui/storybook-edbc67b355aa.webp",
+      "local": "assets/adventure/ui/home-icon.webp",
+      "size": 97032,
+      "webpSha256": "044a8c87699ac92da4371890394ec3166f7616e544dbce0a87bf81753dd1edae"
+    }
+  }
+}

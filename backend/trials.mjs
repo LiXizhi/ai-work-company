@@ -58,9 +58,11 @@ export class Trials {
     const approved=this.s.one("SELECT COALESCE(SUM(value),0) n FROM trial_runs WHERE worker=? AND state='approved'",worker).n;
     const reserved=this.s.one("SELECT COALESCE(SUM(reserved),0) n FROM trial_runs WHERE worker=? AND state IN ('running','submitted','expired','revoked')",worker).n;
     const rejected = this.s.one("SELECT COALESCE(SUM(value),0) n FROM trial_runs WHERE worker=? AND state='rejected'",worker).n;
-    return {worker_id:worker,qualified:!!w.qualified,suspended:!!w.suspended,approved_usd_micro:approved,reserved_usd_micro:reserved,rejected_usd_micro:rejected,target_usd_micro:TARGET,pass_usd_micro:PASS,remaining_usd_micro:Math.max(0,TARGET-approved-reserved-rejected),trial_income_minor:0};
+    const locked=this.s.all("SELECT price,reviewed_usage FROM trial_runs WHERE worker=? AND state='approved'",worker).reduce((n,r)=>n+usageValue(JSON.parse(r.price),JSON.parse(r.reviewed_usage)).credit_minor,0);
+    return {trial_locked_minor:locked,worker_id:worker,qualified:!!w.qualified,suspended:!!w.suspended,approved_usd_micro:approved,reserved_usd_micro:reserved,rejected_usd_micro:rejected,target_usd_micro:TARGET,pass_usd_micro:PASS,remaining_usd_micro:Math.max(0,TARGET-approved-reserved-rejected),trial_income_minor:0};
   }
   claim(owner, worker) {
+    if(this.s.freeTasks) need(!this.s.one("SELECT id FROM free_tasks WHERE worker=? AND state='running' AND lease_until>?",worker,this.s.now()),'worker_busy');
     this.expire(); const s=this.s,w=s.worker(owner,worker); need(!w.qualified && !w.suspended,'trial_not_eligible'); need(s.models.includes(w.model),'model_not_allowed');
     need(!s.one("SELECT id FROM trial_runs WHERE worker=? AND state='running'",worker),'worker_busy');
     const p=this.progress(owner,worker); if(p.approved_usd_micro>=PASS) return {state:'review_required',...p};
@@ -107,7 +109,8 @@ export class Trials {
       this.s.run('INSERT INTO receipts(reference,worker) VALUES(?,?)',reference,worker);
       this.s.run('UPDATE workers SET qualified=1,trial_minor=?,evidence_ref=? WHERE id=?',Math.floor(p.approved_usd_micro/10000),reference,worker);
       const rejected = this.s.one("SELECT COALESCE(SUM(value),0) n FROM trial_runs WHERE worker=? AND state='rejected'",worker).n;
-    return {worker_id:worker,qualified:true,trial_income_minor:0};
+    const locked=this.s.all("SELECT price,reviewed_usage FROM trial_runs WHERE worker=? AND state='approved'",worker).reduce((n,r)=>n+usageValue(JSON.parse(r.price),JSON.parse(r.reviewed_usage)).credit_minor,0);
+    return {trial_locked_minor:locked,worker_id:worker,qualified:true,trial_income_minor:0};
     });
   }
 }

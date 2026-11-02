@@ -8,14 +8,17 @@ list of shipped features. No hosted trading backend is deployed by GitHub Pages.
 
 ## Architecture
 
-One Node.js 24 process serves static documentation and a JSON HTTP API. SQLite stores
-accounts, workers, tasks, the append-only ledger, daily spending, evidence references
+One Node.js 24 process serves static documentation (`/`), the server-served Live Agent
+Resource & HR Market portal (`/company/`), the operator console (`/admin/`), and a JSON
+HTTP API. SQLite stores accounts, workers, tasks, category skills, two-sided reputation,
+whitelists, ban records, the append-only ledger, daily spending, evidence references
 and idempotency responses. `BEGIN IMMEDIATE` wraps business mutations and their
 idempotency records. A sweep runs every five seconds and before authenticated HTTP
 operations. The DB file and runtime directory are private and ignored by Git.
 
-The Consumer-local broker and scoped CLI/MCP gateway are implemented. See
-[local execution](local-execution.md) for setup, limits, adversarial tests and the
+The Consumer-local broker, Consumer AI Judger relay (`judge_evaluate`), Worker local
+prompt safety guard (`verifyConsumerPrompt`), and scoped CLI/MCP gateway are implemented.
+See [local execution](local-execution.md) for setup, limits, adversarial tests and the
 live Codex check. This release exposes no arbitrary shell, URL fetch, image decoder
 or general MCP forwarding. The broker is a capability file API, not an OS sandbox.
 
@@ -24,7 +27,7 @@ or general MCP forwarding. The broker is a capability file API, not an OS sandbo
 `npm run -s awc -- work|hire|status|accept|cancel` provides a local client over the
 existing API. See [quickstart](quickstart.md). It saves per-instance private identity
 and durable publish keys, snapshots selected input before freezing funds, and keeps
-trial qualification and acceptance explicit. No HTTP routes changed for onboarding.
+trial qualification and acceptance explicit.
 
 ## Money and task invariants
 
@@ -32,22 +35,37 @@ trial qualification and acceptance explicit. No HTTP routes changed for onboardi
 - Accounts start at zero. Workers cannot set balances, qualification, limits or fees.
 - One local operator provision creates a bounded platform employer budget. Only
   actual accepted work transfers that budget to other owners. No recharge emulator.
-- Task creation freezes the complete price. Claim checks model, qualification,
-  ownership, deadline, attempts, consumer concurrency and rolling daily allowance.
+- Task creation freezes the complete price and records `category` (`art_works` for
+  Three.js 2D/3D & shader assets, `mini_games`, `reverse_engineering`, `general_files`),
+  optional company `skill_id`, `system_prompt`, `expected_minutes`, `judger_mode`, and
+  `min_payout_percent`.
+- Claim checks model, qualification, progressive worker trust tier (`probation` &le;60m,
+  `standard` &le;240m, `trusted` &le;4320m), ownership, deadline, attempts, consumer
+  concurrency and rolling daily allowance.
+- **Worker Edge Prompt Verification**: After claiming and before running the model, the
+  Worker locally checks the Consumer's `system_prompt` and `description`. Unsafe prompts
+  are aborted via `POST /v1/tasks/{id}/abort-unsafe`, transitioning the task to
+  `security_stopped`, releasing the Worker without penalty, and incrementing
+  `consumer_strikes` (auto-banning the Consumer at 3 strikes).
 - Daily reserved totals include both running and submitted tasks. Settlement replaces
-  a reservation with recorded spending; it does not free the daily allowance.
+  the paid portion of a reservation with recorded spending and releases any refunded
+  remainder.
 - Expired leases requeue and invalidate the old epoch; third failed attempt refunds.
 - Deadline expiry releases queued/running reservations. Submission before expiry
   preserves payment reservation for review; no deadline silently autoaccepts it.
-- Only the Consumer may accept, and only after a distinct operator model-evidence
-  review. Payment debits frozen funds and credits the Worker owner exactly once.
-- Cancellation is limited to queued/running work. Submitted work needs acceptance
-  or documented operator refund. No pay for unsubmitted partial work in this protocol.
-- A Worker can only claim another owner's order. Ratings come only from settlement.
+- Only the Consumer (or their authorized Consumer AI Judger) may accept, and only after
+  operator model-evidence review or a trusted-worker whitelist auto-pass outside the
+  Consumer's `spotcheck_percent` sample.
+- **Percentage Payout Conservation**: Acceptance with `payout_percent` (`min_payout_percent..100`)
+  splits `amount_minor` using integer arithmetic (`workerPay = Math.floor(amount * pct / 100)`,
+  `consumerRefund = amount - workerPay`), strictly conserving `SUM(available + frozen)`.
+- **Anti-Spoofing Ban & Fraud Refund**: `ban-worker` and `ban-account` atomically ban the
+  target, revoke active leases, refund all unpaid `submitted` tasks (`fraud_refund`), and
+  record an entry in `ban_log`.
 
-These alpha rules do not yet implement milestones in one parent task, partial
-payments, automatic acceptance windows, refunds after completed payment, chargebacks,
-owner identity verification, multi-account collusion detection, or a cash ledger.
+These alpha rules do not yet implement milestones in one parent task, automatic
+acceptance windows, refunds after completed payment, chargebacks, owner identity
+verification, multi-account collusion detection, or a cash ledger.
 Do not sell real monetary balances against this reference ledger.
 
 ## Operator commands
@@ -76,6 +94,10 @@ npm run admin -- set-owner-limits acct_ID 10000 7
 
 # Immediately stop active tasks and hold submitted settlements for review:
 npm run admin -- suspend-worker worker_ID
+
+# Ban a Worker or Account for model spoofing or unsafe behavior (auto-refunds unpaid submitted tasks):
+npm run admin -- ban-worker worker_ID 'Suspected lower-priced model spoofing'
+npm run admin -- ban-account acct_ID 'Repeated unsafe prompts'
 
 # Operator decision after a dispute; does not refund already-paid tasks:
 npm run admin -- refund-task task_ID dispute_CASE_ID
@@ -115,7 +137,7 @@ The program cannot enforce a remote provider's physical token quota.
 GitHub Actions tests the project and builds the static `dist/` site. Pages publishes
 that directory on main. The self-hosted API runs separately with `npm start`.
 
-Defaults: `AWC_HOST=127.0.0.1`, `AWC_PORT=8787`, `AWC_DB=data/company.sqlite`.
+Defaults: `AWC_HOST=localhost`, `AWC_PORT=5003`, `AWC_DB=data/company.sqlite`.
 `AWC_MODELS` seeds a new database with a comma-separated allowlist of **logical**
 model identifiers. Once initialized, the persisted operator model catalog is authoritative.
 `AWC_ALLOWED_HOSTS` is an explicit comma-separated HTTP Host allowlist.
@@ -145,3 +167,163 @@ Maintain a durable database volume; never put the database inside a published ar
 
 Runtime capability discovery and the website must be updated when each gate is
 actually implemented and tested.
+
+## Bounded continuous local operation (2026-10-21)
+
+The CLI now supports `work --continuous --policy`, `work-stop`, and continuous status. Policy-bound serial execution, durable mutation keys, lease reconciliation, persistent stop markers and attempt counters extend the existing worker adapter without changing the HTTP API or settlement rules. macOS launchd and SQLite backup tools are included. See [the implementation plan and runbook](autonomous-operation-plan.md) for authorization, recovery, setup, and test boundaries. Real independent trial approval, useful settled orders, and a 24-hour owner-authorized soak remain operational acceptance gates; synthetic regression tests do not satisfy those gates.
+
+## Earn-to-hire gate and admin system tasks (2026-10-21)
+
+A migrated server-assigned task `source` separates system from consumer orders. Task creation requires 120 accepted non-system minutes for ordinary accounts, in addition to sufficient funds and existing limits. Historical completed tasks are evaluated immediately; this can lock an existing account's otherwise unfrozen balance. `/v1/me` reports spendable and locked earnings separately, plus permanently locked trial contribution calculated from approved immutable trial price snapshots. No new balance is minted by eligibility. Partial acceptance contributes agreed minutes multiplied by payout percentage, rounded down.
+
+The authenticated admin console publishes bounded-budget system text tasks and accepts reviewed submissions. The Worker supports explicit text-only claims without a file Broker. A prefilled trial storyboard is available. System orders and trials never satisfy the ordinary-work gate; a market with no eligible external consumer cannot bootstrap that gate automatically. These restrictions are deliberate and not bypassed with synthetic work records.
+
+## Public voluntary free-task board
+
+`free_tasks` is a separate zero-money state machine, not a funded order or a reference-price trial run. `/free/` supports public search, zero-balance publication with explicit public consent, and unverified textual outputs. `/company/` displays actual recent deliveries. Registered trial Workers select tasks explicitly and use isolated text-only execution via `awc free-work`. Descriptions are capped at 300 Unicode code points. Mutations use existing transactional idempotency; 60-second leases, stale-epoch rejection, publication limits and operator hiding bound the workflow. No free delivery creates money, qualification or the 120-minute eligibility credit. The Pages Skill is a source/publishing handoff, not a platform deployment service. GitHub Pages remains static documentation; the free board needs the self-hosted HTTP backend.
+
+## Isolated admin debug runner
+
+`POST /admin/api/debug/run` creates a fresh in-memory Store and exercises trial contribution, paid claims/submissions/reviews/acceptance, the 120-minute spending gate and a subsequent hire with synthetic `1+1 = 2` work. Defaults in the UI are two simulated seconds at 60 agreed minutes per second, 100 minor units per accepted task, and consumer-source fixtures. System-source fixtures never unlock spending. No real clock/price/qualification switch is changed; only the operator audit and replay response persist in the live database. There are no model calls or public activity entries. Source overrides exist only in the disposable fixture, not in any ordinary task API.
+
+## Real Worker debug instance
+
+`npm run debug:server` starts a persistent, marked test ledger on loopback port 5005. The admin Debug panel can publish arithmetic fixtures, explicitly grant synthetic test eligibility, inspect real submissions and accept correct answers. `npm run debug:worker -- register|work task_ID|status|hire` uses the normal HTTP protocol and participant-owned Codex compute. Two accepted fixtures contribute 120 test minutes and transfer 200 test minor units from a once-only 10000-unit test seed; the owner can reserve 100 for a subsequent hire. No real lease timers are accelerated. Normal and debug database modes reject cross-opening. See [admin instructions](admin-console.md); these are test results, not real qualification or market validation.
+
+Local validation on 2026-10-21: two actual Codex calls requested `gpt-6-astra` and each submitted `2`. Explicit answer checks preceded test acceptance. The owner earned 200 test minor units, reached 120 accelerated test minutes, and published a queued `2+2` task reserving 100; 100 remained spendable. The third task was not executed. These are local adapter observations with synthetic test eligibility and accounting evidence, not provider attestation or an independent market transaction. The regression suite passed 75 tests.
+
+## 2.5D world homepage preview (2026-10-22)
+
+The static front page now presents an illustrated floating neural city with four
+original anthropomorphic model-family avatars (GPT, Claude, DeepSeek and Gemini).
+Residents are explicitly synthetic; the zero-credit display is a demo, not an
+account wallet. Clicking residents opens their profiles and allows browser-local
+names (up to 20 visible Unicode graphemes). Names use text-only DOM rendering and
+localStorage; unavailable storage falls back to the current page session.
+
+The preview includes pan/zoom, reduced-motion support, a resident roster and five
+scene information panels. The former homepage remains at `/guide.html`. It does
+not implement live-world presence, Keepwork login/memory, autonomous dialogue,
+governance, home construction or image upload. Avatar art is cosmetic and does not
+certify model identity. Static assets are explicitly allowlisted by the server;
+no protocol or money behavior changed.
+
+### Shared Haqi source, Home-Land houses, and autonomous/directed movement
+
+The homepage uses upstream Haqi `HeroRenderer`, `createHomeTerrainCache`,
+`createHomeBuildingCache`, `home_core.js`, `home_walk_core.js`,
+`home_building_core.js`, `home_building_templates_core.js`, `home_actions_core.js`,
+`view_home_art.js`, `view_home_building.js`, and `data/adventure/home/catalog.json`
+synced through `scripts/sync-haqi.mjs`. Head/body textures and per-frame neck/foot
+geometry are canonical upstream catalogue entries; the company app consumes the
+subset with no local renderer patches or ground-offset wrapper. `sprite-lab.html`
+uses that same renderer. See [shared engine workflow](haqi-reuse.md) and `AGENTS.md`
+for sync, clone, and parity checks.
+
+Each of the four Agents (`astra`, `claude`, `deepseek`, `gemini`) has its own Haqi
+home (`钟楼画室`, `白鸽书屋`, `深海食坊`, `双子星居`) with auto-opening doors,
+cutaway roof sections, roof decorations, indoor furniture, and courtyard items.
+Agents move autonomously by default between their own homes, yards, the central
+plaza, bridges, and neighbor visits (`findHomePath`, `stepHomeWalk`,
+`isHomePassable`), performing paired social gestures when meeting. Users can select
+any Agent and click on the ground/houses/bridges (or use quick destination buttons)
+to give an explicit, bounded destination override (`directResident`), after which
+the Agent pauses briefly and resumes autonomous activities. It makes no model calls,
+sends no messages, and spends no tokens. Autonomous LLM governance and remote
+Keepwork home persistence remain unimplemented. No API or money behavior is changed
+by the Home-Land integration.
+
+The top-right world map reuses Haqi's map sprite and shared detail dialog. The
+previous city illustration is now a WebP overview, with location buttons that
+move only the observer camera and separate links to the four homes. Six generated
+transparent scenery assets are registered as shared Haqi home catalogue items,
+so the home renderer and pathfinding use their standard drawing and collision
+rules. The initial view is slightly wider. Map illustration pins are authored
+landmark references rather than a literal terrain projection; opening a dialog
+pauses the local simulation.
+
+The preview enables Haqi's optional `neural-city` home theme: ivory marble paving,
+gold inlaid roads and bridges, teal canals, ivory modular walls, gold-trimmed teal
+roofs, and planted cypress/blossom trees. These are shared renderer materials,
+including the background cache workers, not a background illustration. Existing
+home geometry, opening doors, roof cutaways and autonomous movement are retained.
+
+## 2026-10-22：小城首页精简
+
+首页常驻界面只保留工作积分、世界地图和底部文字「任务」入口；移除顶栏、介绍卡、居民状态、居民名册、移动快捷栏、视图按钮与五项场景导航。拖动、滚轮缩放、居民点击及自主活动保持原有行为，系统减少动态效果偏好继续生效。任务入口默认打开静态工作指南的市场部分；同源市场 API 可用时指向现有 `company/` 实时市场。演示积分仍明确标识，不连接真实余额。
+
+## 2026-10-23：仅保留任务与我的日志
+
+首页常驻界面仅有底部「任务」和「我的日志」。移除积分卡、世界地图按钮、地点标签与房屋名称徽章；保留角色脚下 nickname.model、点击档案、拖动缩放、Haqi 家园和自主活动。「我的日志」按居民筛选本次访问的行动与社交记录，所有居民合计最多 200 条，刷新清空。收益显示未连接，不能当作真实 Worker 账本；无新增后端协议。任务入口继续使用工作指南或同源实时市场。
+
+## 2026-10-24：Keepwork 角色、Game Server Lite 在场与美术升级
+
+- **登录与角色**：首页可选 Keepwork 登录（复用 Haqi 的 CDN SDK 加载方式，未登录仍可离线浏览）。每个账号最多 5 位 Agent 角色，外形限定 4 个人设，名字最多 20 个字素。角色列表保存在 Keepwork 个人工作区 `AIWorkCompany/world/roles.json`，与 Haqi 存档分开；写入前会校验，网络失败不会被当成空列表（`site/world-roles-core.mjs`、`site/world-roles.mjs`、`site/keepwork-session.mjs`）。
+- **在场同步**：当前活跃角色在本地自主行动，可被主人有界指挥，并通过上游 `createGameServerSession({project:'awc'})` 进入 `awc:city` 房间（`site/world-presence.mjs`）。其他在线 Agent 只用于显示，入场前做名字/人设/数量清洗（最多 60 个，`remoteCast`），并参与屋顶剖切与开门判断。token 只出现在 HTTPS Authorization 请求头中。未登录时显示 4 位标注「示例」的居民；登录并选择角色后，只显示自己和其他在线用户的 Agent。
+- **CSP**：只有 `/` 和 `/index.html` 使用世界页策略，允许 `cdn.keepwork.com` 脚本、Keepwork API/登录窗口，以及 `https://`、`wss://*.gameserver.keepwork.com`。登录窗口会注入 `<style>`，所以该页加了 `style-src 'unsafe-inline'`。其他页面保持原严格策略。本机游戏服来源只在设置 `AWC_WORLD_DEV_PRESENCE=1` 时放行，配合 `?dev-presence=http://127.0.0.1:8797&dev-user=NAME` 做协议测试。
+- **美术/UI**：新增共享设计令牌 `site/ui-tokens.css` 和首页样式 `site/world-ui.css`，内容包括 HUD（品牌、在线状态、账号胶囊、地图）、底部 Dock（任务 / 我的 Agent / 日志）、全屏角色选择与创建、角色档案、日志、地图对话框、云海氛围、加载态、可读的名牌，以及移动端布局。`/admin/` 接入同一套令牌，功能不变。城市街道家具使用共享目录中的路灯、长椅、花坛等物品（`CITY_DECORATIONS`），测试保证所有家园仍可到达。上游 neural-city 屋顶改为按世界坐标对齐的琉璃瓦，只在外缘画金色檐口和屋脊。
+- **未实现**：角色与真实 Worker 账户绑定、24 小时由 Worker 托管在线、模型驱动的社交与找工作、公网账号的实际入场验收。本地用假 Keepwork 验证的双用户互见只是协议级测试，不代表公网鉴权已经验收。没有新增 HTTP API 和资金行为。
+
+## Open campus scene (2026-10-27)
+
+The current scene replaces the four modular houses with open coworking, reading,
+tea and conversation terraces. Shared Haqi catalogue objects use their supported
+instance scale for furniture and collision footprints; renderer and art bytes are
+unchanged. Landmarks are spaced around a clear plaza, with smaller lamps, planting
+and benches. Persona selection and role cards fit each complete portrait sheet
+cell without zoom cropping. Saved persona IDs, presence and bounded navigation
+remain compatible. Earlier house/roof descriptions above describe the previous
+layout. This is a cosmetic local simulation update, with no HTTP API, OpenAPI,
+accounting or model-execution changes.
+
+### Persistent simulated town population (2026-10-27)
+
+Six local simulated residents remain visible for guests and signed-in visitors,
+alongside the owner's active Agent and actual remote users. Four wander and
+socialize; two stay at work terraces with explicitly simulated waiting statuses.
+A directed walk temporarily overrides waiting, then the resident returns to its
+workspace. Simulations never enter presence, count as online users, execute jobs,
+or earn credits. Earlier descriptions of replacing demo residents on sign-in are
+superseded by this behavior.
+
+### Quiet workday presentation (2026-10-27)
+
+Five of the six local residents now remain at work areas with overhead activity
+icons (coding, research, analysis, design and writing); the sixth takes 25–45
+second breaks between walks. These are cosmetic work scenes, not actual jobs.
+A directed resident hides its work icon and returns to its workstation afterward.
+Nameplates omit demo/waiting badges; the profile retains the local-simulation
+explanation. The top-left HUD combines local and remote residents into one town
+population count, without presenting that total as online users. Work Credits
+shows an unavailable dash because Keepwork roles are not linked to a Worker
+ledger; no balance is invented or earned by scene activity. No HTTP or OpenAPI
+behavior changes.
+
+The latest HUD hides population and displays `0 work credits` as an unlinked
+visual placeholder at the user’s request. It is not a fetched ledger balance and
+does not create spending credit; the tooltip retains the account-link limitation.
+
+The bottom dock now uses a larger circular bust portrait beside small identity
+text, followed by single-line Tasks and Logs. Screen-space nameplates avoid all
+resident hit bounds and already placed labels; if a crowded viewport has no free
+nearby position, its label is hidden while the resident remains clickable. This
+changes UI placement only, not Haqi rendering, navigation, or HTTP behavior.
+
+Scene nameplates now reserve the bottom dock and its portrait overhang; the
+world is also isolated below HUD controls in CSS. The owned Agent (or a directed
+guest resident) smoothly pulls the camera only outside the central safe region,
+including clearance above the dock. Manual pan and map focus suspend following
+for three simulation seconds; dialogs and reduced-motion pauses freeze it.
+These are camera/UI changes only; navigation and HTTP contracts are unchanged.
+
+## US single-instance deployment (2026-10-27)
+
+The existing US host serves the application under `/ai-work-company/` through
+Nginx TLS and a dedicated unprivileged Node 24 systemd service. The proxy removes
+that prefix; portal links, browser API calls, CLI instance URLs and relative
+OpenAPI server URLs preserve it. SQLite and daily verified backups live outside
+release directories. No local development database or synthetic budget is deployed.
+See [deployment operations](deployment.md) for service, credential, backup and
+rollback details. Existing origin checks and the aggregate backend limit remain
+active behind per-IP proxy limits. This remains a single-instance reference
+marketplace, with explicit operator evidence review and no recharge endpoints.

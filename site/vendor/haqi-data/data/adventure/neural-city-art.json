@@ -1,0 +1,529 @@
+{
+  "schemaVersion": 1,
+  "source": "image_gen; original neural-city illustration",
+  "atlases": {
+    "neuralObservatory": {
+      "local": "assets/adventure/neural-city/observatory-22bff79bb2c2.webp",
+      "width": 508,
+      "height": 478,
+      "size": 119930,
+      "sha256": "22bff79bb2c295fa1598391db13183248c372f808a9e22287c2ed8500a905a0e",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+        "sourceRect": [
+          36,
+          74,
+          508,
+          478
+        ],
+        "prompt": "art-references/neural-city-prompts.json"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "observatory": {
+          "rect": [
+            0,
+            0,
+            508,
+            478
+          ]
+        }
+      },
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/observatory-22bff79bb2c2.webp"
+    },
+    "neuralMemory": {
+      "local": "assets/adventure/neural-city/memory-75e59f5dfc82.webp",
+      "width": 426,
+      "height": 489,
+      "size": 146990,
+      "sha256": "75e59f5dfc82c4d58c8db0dd53cf148b67ac0b37504632a6f7d7720973054abd",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+        "sourceRect": [
+          569,
+          57,
+          426,
+          489
+        ],
+        "prompt": "art-references/neural-city-prompts.json"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "memory": {
+          "rect": [
+            0,
+            0,
+            426,
+            489
+          ]
+        }
+      },
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/memory-75e59f5dfc82.webp"
+    },
+    "neuralLibrary": {
+      "local": "assets/adventure/neural-city/library-339023c4f46d.webp",
+      "width": 463,
+      "height": 425,
+      "size": 110294,
+      "sha256": "339023c4f46d64c3a723bb42f123d086f91ee48e7fd7f6e24cb4b9c0f73711f1",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+        "sourceRect": [
+          1030,
+          117,
+          463,
+          425
+        ],
+        "prompt": "art-references/neural-city-prompts.json"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "library": {
+          "rect": [
+            0,
+            0,
+            463,
+            425
+          ]
+        }
+      },
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/library-339023c4f46d.webp"
+    },
+    "neuralWelcome": {
+      "local": "assets/adventure/neural-city/welcome-5f0fcfe1eab2.webp",
+      "width": 488,
+      "height": 353,
+      "size": 86112,
+      "sha256": "5f0fcfe1eab2c9b2194fc39824721c4f98f9e3ace70153b3ee958c4cf41ed5b6",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+        "sourceRect": [
+          18,
+          604,
+          488,
+          353
+        ],
+        "prompt": "art-references/neural-city-prompts.json"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "welcome": {
+          "rect": [
+            0,
+            0,
+            488,
+            353
+          ]
+        }
+      },
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/welcome-5f0fcfe1eab2.webp"
+    },
+    "neuralFountain": {
+      "local": "assets/adventure/neural-city/fountain-924b94f0ff4b.webp",
+      "width": 427,
+      "height": 322,
+      "size": 193070,
+      "sha256": "924b94f0ff4b23d0cd46401ea782be20ef8630aecc81b49adb99eb4fda8a9e18",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+        "sourceRect": [
+          556,
+          632,
+          427,
+          322
+        ],
+        "prompt": "art-references/neural-city-prompts.json"
+      },
+      "encoding": {
+        "lossless": true,
+        "quality": 100
+      },
+      "frames": {
+        "fountain": {
+          "rect": [
+            0,
+            0,
+            427,
+            322
+          ]
+        }
+      },
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/fountain-924b94f0ff4b.webp"
+    },
+    "neuralWorkshop": {
+      "local": "assets/adventure/neural-city/workshop-7339d416ed3a.webp",
+      "width": 479,
+      "height": 403,
+      "size": 87752,
+      "sha256": "7339d416ed3aff0716bafc5b2d84cc40294a0573ad5c8dec39346f0b8c9ba583",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+        "sourceRect": [
+          1031,
+          573,
+          479,
+          403
+        ],
+        "prompt": "art-references/neural-city-prompts.json"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "workshop": {
+          "rect": [
+            0,
+            0,
+            479,
+            403
+          ]
+        }
+      },
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/workshop-7339d416ed3a.webp"
+    }
+  },
+  "map": {
+    "local": "assets/adventure/neural-city/world-map-50a6ee69bbb8.webp",
+    "width": 1100,
+    "height": 733,
+    "size": 160658,
+    "sha256": "50a6ee69bbb8fc26a2952cca6234ccc982b49ca2092840edc890504f8acf1d8a",
+    "source": {
+      "generator": "image_gen",
+      "sha256": "cbe0a814722005c9bbb85bc5a271d3ceede6e852f5b5e8cf12b0ff4616ce4e49",
+      "note": "Earlier AI Work Company world concept illustration, retained as illustrated overview."
+    },
+    "encoding": {
+      "lossless": false,
+      "quality": 82
+    },
+    "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/world-map-50a6ee69bbb8.webp"
+  },
+  "homeItems": [
+    {
+      "id": "neural-observatory",
+      "zh": "\u89c2\u661f\u53f0",
+      "en": "observatory",
+      "category": "outdoor",
+      "layer": "solid",
+      "size": [
+        4,
+        3
+      ],
+      "renderScale": 1.15,
+      "art": {
+        "local": "assets/adventure/neural-city/observatory-22bff79bb2c2.webp",
+        "width": 508,
+        "height": 478,
+        "size": 119930,
+        "sha256": "22bff79bb2c295fa1598391db13183248c372f808a9e22287c2ed8500a905a0e",
+        "source": {
+          "generator": "image_gen",
+          "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+          "sourceRect": [
+            36,
+            74,
+            508,
+            478
+          ],
+          "prompt": "art-references/neural-city-prompts.json"
+        },
+        "encoding": {
+          "lossless": false,
+          "quality": 94
+        },
+        "frames": {
+          "observatory": {
+            "rect": [
+              0,
+              0,
+              508,
+              478
+            ]
+          }
+        },
+        "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/observatory-22bff79bb2c2.webp",
+        "crop": [
+          0,
+          0,
+          508,
+          478
+        ]
+      }
+    },
+    {
+      "id": "neural-memory",
+      "zh": "\u8bb0\u5fc6\u6811",
+      "en": "memory",
+      "category": "outdoor",
+      "layer": "solid",
+      "size": [
+        4,
+        3
+      ],
+      "renderScale": 1.15,
+      "art": {
+        "local": "assets/adventure/neural-city/memory-75e59f5dfc82.webp",
+        "width": 426,
+        "height": 489,
+        "size": 146990,
+        "sha256": "75e59f5dfc82c4d58c8db0dd53cf148b67ac0b37504632a6f7d7720973054abd",
+        "source": {
+          "generator": "image_gen",
+          "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+          "sourceRect": [
+            569,
+            57,
+            426,
+            489
+          ],
+          "prompt": "art-references/neural-city-prompts.json"
+        },
+        "encoding": {
+          "lossless": false,
+          "quality": 94
+        },
+        "frames": {
+          "memory": {
+            "rect": [
+              0,
+              0,
+              426,
+              489
+            ]
+          }
+        },
+        "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/memory-75e59f5dfc82.webp",
+        "crop": [
+          0,
+          0,
+          426,
+          489
+        ]
+      }
+    },
+    {
+      "id": "neural-library",
+      "zh": "\u77e5\u8bc6\u56fe\u4e66\u9986",
+      "en": "library",
+      "category": "outdoor",
+      "layer": "solid",
+      "size": [
+        4,
+        3
+      ],
+      "renderScale": 1.15,
+      "art": {
+        "local": "assets/adventure/neural-city/library-339023c4f46d.webp",
+        "width": 463,
+        "height": 425,
+        "size": 110294,
+        "sha256": "339023c4f46d64c3a723bb42f123d086f91ee48e7fd7f6e24cb4b9c0f73711f1",
+        "source": {
+          "generator": "image_gen",
+          "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+          "sourceRect": [
+            1030,
+            117,
+            463,
+            425
+          ],
+          "prompt": "art-references/neural-city-prompts.json"
+        },
+        "encoding": {
+          "lossless": false,
+          "quality": 94
+        },
+        "frames": {
+          "library": {
+            "rect": [
+              0,
+              0,
+              463,
+              425
+            ]
+          }
+        },
+        "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/library-339023c4f46d.webp",
+        "crop": [
+          0,
+          0,
+          463,
+          425
+        ]
+      }
+    },
+    {
+      "id": "neural-welcome",
+      "zh": "\u5165\u804c\u5c0f\u7ad9",
+      "en": "welcome",
+      "category": "outdoor",
+      "layer": "solid",
+      "size": [
+        4,
+        3
+      ],
+      "renderScale": 1.15,
+      "art": {
+        "local": "assets/adventure/neural-city/welcome-5f0fcfe1eab2.webp",
+        "width": 488,
+        "height": 353,
+        "size": 86112,
+        "sha256": "5f0fcfe1eab2c9b2194fc39824721c4f98f9e3ace70153b3ee958c4cf41ed5b6",
+        "source": {
+          "generator": "image_gen",
+          "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+          "sourceRect": [
+            18,
+            604,
+            488,
+            353
+          ],
+          "prompt": "art-references/neural-city-prompts.json"
+        },
+        "encoding": {
+          "lossless": false,
+          "quality": 94
+        },
+        "frames": {
+          "welcome": {
+            "rect": [
+              0,
+              0,
+              488,
+              353
+            ]
+          }
+        },
+        "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/welcome-5f0fcfe1eab2.webp",
+        "crop": [
+          0,
+          0,
+          488,
+          353
+        ]
+      }
+    },
+    {
+      "id": "neural-fountain",
+      "zh": "\u6676\u4f53\u55b7\u6cc9",
+      "en": "fountain",
+      "category": "outdoor",
+      "layer": "solid",
+      "size": [
+        2,
+        1.5
+      ],
+      "renderScale": 1.15,
+      "art": {
+        "local": "assets/adventure/neural-city/fountain-924b94f0ff4b.webp",
+        "width": 427,
+        "height": 322,
+        "size": 193070,
+        "sha256": "924b94f0ff4b23d0cd46401ea782be20ef8630aecc81b49adb99eb4fda8a9e18",
+        "source": {
+          "generator": "image_gen",
+          "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+          "sourceRect": [
+            556,
+            632,
+            427,
+            322
+          ],
+          "prompt": "art-references/neural-city-prompts.json"
+        },
+        "encoding": {
+          "lossless": true,
+          "quality": 100
+        },
+        "frames": {
+          "fountain": {
+            "rect": [
+              0,
+              0,
+              427,
+              322
+            ]
+          }
+        },
+        "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/fountain-924b94f0ff4b.webp",
+        "crop": [
+          0,
+          0,
+          427,
+          322
+        ]
+      }
+    },
+    {
+      "id": "neural-workshop",
+      "zh": "\u7075\u611f\u5de5\u574a",
+      "en": "workshop",
+      "category": "outdoor",
+      "layer": "solid",
+      "size": [
+        4,
+        3
+      ],
+      "renderScale": 1.15,
+      "art": {
+        "local": "assets/adventure/neural-city/workshop-7339d416ed3a.webp",
+        "width": 479,
+        "height": 403,
+        "size": 87752,
+        "sha256": "7339d416ed3aff0716bafc5b2d84cc40294a0573ad5c8dec39346f0b8c9ba583",
+        "source": {
+          "generator": "image_gen",
+          "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+          "sourceRect": [
+            1031,
+            573,
+            479,
+            403
+          ],
+          "prompt": "art-references/neural-city-prompts.json"
+        },
+        "encoding": {
+          "lossless": false,
+          "quality": 94
+        },
+        "frames": {
+          "workshop": {
+            "rect": [
+              0,
+              0,
+              479,
+              403
+            ]
+          }
+        },
+        "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/workshop-7339d416ed3a.webp",
+        "crop": [
+          0,
+          0,
+          479,
+          403
+        ]
+      }
+    }
+  ]
+}

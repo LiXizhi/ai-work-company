@@ -1,0 +1,55 @@
+@media(min-width:1600px){.intro{left:5vw;top:130px}.intro h1{font-size:62px}.wallet{left:5vw}}
+@media(max-width:1100px){.topbar{padding:0 24px}.intro{left:25px;top:115px}.intro h1{font-size:42px}.intro>p:not(.eyebrow){font-size:11px}.wallet{left:24px}.scene-dock button{padding:12px 10px;gap:7px}.scene-dock small{font-size:6px}.bottom-bar{width:770px}.world-status{right:24px}}
+@media(max-width:720px){.topbar{height:68px;padding:0 17px}.brand{font-size:10px;letter-spacing:.9px;gap:7px}.brand-mark{font-size:29px}.brand small{font-size:7px;letter-spacing:1px}.topbar nav{gap:15px}.topbar nav a{display:none}.topbar nav a:nth-child(2){display:block;font-size:10px;padding:20px 0}.outline{font-size:10px;padding:8px}.outline span{display:none}.world-shell{height:calc(100svh - 110px);min-height:600px}.wallet{top:16px;left:16px;padding:9px 12px;gap:9px;border-radius:11px}.wallet-note{display:none}.wallet strong{font-size:20px}.coin{width:30px;height:30px;font-size:19px}.wallet-label{font-size:7px}.world-status{top:24px;right:17px;width:170px;font-size:9px;gap:6px}.world-status small{font-size:8px}.intro{top:100px;left:22px}.intro h1{font-size:32px;margin:12px 0 8px}.intro .eyebrow{font-size:7px;letter-spacing:1.5px}.intro>p:not(.eyebrow){font-size:10px;line-height:1.7}.demo-tag{font-size:8px;margin-top:9px}.demo-tag span{font-size:6px}.bottom-bar{max-width:calc(100% - 24px);bottom:20px}.scene-dock{padding:5px;border-radius:14px;gap:0}.scene-dock button{flex-direction:column;text-align:center;gap:4px;padding:10px 4px;font-size:9px;min-width:0}.scene-dock small{display:none}.dock-icon{font-size:21px}.world-hint{bottom:106px;font-size:8px}.view-controls{right:14px;bottom:120px}.view-controls button{width:30px;height:30px;font-size:17px}.footer{height:42px;padding:7px 15px;font-size:7px;gap:7px;align-items:flex-start;flex-direction:column;justify-content:center}.residents{right:15px;top:85px;width:245px}.character-dialog[open]{grid-template-columns:1fr;gap:10px;padding:22px;width:360px;max-height:calc(100svh - 30px);overflow:auto}.portrait-wrap{min-height:190px}.portrait-wrap .avatar-art{height:190px;width:114px}.portrait-caption{bottom:9px;font-size:7px}.character-info h2{font-size:22px;margin:8px 0}.character-info>p:not(.eyebrow){font-size:11px}.role-line{margin:2px 0 12px}.character-info .identity-note{margin-bottom:0}.scene-dialog{padding:26px}.scene-dialog h2{font-size:24px}}
+@media(prefers-reduced-motion:reduce){.actor .avatar-art,.actor .speech{animation:none!important}.actor .speech{display:none}*{scroll-behavior:auto!important}}
+@media(max-width:720px){.intro{padding:12px 15px 13px;top:94px;max-width:210px;background:linear-gradient(110deg,#f7faf0e8,#f7faf0b8 75%,#f7faf000);backdrop-filter:none}.intro h1{font-size:29px}.intro>p:not(.eyebrow){font-size:9px}.intro .demo-tag{margin-top:7px}}
+
+@media(max-width:720px){.portrait-wrap .avatar-art{width:137px;height:200px}.portrait-wrap{min-height:220px}}
+
+/* Haqi's atlas and shared DetailDialog; company-specific layout only. */
+.world-map-toggle{position:absolute;right:30px;top:22px;z-index:7;display:flex;align-items:center;gap:7px;border:1px solid #d7c99c;background:#fffdf0ed;border-radius:16px;padding:5px 14px 5px 6px;color:#405d58;font-size:12px;box-shadow:0 4px 18px #425f4320;cursor:pointer}
+.world-map-toggle .icon{display:block;width:48px;height:48px;font-size:36px;text-align:center}
+.world-status{top:92px}
+.storybook-ui .icon[data-ui-icon]{background-image:var(--ui-atlas);background-size:var(--ui-atlas-size);background-repeat:no-repeat;font-size:0}
+.storybook-ui .icon[data-ui-icon] svg{visibility:hidden}
+.world-map-dialog{width:min(1120px,94vw,calc((92svh - 170px)*1.5));max-width:94vw;max-height:92svh;padding:16px;border:1px solid #d3bb80;border-radius:22px;background:#fcf8e9;color:#365852;box-shadow:0 30px 100px #173c4866;overflow:auto}
+.world-map-dialog::backdrop{background:#14393a88;backdrop-filter:blur(7px)}
+.world-map-dialog .equipment-dialog-header{display:flex;align-items:center;justify-content:space-between;padding:0 0 10px 12px;gap:20px;letter-spacing:2px}
+.world-map-dialog .close-button{flex-shrink:0;width:48px;height:48px;border:0;background:transparent;cursor:pointer;color:#365852}
+.world-map-dialog .close-button .icon{display:block;width:40px;height:40px}
+.world-map-dialog .close-button svg{width:100%;height:100%}
+.world-map-chart{position:relative;aspect-ratio:3/2;overflow:hidden;border-radius:12px;background:#e3ecdc}
+.world-map-picture{display:block;width:100%;height:100%;object-fit:cover}
+.world-map-pin{position:absolute;transform:translate(-50%,-50%);padding:8px 13px;border-radius:20px;border:1px solid #bda36a;background:#fffbeaee;color:#294f4c;font-size:12px;font-weight:600;white-space:nowrap;box-shadow:0 3px 12px #365a4c33;cursor:pointer}
+.world-map-pin:hover{background:#285d57;color:#fff9df}.world-map-pin:focus-visible,.world-map-toggle:focus-visible,.close-button:focus-visible{outline:3px solid #229b98;outline-offset:3px}
+.world-map-dialog .equipment-detail-footer p{margin:14px 8px 2px;font-size:12px;color:#65766b}
+@media(max-width:720px){.world-map-toggle{right:16px;top:14px;padding:3px 9px 3px 3px;font-size:10px}.world-map-toggle .icon{width:40px;height:40px}.world-status{top:76px;right:16px}.world-map-dialog{padding:10px;width:96vw;max-width:96vw}.world-map-chart{width:100%;aspect-ratio:3/2;overflow:hidden}.world-map-picture{width:100%;height:100%}.world-map-pin{font-size:9px;padding:6px 5px}.world-map-dialog .equipment-dialog-header{font-size:12px;letter-spacing:0;padding-left:4px}.world-map-dialog .equipment-detail-footer p{font-size:10px}}
+.world-map-homes{display:flex;gap:8px;flex-wrap:wrap;margin:12px 8px 0}.world-map-homes button{border:1px solid #c7b686;border-radius:12px;padding:8px 12px;background:#f0ead6;color:#375b50;cursor:pointer;font:inherit;font-size:12px}
+
+.actor .nametag{top:auto;bottom:-22px;background:transparent;border:0;box-shadow:none;padding:0;color:#f5ffec;text-shadow:0 1px 3px #244c3f,0 0 4px #244c3f;font-size:11px}.actor .nametag::before{display:none}
+
+/* Minimal world HUD: credits, map and one text-only task entry. */
+.world-shell{height:100svh;min-height:0}
+.wallet{left:max(16px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));z-index:7}
+.world-map-toggle{right:max(16px,env(safe-area-inset-right));top:max(16px,env(safe-area-inset-top))}
+.tasks-bar{position:absolute;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:7}
+.tasks-bar a{display:block;min-width:128px;padding:15px 32px;text-align:center;border:1px solid #fff;border-radius:16px;background:#f8faf0ed;color:#355d4c;box-shadow:0 8px 26px #294e3c14;font-size:16px}
+.tasks-bar a:hover{background:#e1ecdf}
+#toast{bottom:90px;max-width:calc(100% - 32px)}
+@media(max-width:420px){.wallet-note{display:none}.wallet{padding:9px 12px;gap:9px}.wallet strong{font-size:20px}}
+
+/* Only two persistent controls; details open on demand. */
+.tasks-bar{display:flex;gap:10px}
+.tasks-bar a,.tasks-bar button{display:block;min-width:128px;padding:15px 26px;text-align:center;border:1px solid #fff;border-radius:16px;background:#f8faf0ed;color:#355d4c;box-shadow:0 8px 26px #294e3c14;font:inherit;font-size:16px;cursor:pointer}
+.tasks-bar a:hover,.tasks-bar button:hover{background:#e1ecdf}
+.tasks-bar a:focus-visible,.tasks-bar button:focus-visible{outline:3px solid #229b98;outline-offset:3px}
+.logs-dialog{width:min(520px,calc(100vw - 32px));max-height:85svh;overflow:auto}
+.logs-dialog label{display:block;font-size:12px;margin-bottom:8px}
+.logs-dialog select{width:100%;padding:12px;border:1px solid #c8cdb8;border-radius:10px;background:#fffdf5;color:#355d4c;font:inherit}
+.logs-earnings{display:grid;grid-template-columns:1fr auto;gap:8px;padding:18px 0;margin-top:12px;border-bottom:1px solid #dce1d1}
+.logs-earnings small{grid-column:1/-1;color:#667767;line-height:1.6}
+.logs-note{font-size:12px!important;color:#667767}
+.logs-list{list-style:none;padding:0;margin:16px 0 0}
+.logs-list li{display:flex;gap:14px;padding:13px 0;border-bottom:1px solid #e2e5d8;font-size:13px;line-height:1.6}
+.logs-list time{font-variant-numeric:tabular-nums;color:#788575;flex-shrink:0}
+@media(max-width:420px){.tasks-bar a,.tasks-bar button{min-width:120px;padding:13px 20px}.logs-list li{gap:9px;font-size:12px}}

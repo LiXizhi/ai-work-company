@@ -17,6 +17,8 @@ const usage = `Local operator commands (same AWC_DB as the server):
   qualify-worker <worker-id> <reviewed-evidence.json>
   review-task <task-id> <reviewed-evidence.json>
   suspend-worker <worker-id>
+  ban-worker <worker-id> <reason> <evidence-ref>
+  ban-account <account-id> <reason> <evidence-ref>
   refund-task <task-id> <decision-reference>
   set-owner-limits <account-id> <daily-limit-minor> <concurrency>
 Evidence must be independently reviewed before these commands. They do not
@@ -39,6 +41,8 @@ try {
   else if (command === 'qualify-worker') value = store.qualifyWorker(target, JSON.parse(readFileSync(argument, 'utf8')));
   else if (command === 'review-task') value = store.reviewTask(target, JSON.parse(readFileSync(argument, 'utf8')));
   else if (command === 'suspend-worker') value = store.suspend(target);
+  else if (command === 'ban-worker') value = store.market.banWorker(target, { reason: argument, evidence_ref: extra });
+  else if (command === 'ban-account') value = store.market.banAccount(target, { reason: argument, evidence_ref: extra });
   else if (command === 'refund-task') value = store.resolveDispute(target, 'refund', argument);
   else if (command === 'set-owner-limits') value = store.limits(target, Number(argument), Number(extra));
   else throw new Error(usage);

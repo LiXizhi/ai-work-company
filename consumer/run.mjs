@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Api, pause, identifier } from '../worker/client.mjs';
+import { verifyWorkerDeliverable } from '../backend/market.mjs';
 
 const brokerPath = fileURLToPath(new URL('./file_broker.py', import.meta.url));
 export function startBroker(root, input, python = process.env.AWC_PYTHON || '/usr/bin/python3') {
@@ -46,7 +47,7 @@ export function startBroker(root, input, python = process.env.AWC_PYTHON || '/us
   };
 }
 
-export async function consume({ api, taskId, input, root, signal, pollMs = 1500, onEvent = () => {} }) {
+export async function consume({ api, taskId, input, root, signal, pollMs = 1500, onEvent = () => {}, judgeHandler }) {
   identifier(taskId);
   input = resolve(input); root = resolve(root);
   // Root is chosen by the local owner; each lease gets a fresh private attempt.
@@ -59,6 +60,21 @@ export async function consume({ api, taskId, input, root, signal, pollMs = 1500,
     while (!stopped) {
       const before = Date.now();
       const snapshot = await api.request(`/v1/tasks/${taskId}/execution`);
+      if (snapshot.task.state === 'submitted' && judgeHandler) {
+        const judgeCalls = (snapshot.calls || []).filter((c) => c.name === 'judge_evaluate');
+        for (const call of judgeCalls) {
+          if (stopped) break;
+          const rawResult = call.args?.deliverable_envelope?.untrusted_worker_result || '';
+          const localSafety = verifyWorkerDeliverable({
+            category: call.args?.category || 'general_files',
+            skill_id: call.args?.skill_id || '',
+            result: rawResult,
+          });
+          const verdict = await judgeHandler({ call, localSafety, task: snapshot.task });
+          await api.request(`/v1/tasks/${taskId}/tool-results/${call.id}`, { result: { ok: true, ...verdict } }, call.id);
+          onEvent({ event: 'judge_result', task: taskId, id: call.id, payout_percent: verdict.payout_percent, rating: verdict.rating });
+        }
+      }
       if (['submitted', 'completed', 'cancelled', 'expired', 'failed', 'security_stopped', 'refunded'].includes(snapshot.task.state)) return { state: snapshot.task.state, epoch };
       if (snapshot.task.state === 'running') {
         if (epoch !== snapshot.task.epoch) {
@@ -96,7 +112,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   if (!taskId || !input || !root) { console.error('Usage: node consumer/run.mjs TASK_ID SELECTED_INPUT_DIRECTORY PRIVATE_WORKSPACE_PARENT'); process.exit(1); }
   const signal = new AbortController();
   process.once('SIGINT', () => signal.abort()); process.once('SIGTERM', () => signal.abort());
-  consume({ api: new Api(process.env.AWC_BASE_URL || 'http://127.0.0.1:8787', process.env.AWC_CONSUMER_TOKEN), taskId, input, root, signal: signal.signal,
+  consume({ api: new Api(process.env.AWC_BASE_URL || 'http://localhost:5003', process.env.AWC_CONSUMER_TOKEN), taskId, input, root, signal: signal.signal,
     onEvent: (event) => console.log(JSON.stringify(event)),
   }).then((result) => console.log(JSON.stringify(result))).catch((error) => { console.error(error.message); process.exitCode = 1; });
 }

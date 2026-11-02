@@ -1,0 +1,243 @@
+/* World page: full-bleed Haqi canvas with storybook HUD. Tokens: ui-tokens.css */
+.sprite{position:absolute;width:0;height:0;overflow:hidden}
+body{overflow:hidden;background:#cfe6e2}
+.world-shell{position:relative;height:100svh;overflow:hidden;background:
+  radial-gradient(120% 90% at 50% 45%,#fbf6e4 0%,#eef0dc 45%,#cfe5df 80%,#b9d9d6 100%)}
+.world-viewport{position:absolute;z-index:0;inset:0;overflow:hidden;cursor:grab;touch-action:none}
+.world-viewport.dragging{cursor:grabbing}
+.world-stage{position:absolute;inset:0}
+#world-canvas{display:block;width:100%;height:100%;opacity:0;transition:opacity var(--slow) var(--ease)}
+.scene-ready #world-canvas{opacity:1}
+
+/* Floating-city atmosphere: soft cloud banks at the edges and drifting motes. */
+.sky-veil{position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:radial-gradient(140% 110% at 50% 50%,transparent 58%,rgba(255,252,240,.55) 78%,rgba(255,250,236,.92) 100%)}
+.cloud{position:absolute;border-radius:50%;filter:blur(18px);background:radial-gradient(closest-side,rgba(255,255,255,.95),rgba(255,255,255,.55) 55%,transparent);animation:drift 38s ease-in-out infinite alternate}
+.c1{width:46vw;height:24vw;left:-18vw;top:-10vw}
+.c2{width:40vw;height:22vw;right:-16vw;top:-8vw;animation-delay:-9s}
+.c3{width:52vw;height:26vw;left:-22vw;bottom:-14vw;animation-delay:-17s}
+.c4{width:46vw;height:24vw;right:-20vw;bottom:-12vw;animation-delay:-25s}
+.motes{position:absolute;inset:0;background-image:
+  radial-gradient(2px 2px at 12% 30%,rgba(230,190,90,.8),transparent),radial-gradient(2px 2px at 78% 22%,rgba(230,190,90,.7),transparent),
+  radial-gradient(1.6px 1.6px at 64% 72%,rgba(120,210,200,.8),transparent),radial-gradient(2px 2px at 30% 80%,rgba(230,190,90,.6),transparent),
+  radial-gradient(1.6px 1.6px at 90% 60%,rgba(120,210,200,.7),transparent),radial-gradient(1.8px 1.8px at 46% 14%,rgba(230,190,90,.7),transparent);
+  animation:twinkle 6s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(3vw,1.5vw) scale(1.05)}}
+@keyframes twinkle{from{opacity:.35}to{opacity:1}}
+.paused .cloud,.paused .motes{animation-play-state:paused}
+
+.loading-veil{position:absolute;inset:0;z-index:4;display:grid;place-content:center;justify-items:center;gap:16px;color:var(--ink-700);font-size:18px;pointer-events:none;transition:opacity var(--slow) var(--ease)}
+.scene-ready .loading-veil{opacity:0}
+.loading-orb{width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--gold-300) 45%,var(--gold-500));box-shadow:0 0 30px rgba(230,207,150,.9),0 0 80px rgba(143,208,200,.6);animation:orb 1.8s ease-in-out infinite}
+@keyframes orb{50%{transform:translateY(-8px) scale(1.06)}}
+
+/* Actors: invisible hit targets that carry readable nameplates. */
+#actors{position:absolute;inset:0;pointer-events:none}
+.actor{position:absolute;width:calc(64px * var(--s,1));height:calc(104px * var(--s,1));margin-left:calc(-32px * var(--s,1));margin-top:calc(-96px * var(--s,1));pointer-events:auto;opacity:0;transition:opacity var(--mid)}
+.scene-ready .actor{opacity:1}
+.actor:focus-visible{outline:2px solid var(--gold-300);outline-offset:2px;border-radius:40px}
+.nameplate{position:absolute;left:50%;top:100%;transform:translate(-50%,6px);display:inline-flex;align-items:center;gap:6px;max-width:220px;padding:3px 10px 3px 7px;border-radius:var(--radius-pill);font-size:12.5px;font-weight:600;line-height:18px;white-space:nowrap;color:var(--ink-900);background:rgba(255,252,242,.92);border:1px solid rgba(191,154,76,.35);box-shadow:0 2px 8px rgba(32,57,58,.16)}
+.nameplate i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--accent,var(--teal-400));box-shadow:0 0 0 2px rgba(255,255,255,.9)}
+.nameplate span{overflow:hidden;text-overflow:ellipsis}
+.nameplate b{font-size:10px;font-weight:700;letter-spacing:.06em;color:#7a5a17;background:linear-gradient(180deg,#fbe6ac,#e6c271);padding:0 6px;border-radius:var(--radius-pill)}
+.nameplate em{font-style:normal;font-size:10px;color:var(--ink-400);font-weight:500}
+.actor.mine .nameplate{border-color:var(--gold-400);box-shadow:0 0 0 2px rgba(230,207,150,.45),0 3px 10px rgba(32,57,58,.2)}
+.actor.remote .nameplate{background:rgba(250,255,253,.9)}
+.actor.selected .nameplate,.actor:hover .nameplate{background:#fff}
+
+/* HUD */
+.hud{position:absolute;z-index:6;pointer-events:none}
+.hud-top{left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;padding:max(16px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) 0 max(18px,env(safe-area-inset-left))}
+.hud-cluster{display:flex;flex-direction:column;align-items:flex-start;gap:10px;pointer-events:auto}
+.hud-right{flex-direction:row;align-items:center}
+.brand{display:flex;align-items:center;gap:10px;padding:9px 18px 9px 10px;border-radius:var(--radius-m)}
+.brand img{width:30px;height:30px}
+.brand span{display:flex;align-items:baseline;gap:8px}
+.brand strong{font-size:19px;color:var(--ink-900)}
+.brand em{font-style:normal;font-family:var(--font-serif);font-size:17px;color:var(--teal-700);padding-left:8px;border-left:1px solid var(--line)}
+.status-pill{margin:0;display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:var(--radius-pill);font-size:13px;color:var(--ink-700)}
+.status-pill i{width:9px;height:9px;border-radius:50%;background:var(--ink-400)}
+.status-pill[data-state=online] i{background:var(--ok);box-shadow:0 0 0 3px rgba(63,170,108,.2);animation:pulse 2.4s ease-in-out infinite}
+.status-pill[data-state=connecting] i{background:var(--warn);animation:pulse 1s ease-in-out infinite}
+.status-pill[data-state=error] i{background:var(--bad)}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(63,170,108,0)}}
+.account-pill{display:flex;align-items:center;gap:10px;padding:5px 16px 5px 5px;border-radius:var(--radius-pill);text-align:left;transition:background var(--fast)}
+.account-pill:hover{background:#fff}
+.account-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:linear-gradient(180deg,#fff,var(--ivory-200));border:1px solid var(--gold-300);color:var(--teal-600)}
+.account-avatar.portrait{background-image:url('assets/persona-portraits.png');background-size:400% 160%;background-repeat:no-repeat;background-color:#fff}
+.account-avatar.portrait svg{display:none}
+.account-text{display:grid;line-height:1.2}
+.account-text strong{font-size:14px;color:var(--ink-900)}
+.account-text small{font-size:11.5px;color:var(--ink-500)}
+.round-btn{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;color:var(--gold-600);border-color:var(--gold-400);background:radial-gradient(circle at 35% 30%,#fffef6,#f5e9c6)}
+.round-btn .icon{width:24px;height:24px}
+.round-btn:hover{color:var(--teal-700)}
+
+.dock{position:fixed;z-index:6;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:min(480px,calc(100% - 24px));gap:4px;padding:6px;border-radius:20px}
+.dock a,.dock button{display:flex;align-items:center;justify-content:center;min-width:0;white-space:nowrap;gap:8px;padding:12px 8px;border-radius:14px;font-size:15px;font-weight:600;color:var(--ink-700);transition:background var(--fast),color var(--fast)}
+.dock a:hover,.dock button:hover{background:rgba(255,255,255,.9);color:var(--teal-700)}
+.dock .icon{color:var(--teal-500)}
+
+.toast{position:fixed;z-index:30;left:50%;bottom:calc(max(18px,env(safe-area-inset-bottom)) + 84px);transform:translate(-50%,8px);max-width:min(560px,calc(100vw - 32px));padding:11px 18px;border-radius:14px;font-size:13.5px;color:var(--ink-900);opacity:0;pointer-events:none;transition:opacity var(--mid),transform var(--mid) var(--ease)}
+.toast.visible{opacity:1;transform:translate(-50%,0)}
+
+/* Roles: full-screen selection over the illustrated city. */
+.roles-dialog{position:fixed;inset:0;width:100vw;height:100svh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#e9e1c9;color:var(--ink-900);overflow:auto}
+.roles-dialog[open]{display:block;animation:sheet-in var(--mid) var(--ease)}
+.roles-dialog::backdrop{background:#0000}
+.roles-backdrop{position:fixed;inset:-30px;width:calc(100% + 60px);height:calc(100% + 60px);object-fit:cover;filter:blur(10px) saturate(1.05) brightness(1.04);transform:scale(1.04)}
+.roles-frame{position:relative;min-height:100%;display:flex;flex-direction:column;align-items:center;gap:26px;padding:max(28px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));background:radial-gradient(110% 80% at 50% 40%,rgba(255,250,236,.25),rgba(255,248,230,.7))}
+.roles-head{position:relative;width:min(1180px,100%);text-align:center}
+.roles-head .sheet-close{right:0;top:0}
+.roles-title{margin:8px 0 6px;font-size:clamp(30px,4vw,44px);color:var(--ink-900);text-shadow:0 2px 14px rgba(255,255,255,.8)}
+.roles-title::before,.roles-title::after{content:"";display:inline-block;vertical-align:middle;width:min(120px,12vw);height:1px;margin:0 18px;background:linear-gradient(90deg,transparent,var(--gold-500))}
+.roles-title::after{background:linear-gradient(90deg,var(--gold-500),transparent)}
+.roles-sub{margin:0 auto;max-width:640px;font-size:14px;line-height:1.7;color:var(--ink-700)}
+.roles-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px;width:min(1180px,100%)}
+.role-card{position:relative;display:flex;flex-direction:column;align-items:center;min-height:360px;padding:16px 14px 18px;border-radius:20px;background:linear-gradient(180deg,rgba(255,253,246,.92),rgba(250,243,224,.88));border:1px solid var(--gold-300);box-shadow:var(--shadow-2);transition:transform var(--mid) var(--ease),box-shadow var(--mid),border-color var(--mid);text-align:center}
+.role-card::before{content:"";position:absolute;inset:6px;border-radius:15px;border:1px solid var(--line-soft);pointer-events:none}
+.role-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(32,57,58,.22)}
+.role-card.active{border-color:var(--gold-500);box-shadow:0 0 0 3px rgba(230,207,150,.75),0 18px 40px rgba(32,57,58,.24)}
+.role-card .avatar-art{flex:1;width:100%;min-height:230px;background-image:url('assets/persona-portraits.png');background-repeat:no-repeat;background-size:400% auto;mix-blend-mode:multiply}
+.role-card h3{margin:10px 0 6px;font-family:var(--font-serif);font-size:20px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.role-card .chip{background:var(--chip)}
+.role-card .role-tools{position:absolute;right:12px;top:12px;display:flex;gap:4px;opacity:0;transition:opacity var(--fast)}
+.role-card:hover .role-tools,.role-card:focus-within .role-tools{opacity:1}
+.role-tools button{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#fff;border:1px solid var(--line-soft);color:var(--ink-500);font-size:12px}
+.role-tools button:hover{color:var(--bad)}
+.role-card.empty{justify-content:center;gap:12px;background:rgba(255,253,246,.55);border-style:dashed;color:var(--ink-500);font-size:15px}
+.role-card.empty .plus{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(230,207,150,.35);color:var(--gold-600)}
+.role-card.empty .plus .icon{width:26px;height:26px}
+.role-create{width:min(860px,100%);padding:22px 24px;border-radius:var(--radius-l);display:grid;gap:14px}
+.role-create h3{margin:0;font-size:22px}
+.persona-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.persona-option{position:relative;display:grid;justify-items:center;gap:6px;padding:10px 8px 12px;border-radius:16px;border:1px solid var(--ivory-300);background:var(--ivory-50);transition:border-color var(--fast),box-shadow var(--fast),transform var(--fast)}
+.persona-option .avatar-art{width:100%;height:150px;background-image:url('assets/persona-portraits.png');background-repeat:no-repeat;background-size:400% auto;mix-blend-mode:multiply}
+.persona-option strong{font-size:14px}
+.persona-option small{font-size:10.5px;letter-spacing:.08em;color:var(--ink-500)}
+.persona-option[aria-checked=true]{border-color:var(--gold-500);box-shadow:0 0 0 3px rgba(230,207,150,.6);transform:translateY(-2px)}
+.row-actions{display:flex;justify-content:flex-end;gap:10px}
+.form-status{margin:0;min-height:18px;font-size:13px;color:var(--bad)}
+.roles-foot{position:relative;display:flex;align-items:center;justify-content:center;gap:14px;width:min(1180px,100%)}
+.roles-account{position:absolute;left:0;font-size:13px;color:var(--ink-700)}
+#roles-logout{position:absolute;right:0}
+.identity-note{margin:0;font-size:11.5px;line-height:1.6;color:var(--ink-500);text-align:center}
+
+/* Character profile */
+.character-dialog[open]{display:grid;grid-template-columns:240px 1fr;gap:26px;width:min(760px,calc(100vw - 24px))}
+.portrait-wrap{position:relative;min-height:340px;border-radius:18px;overflow:hidden;background:radial-gradient(80% 60% at 50% 40%,#fffaf0,#efe6cc);border:1px solid var(--line-soft)}
+.portrait-halo{position:absolute;left:50%;top:38%;width:200px;height:200px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,240,190,.9),rgba(143,208,200,.25) 60%,transparent 70%)}
+.portrait-wrap .avatar-art{position:absolute;inset:10px 6px 26px;background-image:url('assets/persona-portraits.png');background-repeat:no-repeat;background-size:400% auto;background-position-y:center;mix-blend-mode:multiply}
+.portrait-caption{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:10px;letter-spacing:.24em;color:var(--gold-600)}
+.character-info{display:flex;flex-direction:column;gap:6px;min-width:0}
+.character-owner{margin:0;font-size:13px;color:var(--teal-600)}
+.character-description{margin:4px 0;font-size:14px;line-height:1.8;color:var(--ink-700)}
+.role-line{align-self:flex-start;font-size:12px;padding:6px 12px;border-radius:var(--radius-pill);background:rgba(143,208,200,.2);color:var(--teal-700)}
+.dialog-direct-actions{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.name-input{display:flex;gap:8px}
+#name-form small{display:block;margin-top:6px;font-size:11.5px;color:var(--ink-400)}
+#name-status{margin:6px 0 0;min-height:16px;font-size:12.5px;color:var(--teal-600)}
+.character-info .identity-note{text-align:left;margin-top:auto;padding-top:12px;border-top:1px solid var(--line-soft)}
+
+/* Logs */
+.logs-dialog{width:min(560px,calc(100vw - 24px))}
+.logs-dialog .select{margin-bottom:6px}
+.logs-earnings{display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:14px;padding:14px 16px;border-radius:14px;background:rgba(230,207,150,.18);border:1px solid var(--line-soft);font-size:14px}
+.logs-earnings strong{color:var(--gold-600)}
+.logs-earnings small{grid-column:1/-1;font-size:12px;line-height:1.6;color:var(--ink-500)}
+.logs-note{font-size:12px;color:var(--ink-400)}
+.logs-list{list-style:none;margin:8px 0 0;padding:0}
+.logs-list li{display:flex;gap:14px;padding:11px 2px;border-bottom:1px dashed var(--line-soft);font-size:13.5px;line-height:1.6}
+.logs-list time{flex:none;font-variant-numeric:tabular-nums;color:var(--gold-600)}
+.logs-list .logs-empty{color:var(--ink-400)}
+
+/* Shared Haqi map dialog restyled to the same sheet language. */
+.world-map-dialog{width:min(1120px,94vw,calc((92svh - 170px)*1.5));max-height:92svh;padding:16px;border:1px solid var(--line);border-radius:var(--radius-l);background:var(--ivory-50);color:var(--ink-900);box-shadow:var(--shadow-3);overflow:auto}
+.world-map-dialog::backdrop{background:rgba(21,56,58,.4);backdrop-filter:blur(7px)}
+.world-map-dialog .equipment-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 0 12px 10px;font-family:var(--font-serif);font-size:20px}
+.world-map-dialog .close-button{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:var(--ink-500);background:var(--ivory-100);border:1px solid var(--line-soft)}
+.world-map-dialog .close-button .icon{width:30px;height:30px;display:block}
+.world-map-dialog .close-button svg{width:18px;height:18px;margin:6px}
+.world-map-chart{position:relative;aspect-ratio:3/2;overflow:hidden;border-radius:14px;background:#e3ecdc}
+.world-map-picture{display:block;width:100%;height:100%;object-fit:cover}
+.world-map-pin{position:absolute;transform:translate(-50%,-50%);padding:7px 14px;border-radius:var(--radius-pill);border:1px solid var(--gold-400);background:rgba(255,252,242,.94);color:var(--ink-900);font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 3px 12px rgba(32,57,58,.2)}
+.world-map-pin:hover{background:var(--teal-600);color:#fffbea}
+.world-map-dialog .equipment-detail-footer p{margin:12px 8px 4px;font-size:12.5px;color:var(--ink-500)}
+.world-map-homes{display:flex;flex-wrap:wrap;gap:8px;margin:10px 8px 0}
+.world-map-homes button{padding:8px 14px;border-radius:var(--radius-pill);border:1px solid var(--line);background:var(--ivory-100);font-size:13px;color:var(--ink-700)}
+.world-map-homes button:hover{background:#fff;color:var(--teal-700)}
+
+.no-script{position:fixed;inset:auto 16px 16px;padding:14px;border-radius:12px;background:#fff}
+
+/* Narrow screens */
+@media (max-width:900px){
+  .roles-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .persona-picker{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:640px){
+  .brand{padding:7px 12px 7px 8px}.brand strong{display:none}.brand em{font-size:16px;border-left:0;padding-left:0}.brand img{width:26px;height:26px}
+  .status-pill{font-size:12px;padding:6px 12px}
+  .account-text{display:none}.account-pill{padding:4px}
+  .round-btn{width:46px;height:46px}
+  .hud-right{gap:8px}
+  .dock{gap:2px;padding:5px}
+  .dock a,.dock button{flex-direction:row;gap:5px;padding:11px 2px;font-size:12px}
+  .dock .icon{width:18px;height:18px}
+  .toast{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 86px)}
+  .roles-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .role-card{min-height:280px}.role-card .avatar-art{min-height:170px}
+  .roles-title::before,.roles-title::after{display:none}
+  .roles-foot{flex-direction:column}.roles-account,#roles-logout{position:static}
+  .character-dialog[open]{grid-template-columns:1fr}
+  .portrait-wrap{min-height:240px}
+  .name-input{flex-direction:column}
+  .nameplate{font-size:11.5px}
+}
+
+/* Fit a complete 519.75 × 756 portrait cell at every card width. */
+.persona-option .avatar-art,.role-card .avatar-art{
+  flex:none;width:min(100%,165px);height:auto;min-height:0;
+  aspect-ratio:519.75 / 756;background-size:400% 100%;
+}
+.portrait-wrap .avatar-art{
+  inset:12px 0 30px;margin:auto;width:auto;height:calc(100% - 42px);
+  max-width:100%;aspect-ratio:519.75 / 756;background-size:400% 100%;
+}
+
+/* Display-only credits; the Worker ledger remains unconnected. */
+.town-stats{display:flex;align-items:center;gap:16px;padding:12px 16px;border-radius:18px}
+.town-stats p{display:flex;align-items:center;gap:8px;margin:0;white-space:nowrap;font-size:14px;color:var(--ink-700)}
+.town-stats .icon{color:var(--teal-600);width:20px;height:20px}
+.town-credits{padding:0}
+.town-credits>span{color:var(--gold-600);font-size:22px}
+.town-credits strong{font-size:20px;font-variant-numeric:tabular-nums}
+.town-credits small{font-size:10px;color:var(--ink-500)}
+.work-indicator{position:absolute;left:50%;top:0;transform:translate(-50%,-65%);display:grid;place-items:center;width:30px;height:30px;font-size:18px;border-radius:10px;background:rgba(255,253,241,.96);border:1px solid var(--gold-300);box-shadow:0 3px 10px #20393a20;pointer-events:none}
+.work-indicator::after{content:'';position:absolute;bottom:-4px;width:6px;height:6px;background:var(--teal-500);border:2px solid #fff;border-radius:50%}
+@media(max-width:640px){.town-stats{padding:9px 11px;gap:10px}.town-stats p{font-size:12px}.town-credits{padding:0}.town-credits small{font-size:10px}}
+
+/* Ivory ribbon and inset portrait medallion, kept in one quiet horizontal row. */
+.hud-right{align-items:flex-start}
+.dock{grid-template-columns:minmax(0,1.8fr) repeat(2,minmax(0,1fr));width:min(500px,calc(100% - 48px));align-items:stretch;padding:7px 10px 7px 7px;gap:4px;border-radius:25px;border:1px solid #cfb575;background:linear-gradient(110deg,#fffaf0 0%,#fbf7ea 58%,#edf3e8 100%);box-shadow:inset 0 0 0 3px #fffdf4,0 8px 26px #254c3b24;overflow:visible}
+.dock::before{content:'';position:absolute;inset:6px;border:1px solid #cbb77955;border-radius:19px;pointer-events:none}
+.dock::after{content:'✦';position:absolute;right:12px;top:-8px;padding:0 5px;font-size:12px;line-height:14px;color:#b99a55;background:#fbf8ee;pointer-events:none}
+.dock .dock-resident{position:relative;display:flex;flex-direction:row;justify-content:flex-start;align-items:center;gap:8px;min-height:66px;padding:8px 10px 8px 84px;border-radius:18px;background:linear-gradient(90deg,#e7eddf88,transparent)}
+.dock .dock-resident:hover{background:linear-gradient(90deg,#d9e8d9bb,transparent)}
+.dock-resident .account-avatar{position:absolute;left:-20px;top:50%;transform:translateY(-50%);width:88px;height:88px;border:2px solid #c6a153;border-radius:50%;overflow:hidden;background-color:#eee7d2;box-shadow:0 0 0 4px #fffaf0,0 0 0 5px #ccb779,0 5px 12px #3b4a3828;transition:box-shadow var(--fast)}
+.dock-resident:hover .account-avatar{box-shadow:0 0 0 4px #fffaf0,0 0 0 5px #b49142,0 5px 16px #3b4a3838}
+.dock-resident.has-role .account-avatar{background-image:url('assets/persona-portraits.png');background-repeat:no-repeat;background-size:600% auto}
+.dock .dock-resident .account-text{display:grid;gap:5px;line-height:1.2;text-align:left;min-width:0}
+.dock-resident .account-text strong{font-family:var(--font-serif);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dock-resident .account-text small{font-size:9px;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dock #tasks-link,.dock #logs-toggle{position:relative;gap:9px;padding:12px 4px;border-radius:16px;font-size:14px}
+.dock #tasks-link::before{content:'';position:absolute;left:0;top:22%;bottom:22%;width:1px;background:linear-gradient(transparent,#bfa66c66,transparent)}
+.dock #tasks-link:hover,.dock #logs-toggle:hover{background:#e2ebe266}
+.dock .icon{color:#538a7f}
+@media(max-width:640px){
+ .dock{padding:6px 8px 6px 6px;gap:2px;border-radius:22px}
+ .dock .dock-resident{min-height:60px;padding:6px 5px 6px 65px}
+ .dock-resident .account-avatar{left:-17px;width:72px;height:72px}
+ .dock-resident .account-text strong{font-size:12px}
+ .dock-resident .account-text small{font-size:8px;letter-spacing:0}
+ .dock #tasks-link,.dock #logs-toggle{font-size:12px;gap:5px}
+}

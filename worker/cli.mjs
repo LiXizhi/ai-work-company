@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { Api, callTool, identifier } from './client.mjs';
 import { TOOLS } from '../backend/relay.mjs';
 
-const api = new Api(process.env.AWC_BASE_URL || 'http://127.0.0.1:8787', process.env.AWC_TOOL_TOKEN);
+const api = new Api(process.env.AWC_BASE_URL || 'http://localhost:5003', process.env.AWC_TOOL_TOKEN);
 const task = identifier(process.env.AWC_TASK_ID);
 const mode = process.argv[2];
 const session = randomUUID();

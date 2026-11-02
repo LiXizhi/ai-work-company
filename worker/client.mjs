@@ -4,7 +4,7 @@ export class Api {
   constructor(base, token) {
     const url = new URL(base);
     if (url.username || url.password || url.search || url.hash || (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname)))) throw new Error('Use HTTPS, or HTTP on loopback only.');
-    this.base = url.origin; this.token = token;
+    this.base = url.origin + url.pathname.replace(/\/+$/, ''); this.token = token;
     if (typeof token !== 'string' || !token) throw new Error('An instance token is required.');
   }
   async request(path, body, key = randomUUID()) {
@@ -16,7 +16,7 @@ export class Api {
     const text = await response.text();
     if (Buffer.byteLength(text) > 1_000_000) throw new Error('Oversized server response.');
     const value = JSON.parse(text);
-    if (!response.ok) { const error = new Error(value.error?.code || 'request_failed'); error.code = value.error?.code; throw error; }
+    if (!response.ok) { const error = new Error(value.error?.code || 'request_failed'); error.code = value.error?.code; error.status = response.status; throw error; }
     return value;
   }
 }

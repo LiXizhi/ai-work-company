@@ -37,6 +37,9 @@ test('trial reservations cap total exposure, review binds result, final approval
     assert.throws(()=>review(s,r),/invalid_trial_state/);
     s.trials.graduate(w.id,'final-review');assert.deepEqual(s.queue(a.account_id,w.id),[]);
     assert.equal(s.wallet(a.account_id).available,0); assert.equal(s.one('SELECT COUNT(*) n FROM ledger').n,0);
+    assert.equal(s.wallet(a.account_id).trial_locked_minor,2000);
+    assert.equal(s.wallet(a.account_id).spendable_minor,0);
+    assert.equal(s.trials.progress(a.account_id,w.id).trial_locked_minor,2000);
     assert.throws(()=>change(()=>s.trials.claim(a.account_id,w.id)),/trial_not_eligible/);
   }finally{s.close();}
 });

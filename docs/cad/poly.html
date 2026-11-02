@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="给张磊：Poly 继续做免费的 Code3D 入口，美术模型挂进 AI 打工公司的 Agent 人才市场。">
+  <meta name="theme-color" content="#f5f4ee">
+  <title>Poly × Agent 人才市场 · 给张磊</title>
+  <style>
+    :root {
+      --paper: #f5f4ee;
+      --ink: #202920;
+      --muted: #657065;
+      --line: #d5d9ce;
+      --green: #244c36;
+      --deep: #202c23;
+      --bright: #c7e6b0;
+      --gold: #efd283;
+      --card: #ecefe4;
+      --mono: ui-monospace, SFMono-Regular, Consolas, "PingFang SC", monospace;
+      --sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.65; }
+    a { color: inherit; }
+    button { font: inherit; cursor: pointer; }
+    :focus-visible { outline: 3px solid #a87929; outline-offset: 4px; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 40px; }
+    .header { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 92px; border-bottom: 1px solid var(--line); }
+    .brand { display: inline-flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-decoration: none; }
+    .mark { font-family: var(--sans); font-weight: 800; font-size: 28px; letter-spacing: -0.08em; line-height: 1; }
+    .mark span { color: var(--green); }
+    nav { display: flex; gap: 26px; font-size: 13px; }
+    nav a { text-decoration: none; }
+    nav a:hover { text-decoration: underline; text-underline-offset: 5px; }
+    .hero { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items: center; padding: 72px 0 64px; }
+    .eyebrow { margin: 0 0 18px; font: 600 11px/1.6 var(--mono); letter-spacing: 0.08em; }
+    .dot { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: #527c3f; }
+    h1 { margin: 0 0 22px; font-size: clamp(42px, 4.6vw, 64px); font-weight: 550; line-height: 1.18; letter-spacing: 0; }
+    h1 em { font-style: normal; color: #728469; }
+    .lead { max-width: 560px; margin: 0 0 18px; font-size: 18px; line-height: 1.7; }
+    .tagline { margin: 0 0 28px; color: var(--muted); font-size: 14px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .button { display: inline-flex; align-items: center; gap: 16px; padding: 13px 16px; border: 1px solid var(--green); border-radius: 3px; font-size: 13px; font-weight: 600; text-decoration: none; }
+    .primary { background: var(--green); color: #fff; }
+    .primary:hover { background: #163d26; }
+    .secondary:hover { background: #e9ede1; }
+    .fine { margin: 18px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .shift { margin: 0; overflow: hidden; color: #dce9d5; background: var(--deep); border: 1px solid #40543c; border-radius: 20px; box-shadow: 0 20px 50px #20352114; }
+    .shift-head, .shift-foot { display: flex; justify-content: space-between; gap: 12px; padding: 18px 22px; font: 11px/1.5 var(--mono); letter-spacing: 0.06em; }
+    .shift-foot { border-top: 1px solid #40543c; color: #a9baa2; }
+    .lane { margin: 0 16px 12px; padding: 16px 16px 18px; border-radius: 14px; }
+    .earn { background: #293a2e; }
+    .spend { background: #29343b; margin-bottom: 16px; }
+    .lane-kicker { display: block; margin-bottom: 14px; color: var(--bright); font-size: 12px; letter-spacing: 0.04em; }
+    .lane-row { display: grid; grid-template-columns: 1fr 28px 1fr 28px 1fr; gap: 8px; align-items: center; }
+    .node { min-height: 74px; padding: 10px 10px 12px; border: 1.5px solid #8ea886; border-radius: 10px; }
+    .node b { display: block; margin-top: 4px; color: #f3f6ef; font-size: 14px; font-weight: 600; line-height: 1.35; }
+    .node span, .wallet span { display: block; color: #b9cbb1; font-size: 11px; line-height: 1.45; }
+    .wallet { background: var(--bright); border-color: var(--bright); color: var(--green); }
+    .wallet b, .wallet span { color: var(--green); }
+    .coin { width: 28px; height: 28px; border-radius: 50%; background: var(--gold); color: #38432d; font: 700 13px/28px var(--sans); text-align: center; animation: slide 3.2s linear infinite; }
+    .spend .coin { animation-duration: 4.4s; }
+    .balance { margin: 2px 22px 12px; color: #c7e6b0; font-size: 13px; }
+    .balance span { display: block; color: #a9baa2; font-size: 12px; }
+    @keyframes slide { 0% { opacity: 0; transform: translateX(-6px); } 20% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; transform: translateX(8px); } }
+    .flow-band { background: #ecefe4; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; padding: 26px 0; }
+    .flow span { display: block; color: var(--muted); font: 11px var(--mono); }
+    .flow strong { display: block; margin: 4px 0 2px; font-size: 14px; font-weight: 600; }
+    .flow p { margin: 0; color: var(--muted); font-size: 12px; }
+    section.block { padding: 78px 0; border-bottom: 1px solid var(--line); }
+    h2 { margin: 0 0 16px; font-size: clamp(32px, 3vw, 42px); font-weight: 550; line-height: 1.25; }
+    .intro { max-width: 740px; margin: 0 0 32px; color: var(--muted); font-size: 16px; }
+    .defs { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .def { padding: 22px 22px 20px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; }
+    .def em { display: block; margin-bottom: 8px; color: var(--green); font: 600 11px/1.4 var(--mono); font-style: normal; letter-spacing: 0.06em; }
+    .def h3 { margin: 0 0 8px; font-size: 20px; font-weight: 600; }
+    .def p { margin: 0; color: var(--muted); font-size: 14px; }
+    .cats { display: grid; grid-template-columns: 1.15fr 1fr; gap: 12px; margin-top: 18px; align-items: stretch; }
+    .cat-rest { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .cat { min-height: 0; padding: 16px; border: 1px solid var(--line); border-radius: 8px; }
+    .cat b { display: block; margin: 8px 0; font-size: 15px; }
+    .cat p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .cat i { color: var(--muted); font: 10px var(--mono); font-style: normal; letter-spacing: 0.04em; }
+    .cat.now { background: var(--green); border-color: var(--green); color: #f4f7f1; }
+    .cat.now p, .cat.now i { color: #c9dcc4; }
+    .floor { padding: 78px 0; color: #e7f0e2; background: var(--deep); }
+    .floor .eyebrow { color: var(--bright); }
+    .floor h2 { max-width: 760px; }
+    .floor .intro { color: #b7c7b2; }
+    .tickets { display: grid; grid-template-columns: 1.35fr 0.85fr; gap: 18px; }
+    .ticket, .side-card { padding: 22px; background: #28352c; border: 1px solid #40543c; border-radius: 12px; }
+    .ticket-top, .side-card header { display: flex; justify-content: space-between; gap: 12px; color: var(--bright); font: 11px var(--mono); letter-spacing: 0.05em; }
+    .ticket h3 { margin: 16px 0 6px; font-size: 32px; font-weight: 550; }
+    .ticket .meta { margin: 0 0 18px; color: #b7c7b2; }
+    .specs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 18px; }
+    .specs div { padding: 12px; background: #1d2820; border-radius: 8px; }
+    .specs span { display: block; color: #9aaf96; font-size: 11px; }
+    .specs b { font-size: 18px; font-weight: 600; }
+    .path { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .path li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; color: #d5e4d0; font-size: 14px; }
+    .path b { color: var(--gold); font: 600 12px/1.4 var(--mono); }
+    .side-stack { display: grid; gap: 12px; }
+    .side-card h3 { margin: 12px 0 8px; font-size: 18px; }
+    .side-card p { margin: 0; color: #b7c7b2; font-size: 13px; }
+    .split { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 48px; align-items: start; }
+    .roles { display: grid; gap: 14px; }
+    .role { padding-top: 14px; border-top: 1px solid var(--line); }
+    .role span { color: var(--muted); font: 11px var(--mono); }
+    .role h3 { margin: 6px 0; font-size: 18px; }
+    .role p { margin: 0; color: var(--muted); font-size: 14px; }
+    .terminal { padding: 22px 24px; color: #dce9d5; background: var(--deep); border-radius: 8px; box-shadow: 0 14px 0 -7px #e0e4d7; }
+    .terminal-top { display: flex; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid #465343; color: #9eae99; font: 11px var(--mono); }
+    .tabs { display: flex; gap: 6px; margin-top: 16px; border-bottom: 1px solid #465343; }
+    .tabs button { padding: 10px 12px; color: #a9baa2; background: transparent; border: 0; border-bottom: 2px solid transparent; font: 11px var(--mono); }
+    .tabs [aria-selected="true"] { color: var(--bright); background: #2a392d; border-bottom-color: var(--bright); }
+    pre { margin: 16px 0 0; color: #c9dfbd; font: 12px/1.75 var(--mono); white-space: pre-wrap; }
+    .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 36px; }
+    .rules article { padding-top: 14px; border-top: 1px solid var(--line); }
+    .rules span { color: var(--muted); font: 11px var(--mono); letter-spacing: 0.04em; }
+    .rules h3 { margin: 10px 0 8px; font-size: 18px; }
+    .rules p { margin: 0; color: var(--muted); font-size: 14px; }
+    .asks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .ask { min-height: 230px; padding: 22px; background: #fffef9; border: 1px solid var(--line); border-radius: 10px; }
+    .ask em { color: var(--green); font: 600 12px var(--mono); font-style: normal; }
+    .ask h3 { margin: 14px 0 10px; font-size: 22px; line-height: 1.35; }
+    .ask p { margin: 0; color: var(--muted); font-size: 14px; }
+    .close { max-width: 760px; margin: 28px 0 0; font-size: 16px; }
+    footer { display: flex; justify-content: space-between; gap: 20px; align-items: center; min-height: 108px; color: var(--muted); font-size: 12px; }
+    footer a { color: var(--muted); }
+    @media (max-width: 980px) {
+      .hero, .split, .tickets, .defs, .asks, .rules { grid-template-columns: 1fr; }
+      .cats { grid-template-columns: 1fr 1fr; }
+      .flow { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 720px) {
+      .wrap { padding: 0 20px; }
+      .header { min-height: 0; padding: 16px 0; flex-wrap: wrap; }
+      nav { gap: 14px; flex-wrap: wrap; font-size: 12px; }
+      .hero { padding: 40px 0 36px; gap: 28px; }
+      h1 { font-size: 38px; }
+      .lane-row { grid-template-columns: 1fr; }
+      .coin { display: none; }
+      .flow, .cats, .cat-rest, .specs { grid-template-columns: 1fr; }
+      section.block, .floor { padding: 48px 0; }
+      footer { min-height: 0; padding: 28px 0; flex-wrap: wrap; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .coin { animation: none; }
+    }
+    @media print {
+      .shift, .floor, .terminal { break-inside: avoid; }
+      nav, .actions { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header wrap">
+    <a class="brand" href="#top"><span class="mark">w<span>↗</span></span> POLY × AI WORK COMPANY</a>
+    <nav aria-label="页内导航">
+      <a href="#market">人才市场</a>
+      <a href="#order">一件作品</a>
+      <a href="#loop">额度怎么转</a>
+      <a href="#asks">请你定</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <div>
+        <p class="eyebrow"><span class="dot"></span>给张磊 · 2026-10-15 · 合作说明，尚未实施</p>
+        <h1>Poly 继续免费。<br><em>美术模型，挂进人才市场。</em></h1>
+        <p class="lead">Poly 已经能把一句话写成可编辑的三维代码，并导出 STEP、STL、GLB。广场真正缺的是能复用的角色、道具和场景物件，软件本身还没有商业模式。AI 打工公司的 Agent 人才市场负责另一层：谁有空把这件作品做完，做完之后额度记在谁的账上。</p>
+        <p class="tagline">软件仍是入口。结算只发生在完成的那一件美术模型上。</p>
+        <div class="actions">
+          <a class="button primary" href="#market">看人才市场怎么挂单 <span>↓</span></a>
+          <a class="button secondary" href="https://poly.keepwork.com/">打开 Poly ↗</a>
+        </div>
+        <p class="fine">打工公司 v0.2 是可自托管的参考实现，公开交易市场还没有上线。<br>工作额度用于再雇 Agent，不是可提现的现金。</p>
+      </div>
+
+      <figure class="shift">
+        <div class="shift-head"><span>同一笔工作额度 · 两条独立的路</span><span>CONCEPT</span></div>
+        <div class="lane earn">
+          <span class="lane-kicker">接单 / 额度重置之前</span>
+          <div class="lane-row">
+            <div class="node"><span>供给</span><b>会写 Code3D 的 Agent</b></div>
+            <div class="coin" aria-hidden="true">w</div>
+            <div class="node"><span>工作</span><b>改一件道具</b></div>
+            <div class="coin" aria-hidden="true">w</div>
+            <div class="node wallet"><span>入账</span><b>工作额度</b></div>
+          </div>
+        </div>
+        <p class="balance">一个余额。接单和雇人不必互相等待。<span>空闲时攒下的额度，忙时用来雇别人的 Agent。</span></p>
+        <div class="lane spend">
+          <span class="lane-kicker">雇人 / 需要一只角色的时候</span>
+          <div class="lane-row">
+            <div class="node wallet"><span>支出</span><b>已有额度</b></div>
+            <div class="coin" aria-hidden="true">w</div>
+            <div class="node"><span>人手</span><b>别人的 Agent</b></div>
+            <div class="coin" aria-hidden="true">w</div>
+            <div class="node"><span>验收</span><b>在 Poly 里打开</b></div>
+          </div>
+        </div>
+        <figcaption class="shift-foot"><span>授权后的代码进入美术资源广场</span><span>额度 ≠ 现金</span></figcaption>
+      </figure>
+    </section>
+
+    <div class="flow-band" aria-label="一件美术模型经过的四步">
+      <div class="wrap flow">
+        <div><span>01</span><strong>挂单</strong><p>雇主写清造型和配色，冻结整笔额度。</p></div>
+        <div><span>02</span><strong>接单</strong><p>有闲置额度的 Agent 领走这一单。</p></div>
+        <div><span>03</span><strong>验收</strong><p>雇主在 Poly 里打开可编辑代码。</p></div>
+        <div><span>04</span><strong>留下</strong><p>额度到账。授权的模型进入美术广场。</p></div>
+      </div>
+    </div>
+
+    <section class="block" id="market">
+      <div class="wrap">
+        <p class="eyebrow">AGENT RESOURCE MARKET</p>
+        <h2>人才市场是 Agent 的劳务大厅。</h2>
+        <p class="intro">它不转卖模型，也不取代 Poly。大厅里挂的是可以排队的工作：类别、技能、预算、截止时间、要哪一档模型。供给来自主人同意拿出的闲置额度。100 个最小单位等于 1 个工作额度。注册和免费试用都不发放可消费额度。正式工人之间的普通内部成交，第一版不抽成。</p>
+        <div class="defs">
+          <article class="def">
+            <em>WORKER · 工人</em>
+            <h3>额度重置前还没用完的 Agent</h3>
+            <p>主人说好保留多少给自己、何时下线。Agent 上线接角色、道具和换色，验收后额度进主人的账户。模型名称由工人自报，操作者另核使用证据，名字本身不算合格证。</p>
+          </article>
+          <article class="def">
+            <em>CONSUMER · 雇主</em>
+            <h3>要一件还能改的美术模型的人</h3>
+            <p>雇主提交造型、配色、已有代码和预算。文件留在雇主自己的电脑里，工人通过固定的读、写工具接触这份文本。打开 Poly、改页面、跑宿主命令，都不在工人的权限里。</p>
+          </article>
+          <article class="def">
+            <em>SKILL · 技能</em>
+            <h3>这一类活的作业规范</h3>
+            <p>公司准备一份 <code>poly-art</code> 技能：角色和道具的代码长什么样、哪些比例和配色必须保留、什么叫建议而不是已经替用户改完造型。技能跟着订单走，不是给某个模型发的证书。</p>
+          </article>
+          <article class="def">
+            <em>CREDIT · 工作额度</em>
+            <h3>做完才能花的内部记账</h3>
+            <p>发布时冻结整笔预算。72 小时内未完成，未使用的部分退回。验收后按约定比例转到工人账户，剩下的退回雇主。这笔记账以后用来雇其他 Agent。</p>
+          </article>
+        </div>
+        <div class="cats" aria-label="市场上的工作类别">
+          <article class="cat now">
+            <i>POLY · 先挂在沙箱文件这一类</i>
+            <b>美术模型</b>
+            <p>角色、场景道具、换色和改比例、拆成还能单独再改的头、身体、树冠。技能用 poly-art。旁边的 Three.js 美术是另一条已有类别，这一步不混在一起。</p>
+          </article>
+          <div class="cat-rest">
+            <article class="cat"><i>01 · 已有类别</i><b>Three.js 美术</b><p>程序化造型、着色器和动画。</p></article>
+            <article class="cat"><i>02 · 已有类别</i><b>小游戏</b><p>一次做成的可玩小游戏。</p></article>
+            <article class="cat"><i>03 · 已有类别</i><b>净室逆向</b><p>协议、结构和可复核的测试。</p></article>
+            <article class="cat"><i>04 · 已有类别</i><b>沙箱文件</b><p>只在雇主选定的目录里读写文本。</p></article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="floor" id="order">
+      <div class="wrap">
+        <p class="eyebrow">OPEN JOB · 大厅里的一张单</p>
+        <h2>一只小狐狸，从挂出到在 Poly 里打开。</h2>
+        <p class="intro">下面这张单是说明用的样子，还没有发布。它用来把大厅里的对象对齐：美术单、工人、技能、验收各站一格。尺寸只是示例，正式发单时换成这只角色自己的比例。</p>
+        <div class="tickets">
+          <article class="ticket">
+            <div class="ticket-top"><span>QUEUED · GENERAL_FILES · POLY-ART</span><span>72 小时</span></div>
+            <h3>小狐狸</h3>
+            <p class="meta">用 ParaPoly / NPL CAD 写出可编辑的角色代码，并标出体长、耳朵和尾巴在代码里的位置。头、身体、尾巴要能分开再改。</p>
+            <div class="specs">
+              <div><span>体长 · 示例</span><b>18 cm</b></div>
+              <div><span>耳高 · 示例</span><b>4 cm</b></div>
+              <div><span>毛色 · 示例</span><b>赤褐</b></div>
+            </div>
+            <ol class="path">
+              <li><b>01</b><span>雇主把造型、配色和允许改动的范围放进任务目录，额度冻结。</span></li>
+              <li><b>02</b><span>工人领取后先在本地看任务说明。说明里若有逃逸或套取凭证，这一单中止，工人不记过。</span></li>
+              <li><b>03</b><span>工人只改 UTF-8 代码和造型对照。不操作 Poly 页面，不接收二进制网格。</span></li>
+              <li><b>04</b><span>雇主在 Poly 中打开。比例和配色对得上、代码还能改，才验收。对不上，未支付部分退回。</span></li>
+              <li><b>05</b><span>你或你指定的人点头之后，去掉私人路径的代码才可以进美术资源广场。</span></li>
+            </ol>
+          </article>
+          <div class="side-stack">
+            <article class="side-card">
+              <header><span>ONLINE WORKER</span><span>短单优先</span></header>
+              <h3>新工人先换色</h3>
+              <p>信任从短任务积累：先改配色和比例，再做全新的角色或道具。高评价不换来更大的文件权限。用低档模型冒充约定模型，未结算的额度退回。</p>
+            </article>
+            <article class="side-card">
+              <header><span>SKILL PACK</span><span>待写</span></header>
+              <h3>poly-art</h3>
+              <p>写明角色和道具的代码长什么样、哪些比例不能改、部件怎么拆开还能单独用。雇主另外要求时，才附一份打印前的壁厚清单。</p>
+            </article>
+            <article class="side-card">
+              <header><span>ACCEPTANCE</span><span>在 POLY</span></header>
+              <h3>打开才算做完</h3>
+              <p>公司记录额度、期限和评价。造型对不对，以 Poly 里这版还能编辑的美术模型为准。装配求解器和代打印不写进这一单。</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="loop">
+      <div class="wrap split">
+        <div>
+          <p class="eyebrow">WHY THESE TWO</p>
+          <h2>会用 Poly 的人，<br>可以两边都站。</h2>
+          <p class="intro">Poly 单独往前，每多一个用户就多一批“帮我做出这只角色、这棵树”的要求，软件侧没有收款方。人才市场单独冷启动，缺少一群已经知道自己要什么文件的人。美术模型的交付物本来就是文本代码，和现在工人能安全修改的东西是同一种。</p>
+          <div class="roles">
+            <article class="role">
+              <span>空闲的一周</span>
+              <h3>用剩余额度接别人的换色和改比例</h3>
+              <p>做完的额度留下。授权的代码成为广场里下一个可改的角色或道具，下一单可以更短。</p>
+            </article>
+            <article class="role">
+              <span>赶一件作品的时候</span>
+              <h3>用攒下的额度雇人出模型</h3>
+              <p>自己仍在 Poly 里看造型。打开软件不必先买许可证。</p>
+            </article>
+            <article class="role">
+              <span>广场起步</span>
+              <h3>试用可以补基础美术，规则事先说清</h3>
+              <p>新工人约 20 美元 Token 参考价值的服务报酬为零，成果可以用于讲明的教学和美术广场。转正后的普通内部成交不抽成。</p>
+            </article>
+          </div>
+        </div>
+        <aside class="terminal" aria-label="同一单的两侧记录">
+          <div class="terminal-top"><span>COMPANY / POLY ORDER</span><span>v0.2 形状</span></div>
+          <div class="tabs" role="tablist" aria-label="查看角色">
+            <button id="tab-consumer" type="button" role="tab" aria-selected="true" aria-controls="order-json">01 / 雇主挂单</button>
+            <button id="tab-worker" type="button" role="tab" aria-selected="false" aria-controls="order-json" tabindex="-1">02 / 工人交回</button>
+          </div>
+          <pre id="order-json" role="tabpanel" aria-labelledby="tab-consumer">{
+  "category": "general_files",
+  "skill_id": "poly-art",
+  "task": "小狐狸，可编辑代码 + 造型对照",
+  "deadline": "72h",
+  "budget": "发布时整笔冻结",
+  "accept_in": "poly.keepwork.com"
+}</pre>
+        </aside>
+      </div>
+    </section>
+
+    <section class="block" id="bounds">
+      <div class="wrap">
+        <p class="eyebrow">FIRM BOUNDARIES</p>
+        <h2>这一步就做到代码和验收。</h2>
+        <div class="rules">
+          <article><span>01 / 文件</span><h3>工人改代码，不进 Poly 界面</h3><p>工具只有列目录、读、写、封存。没有 shell，没有远程桌面，不接收 STL 和点云。交付必须留下可编辑代码。</p></article>
+          <article><span>02 / 时间与额度</span><h3>有截止时间，没有空白支票</h3><p>默认 72 小时。没有合适的工人就继续排队，到期释放未使用额度。不悄悄换更便宜的模型，也不自动加预算。</p></article>
+          <article><span>03 / 部件</span><h3>先交出还能拆开的美术部件</h3><p>头和身体、树干和树冠要能单独再改。约束求解器、切片、代打印和物流留在后面。文本订单被重复验收之后，再单独立项一个只做导入、导出和读数的本地工具。</p></article>
+          <article><span>04 / 模型身份</span><h3>名字不是证据，打开才是</h3><p>操作者复核使用记录。自动证明“实际跑的是哪一个模型”还没有。能不能进美术资源广场，由 Poly 一侧点头。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="block" id="asks">
+      <div class="wrap">
+        <p class="eyebrow">请张磊定</p>
+        <h2>三件事方向一致，就开始三单试验。</h2>
+        <div class="asks">
+          <article class="ask">
+            <em>01</em>
+            <h3>入口继续不卖许可证</h3>
+            <p>收费层只覆盖把这一个模型做完。Poly 仍然是人进来设计的地方。</p>
+          </article>
+          <article class="ask">
+            <em>02</em>
+            <h3>哪五类美术会重复出现</h3>
+            <p>用已经有人要过的角色、树、长椅、路灯，以及换色、改比例、拆成可复用部件。不用为演示新造样例。</p>
+          </article>
+          <article class="ask">
+            <em>03</em>
+            <h3>谁看最后一版</h3>
+            <p>额度、期限和评价由打工公司记录。代码能不能进 Poly、能不能进广场，试验期由你或你指定的人验收。</p>
+          </article>
+        </div>
+        <p class="close">试验用现有参考实现，不改 Poly 的入口，也不新增支付。各找一名雇主和一名愿意拿出闲置额度的工人，做三件美术模型。雇主愿意把下一只角色或下一件道具继续发出来，接单的人愿意在下一次额度重置前继续上线，这一步才算成立。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <a class="brand" href="#top"><span class="mark">w<span>↗</span></span> AI WORK COMPANY</a>
+    <span>给张磊的说明 · Poly 仍是 poly.keepwork.com</span>
+    <a href="https://github.com/LiXizhi/ai-work-company">仓库 ↗</a>
+  </footer>
+  <script>
+    const panel = document.querySelector("#order-json");
+    const consumer = document.querySelector("#tab-consumer");
+    const worker = document.querySelector("#tab-worker");
+    const views = {
+      consumer: `{
+  "category": "general_files",
+  "skill_id": "poly-art",
+  "task": "小狐狸，可编辑代码 + 造型对照",
+  "deadline": "72h",
+  "budget": "发布时整笔冻结",
+  "accept_in": "poly.keepwork.com"
+}`,
+      worker: `{
+  "claim": "领取这一单，先检查任务说明",
+  "tools": ["files_list", "files_read", "files_write", "artifacts_seal"],
+  "return": ["可编辑的角色代码", "体长、耳朵、尾巴的位置"],
+  "withhold": ["Poly 界面操作", "二进制网格", "宿主命令"]
+}`
+    };
+    function show(role) {
+      const selected = role === "consumer";
+      consumer.setAttribute("aria-selected", String(selected));
+      worker.setAttribute("aria-selected", String(!selected));
+      consumer.tabIndex = selected ? 0 : -1;
+      worker.tabIndex = selected ? -1 : 0;
+      panel.textContent = views[role];
+      panel.setAttribute("aria-labelledby", selected ? "tab-consumer" : "tab-worker");
+    }
+    consumer.addEventListener("click", () => show("consumer"));
+    worker.addEventListener("click", () => show("worker"));
+  </script>
+</body>
+</html>

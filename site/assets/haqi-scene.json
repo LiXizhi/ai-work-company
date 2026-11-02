@@ -1,0 +1,1598 @@
+{
+  "schemaVersion": 1,
+  "source": "HaqiCombatSim/data/adventure",
+  "atlases": {
+    "camp": {
+      "local": "assets/adventure/environment/buildings-camp-aefacb4a9a3b.webp",
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/environment/buildings-camp-aefacb4a9a3b.webp",
+      "width": 912,
+      "height": 608,
+      "size": 168864,
+      "sha256": "aefacb4a9a3bddfb9cfba5c61bc6d10daad1ff92998eccd7bc46d806f021dc7d",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "588081bc135a9e376bf004189e0f203c0c7a2c4c9a1e39ad5f45bf6a46160f97",
+        "width": 1264,
+        "height": 848,
+        "prompt": "data/adventure/building-art-plan.json#camp",
+        "reference": "data/adventure/world-map-art.json"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "academy": {
+          "rect": [
+            34,
+            8,
+            235,
+            288
+          ],
+          "sourceRect": [
+            69,
+            11,
+            324,
+            397
+          ],
+          "cell": 0
+        },
+        "observatory": {
+          "rect": [
+            312,
+            29,
+            288,
+            267
+          ],
+          "sourceRect": [
+            448,
+            46,
+            383,
+            355
+          ],
+          "cell": 1
+        },
+        "cabin": {
+          "rect": [
+            616,
+            15,
+            288,
+            281
+          ],
+          "sourceRect": [
+            884,
+            53,
+            348,
+            340
+          ],
+          "cell": 2
+        },
+        "tent": {
+          "rect": [
+            8,
+            327,
+            288,
+            273
+          ],
+          "sourceRect": [
+            25,
+            448,
+            385,
+            365
+          ],
+          "cell": 3
+        },
+        "harbor": {
+          "rect": [
+            312,
+            370,
+            288,
+            230
+          ],
+          "sourceRect": [
+            450,
+            474,
+            381,
+            304
+          ],
+          "cell": 4
+        },
+        "plazaMedallion": {
+          "rect": [
+            616,
+            417,
+            288,
+            183
+          ],
+          "sourceRect": [
+            883,
+            527,
+            361,
+            229
+          ],
+          "cell": 5
+        }
+      }
+    },
+    "town": {
+      "local": "assets/adventure/environment/buildings-town-588efee7f663.webp",
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/environment/buildings-town-588efee7f663.webp",
+      "width": 768,
+      "height": 768,
+      "size": 198248,
+      "sha256": "588efee7f663f0c937c27e6d61726152789be657a317601a30f496d98238842e",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "76aad33fbc1630b9d411261db0ec47a65804b1ff2ded48aade39852555f7aa74",
+        "width": 1254,
+        "height": 1254,
+        "prompt": "data/adventure/building-art-plan.json#town",
+        "reference": "data/adventure/world-map-art.json"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 86
+      },
+      "frames": {
+        "harbor": {
+          "rect": [
+            8,
+            34,
+            368,
+            342
+          ],
+          "sourceRect": [
+            47,
+            50,
+            594,
+            552
+          ],
+          "cell": 0
+        },
+        "boat": {
+          "rect": [
+            394,
+            8,
+            364,
+            368
+          ],
+          "sourceRect": [
+            715,
+            53,
+            492,
+            497
+          ],
+          "cell": 1
+        },
+        "village": {
+          "rect": [
+            8,
+            451,
+            368,
+            309
+          ],
+          "sourceRect": [
+            37,
+            656,
+            584,
+            490
+          ],
+          "cell": 2
+        },
+        "tower": {
+          "rect": [
+            404,
+            392,
+            343,
+            368
+          ],
+          "sourceRect": [
+            715,
+            629,
+            503,
+            539
+          ],
+          "cell": 3
+        }
+      }
+    },
+    "campTrees": {
+      "local": "assets/adventure/environment/camp-trees-fd7135a4fe28.webp",
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/environment/camp-trees-fd7135a4fe28.webp",
+      "width": 652,
+      "height": 652,
+      "size": 119350,
+      "sha256": "fd7135a4fe28653826527997fccce243b18a469aedc37a033ff4428562e5ff90",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "93351d879290f6b375f75e1dbef8b2a5c7e1569873a79dcf7a1c02fd8c49dc9d",
+        "width": 1024,
+        "height": 1024
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "tallPine": {
+          "rect": [
+            60,
+            8,
+            206,
+            310
+          ],
+          "sourceRect": [
+            102,
+            22,
+            301,
+            452
+          ]
+        },
+        "layeredPine": {
+          "rect": [
+            382,
+            8,
+            214,
+            310
+          ],
+          "sourceRect": [
+            620,
+            40,
+            300,
+            434
+          ]
+        },
+        "cypressPine": {
+          "rect": [
+            52,
+            334,
+            221,
+            310
+          ],
+          "sourceRect": [
+            98,
+            536,
+            321,
+            451
+          ]
+        },
+        "blossomTree": {
+          "rect": [
+            351,
+            334,
+            275,
+            310
+          ],
+          "sourceRect": [
+            588,
+            566,
+            358,
+            404
+          ]
+        }
+      }
+    },
+    "islandTrees": {
+      "local": "assets/adventure/environment/island-trees-alpha-1b839451cfda.webp",
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/environment/island-trees-alpha-1b839451cfda.webp",
+      "width": 864,
+      "height": 576,
+      "size": 192516,
+      "sha256": "1b839451cfdab71a3667c880cca76b5331650c9e9a91135acc69fd117fcff97a",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "be4047eae3066aac1b4cdc480dd584cc6edc8592e40179520310b6d8c8084c77",
+        "width": 1536,
+        "height": 1024
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 82
+      },
+      "frames": {
+        "autumnGoldTree": {
+          "rect": [
+            23,
+            8,
+            242,
+            272
+          ],
+          "sourceRect": [
+            38,
+            14,
+            438,
+            492
+          ]
+        },
+        "tropicalPalm": {
+          "rect": [
+            296,
+            13,
+            272,
+            267
+          ],
+          "sourceRect": [
+            520,
+            15,
+            498,
+            488
+          ]
+        },
+        "desertCactus": {
+          "rect": [
+            621,
+            8,
+            198,
+            272
+          ],
+          "sourceRect": [
+            1105,
+            14,
+            358,
+            493
+          ]
+        },
+        "charredEmberTree": {
+          "rect": [
+            19,
+            296,
+            249,
+            272
+          ],
+          "sourceRect": [
+            30,
+            520,
+            454,
+            495
+          ]
+        },
+        "darkShadowTree": {
+          "rect": [
+            304,
+            296,
+            256,
+            272
+          ],
+          "sourceRect": [
+            532,
+            519,
+            467,
+            496
+          ]
+        },
+        "darkWeepingTree": {
+          "rect": [
+            595,
+            296,
+            249,
+            272
+          ],
+          "sourceRect": [
+            1057,
+            521,
+            452,
+            494
+          ]
+        }
+      }
+    },
+    "trees": {
+      "local": "assets/adventure/environment/snow-trees-20e205dd9bda.webp",
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/environment/snow-trees-20e205dd9bda.webp",
+      "width": 652,
+      "height": 652,
+      "size": 180648,
+      "sha256": "20e205dd9bdaf14226329640d4650929bde8e2fa3d3571426852119ea7f9720c",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "77ac3a957801c75aaa862ccb766c25f5c8722207e02ee7d51a73bce377606a14",
+        "width": 1254,
+        "height": 1254
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 90
+      },
+      "frames": {
+        "spruce": {
+          "rect": [
+            29,
+            8,
+            267,
+            310
+          ],
+          "sourceRect": [
+            74,
+            12,
+            530,
+            615
+          ]
+        },
+        "pine": {
+          "rect": [
+            371,
+            8,
+            236,
+            310
+          ],
+          "sourceRect": [
+            707,
+            12,
+            469,
+            615
+          ]
+        },
+        "fir": {
+          "rect": [
+            8,
+            334,
+            309,
+            310
+          ],
+          "sourceRect": [
+            55,
+            658,
+            549,
+            550
+          ]
+        },
+        "oldPine": {
+          "rect": [
+            347,
+            334,
+            284,
+            310
+          ],
+          "sourceRect": [
+            689,
+            627,
+            532,
+            580
+          ]
+        }
+      }
+    },
+    "townFeatures": {
+      "local": "assets/adventure/environment/town-features-c14b79871370.webp",
+      "cdn": "https://cdn.keepwork.com/keepwork/cdn/island-scene-art/town-features-c14b79871370.webp",
+      "width": 960,
+      "height": 640,
+      "size": 198862,
+      "sha256": "c14b79871370687edb427a832b98d07168e133196547bb1f58df8d2c84938ec1",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "c68d1e1d308608c39658da527c9c21e8e1c2ec9b3141c371ed851fff8605f06a",
+        "width": 1536,
+        "height": 1024,
+        "prompt": "assets/adventure/environment/prompts.json#islandSceneArt.town",
+        "reference": "data/adventure/world-map-art.json#town"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 82
+      },
+      "frames": {
+        "snowyHill": {
+          "rect": [
+            8,
+            51,
+            304,
+            261
+          ],
+          "sourceRect": [
+            15,
+            48,
+            483,
+            415
+          ]
+        },
+        "goldenHill": {
+          "rect": [
+            328,
+            24,
+            304,
+            288
+          ],
+          "sourceRect": [
+            523,
+            53,
+            484,
+            459
+          ]
+        },
+        "flowerPond": {
+          "rect": [
+            648,
+            106,
+            304,
+            206
+          ],
+          "sourceRect": [
+            1027,
+            110,
+            496,
+            336
+          ]
+        },
+        "stoneCircle": {
+          "rect": [
+            8,
+            389,
+            304,
+            243
+          ],
+          "sourceRect": [
+            12,
+            555,
+            500,
+            399
+          ]
+        },
+        "gazebo": {
+          "rect": [
+            328,
+            336,
+            304,
+            296
+          ],
+          "sourceRect": [
+            541,
+            512,
+            450,
+            438
+          ]
+        },
+        "fountain": {
+          "rect": [
+            648,
+            380,
+            304,
+            252
+          ],
+          "sourceRect": [
+            1044,
+            546,
+            473,
+            392
+          ]
+        }
+      },
+      "layer": "terrain"
+    },
+    "meadow": {
+      "local": "assets/adventure/environment/terrain-meadow-20b11df57136.webp",
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/environment/terrain-meadow-20b11df57136.webp",
+      "width": 536,
+      "height": 536,
+      "size": 189070,
+      "sha256": "20b11df571364cecdc61460e0cf37c34352dde9b7aa6ea80c59b415d75050408",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "ca0a1a62f79d4ec570bac07d70b2c28b71197806c454de02f41d2ec8e698bda5",
+        "width": 1254,
+        "height": 1254,
+        "description": "image_gen 原生透明 4×4 格图；左上光照、俯视三分之四视角、低矮地表装饰",
+        "cells": [
+          "grass",
+          "wildGrass",
+          "clover",
+          "fern",
+          "daisies",
+          "buttercups",
+          "blueFlowers",
+          "pinkFlowers",
+          "moss",
+          "amberLeaves",
+          "greenLeaves",
+          "redMushrooms",
+          "paleMushrooms",
+          "lowShrub",
+          "mixedMeadow",
+          "grassStone"
+        ]
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "grass": {
+          "rect": [
+            8,
+            26,
+            118,
+            100
+          ],
+          "sourceRect": [
+            68,
+            103,
+            170,
+            144
+          ],
+          "cell": 0
+        },
+        "wildGrass": {
+          "rect": [
+            142,
+            27,
+            118,
+            99
+          ],
+          "sourceRect": [
+            338,
+            47,
+            274,
+            231
+          ],
+          "cell": 1
+        },
+        "clover": {
+          "rect": [
+            276,
+            22,
+            118,
+            104
+          ],
+          "sourceRect": [
+            681,
+            86,
+            205,
+            181
+          ],
+          "cell": 2
+        },
+        "fern": {
+          "rect": [
+            410,
+            28,
+            118,
+            98
+          ],
+          "sourceRect": [
+            969,
+            74,
+            254,
+            212
+          ],
+          "cell": 3
+        },
+        "daisies": {
+          "rect": [
+            8,
+            142,
+            117,
+            118
+          ],
+          "sourceRect": [
+            54,
+            361,
+            217,
+            218
+          ],
+          "cell": 4
+        },
+        "buttercups": {
+          "rect": [
+            142,
+            144,
+            118,
+            116
+          ],
+          "sourceRect": [
+            360,
+            362,
+            217,
+            214
+          ],
+          "cell": 5
+        },
+        "blueFlowers": {
+          "rect": [
+            280,
+            142,
+            110,
+            118
+          ],
+          "sourceRect": [
+            676,
+            365,
+            210,
+            225
+          ],
+          "cell": 6
+        },
+        "pinkFlowers": {
+          "rect": [
+            410,
+            163,
+            118,
+            97
+          ],
+          "sourceRect": [
+            981,
+            390,
+            231,
+            190
+          ],
+          "cell": 7
+        },
+        "moss": {
+          "rect": [
+            8,
+            303,
+            118,
+            91
+          ],
+          "sourceRect": [
+            32,
+            694,
+            251,
+            193
+          ],
+          "cell": 8
+        },
+        "amberLeaves": {
+          "rect": [
+            142,
+            300,
+            118,
+            94
+          ],
+          "sourceRect": [
+            357,
+            696,
+            233,
+            185
+          ],
+          "cell": 9
+        },
+        "greenLeaves": {
+          "rect": [
+            276,
+            305,
+            118,
+            89
+          ],
+          "sourceRect": [
+            659,
+            700,
+            252,
+            189
+          ],
+          "cell": 10
+        },
+        "redMushrooms": {
+          "rect": [
+            410,
+            292,
+            118,
+            102
+          ],
+          "sourceRect": [
+            976,
+            691,
+            230,
+            199
+          ],
+          "cell": 11
+        },
+        "paleMushrooms": {
+          "rect": [
+            8,
+            426,
+            118,
+            102
+          ],
+          "sourceRect": [
+            48,
+            1002,
+            216,
+            187
+          ],
+          "cell": 12
+        },
+        "lowShrub": {
+          "rect": [
+            142,
+            421,
+            118,
+            107
+          ],
+          "sourceRect": [
+            340,
+            966,
+            256,
+            233
+          ],
+          "cell": 13
+        },
+        "mixedMeadow": {
+          "rect": [
+            276,
+            425,
+            118,
+            103
+          ],
+          "sourceRect": [
+            660,
+            982,
+            252,
+            220
+          ],
+          "cell": 14
+        },
+        "grassStone": {
+          "rect": [
+            410,
+            422,
+            118,
+            106
+          ],
+          "sourceRect": [
+            971,
+            983,
+            247,
+            222
+          ],
+          "cell": 15
+        }
+      }
+    },
+    "stones": {
+      "local": "assets/adventure/environment/terrain-stones-06b3275c7e1a.webp",
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/environment/terrain-stones-06b3275c7e1a.webp",
+      "width": 536,
+      "height": 536,
+      "size": 172456,
+      "sha256": "06b3275c7e1a65eca434db5d51fd58bb4df1c0dc7ff4f19ce78765c82fa5607b",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "b02fb8672b3fe381ea95618de6223af5ad747581588255d0f3522525c9659eca",
+        "width": 1254,
+        "height": 1254,
+        "description": "image_gen 原生透明 4×4 格图；左上光照、俯视三分之四视角、低矮地表装饰",
+        "cells": [
+          "sandPebbles",
+          "greyPebbles",
+          "mossRocks",
+          "sandstone",
+          "branch",
+          "log",
+          "leafPile",
+          "roots",
+          "volcanicGravel",
+          "lavaSlab",
+          "snowRocks",
+          "iceCrystals",
+          "sandRipples",
+          "dryGrass",
+          "pinecones",
+          "lichenStone"
+        ]
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "sandPebbles": {
+          "rect": [
+            8,
+            36,
+            118,
+            90
+          ],
+          "sourceRect": [
+            49,
+            98,
+            228,
+            174
+          ],
+          "cell": 0
+        },
+        "greyPebbles": {
+          "rect": [
+            142,
+            36,
+            118,
+            90
+          ],
+          "sourceRect": [
+            366,
+            104,
+            220,
+            167
+          ],
+          "cell": 1
+        },
+        "mossRocks": {
+          "rect": [
+            276,
+            39,
+            118,
+            87
+          ],
+          "sourceRect": [
+            661,
+            88,
+            252,
+            186
+          ],
+          "cell": 2
+        },
+        "sandstone": {
+          "rect": [
+            410,
+            43,
+            118,
+            83
+          ],
+          "sourceRect": [
+            975,
+            97,
+            244,
+            172
+          ],
+          "cell": 3
+        },
+        "branch": {
+          "rect": [
+            8,
+            183,
+            118,
+            77
+          ],
+          "sourceRect": [
+            24,
+            396,
+            268,
+            176
+          ],
+          "cell": 4
+        },
+        "log": {
+          "rect": [
+            142,
+            159,
+            118,
+            101
+          ],
+          "sourceRect": [
+            344,
+            376,
+            254,
+            218
+          ],
+          "cell": 5
+        },
+        "leafPile": {
+          "rect": [
+            276,
+            171,
+            118,
+            89
+          ],
+          "sourceRect": [
+            650,
+            384,
+            261,
+            196
+          ],
+          "cell": 6
+        },
+        "roots": {
+          "rect": [
+            410,
+            168,
+            118,
+            92
+          ],
+          "sourceRect": [
+            960,
+            378,
+            275,
+            215
+          ],
+          "cell": 7
+        },
+        "volcanicGravel": {
+          "rect": [
+            8,
+            303,
+            118,
+            91
+          ],
+          "sourceRect": [
+            31,
+            692,
+            264,
+            203
+          ],
+          "cell": 8
+        },
+        "lavaSlab": {
+          "rect": [
+            142,
+            293,
+            118,
+            101
+          ],
+          "sourceRect": [
+            343,
+            683,
+            257,
+            221
+          ],
+          "cell": 9
+        },
+        "snowRocks": {
+          "rect": [
+            276,
+            298,
+            118,
+            96
+          ],
+          "sourceRect": [
+            658,
+            688,
+            258,
+            210
+          ],
+          "cell": 10
+        },
+        "iceCrystals": {
+          "rect": [
+            410,
+            291,
+            118,
+            103
+          ],
+          "sourceRect": [
+            982,
+            690,
+            232,
+            203
+          ],
+          "cell": 11
+        },
+        "sandRipples": {
+          "rect": [
+            8,
+            429,
+            118,
+            99
+          ],
+          "sourceRect": [
+            23,
+            972,
+            275,
+            231
+          ],
+          "cell": 12
+        },
+        "dryGrass": {
+          "rect": [
+            142,
+            416,
+            118,
+            112
+          ],
+          "sourceRect": [
+            343,
+            964,
+            254,
+            242
+          ],
+          "cell": 13
+        },
+        "pinecones": {
+          "rect": [
+            276,
+            429,
+            118,
+            99
+          ],
+          "sourceRect": [
+            669,
+            988,
+            233,
+            196
+          ],
+          "cell": 14
+        },
+        "lichenStone": {
+          "rect": [
+            410,
+            437,
+            118,
+            91
+          ],
+          "sourceRect": [
+            961,
+            985,
+            264,
+            203
+          ],
+          "cell": 15
+        }
+      }
+    },
+    "shore": {
+      "local": "assets/adventure/environment/terrain-shore-1307b6047bc4.webp",
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/environment/terrain-shore-1307b6047bc4.webp",
+      "width": 652,
+      "height": 652,
+      "size": 199748,
+      "sha256": "1307b6047bc4090a29c787872ab94dad102994607aff990bf3a2d614318e777c",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "139ecaaa18ca8779f854130005809aa406e8692754d325aa4d84efe325524b40",
+        "width": 1254,
+        "height": 1254,
+        "description": "image_gen 原生透明 4×4 格图；左上光照、俯视三分之四视角、低矮地表装饰",
+        "cells": [
+          "reeds",
+          "cattails",
+          "bankGrass",
+          "lilyPads",
+          "shells",
+          "starfish",
+          "wetPebbles",
+          "driftwood",
+          "algae",
+          "bankStone",
+          "waterLily",
+          "rushes",
+          "beachRocks",
+          "shellFragments",
+          "coastalGrass",
+          "coral"
+        ]
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 90
+      },
+      "frames": {
+        "reeds": {
+          "rect": [
+            8,
+            15,
+            147,
+            140
+          ],
+          "sourceRect": [
+            59,
+            89,
+            226,
+            215
+          ],
+          "cell": 0
+        },
+        "cattails": {
+          "rect": [
+            178,
+            8,
+            133,
+            147
+          ],
+          "sourceRect": [
+            371,
+            72,
+            210,
+            232
+          ],
+          "cell": 1
+        },
+        "bankGrass": {
+          "rect": [
+            334,
+            49,
+            147,
+            106
+          ],
+          "sourceRect": [
+            663,
+            115,
+            244,
+            176
+          ],
+          "cell": 2
+        },
+        "lilyPads": {
+          "rect": [
+            497,
+            55,
+            147,
+            100
+          ],
+          "sourceRect": [
+            1000,
+            149,
+            202,
+            137
+          ],
+          "cell": 3
+        },
+        "shells": {
+          "rect": [
+            8,
+            212,
+            147,
+            106
+          ],
+          "sourceRect": [
+            55,
+            420,
+            217,
+            157
+          ],
+          "cell": 4
+        },
+        "starfish": {
+          "rect": [
+            171,
+            216,
+            147,
+            102
+          ],
+          "sourceRect": [
+            378,
+            430,
+            193,
+            134
+          ],
+          "cell": 5
+        },
+        "wetPebbles": {
+          "rect": [
+            334,
+            239,
+            147,
+            79
+          ],
+          "sourceRect": [
+            670,
+            446,
+            233,
+            126
+          ],
+          "cell": 6
+        },
+        "driftwood": {
+          "rect": [
+            497,
+            211,
+            147,
+            107
+          ],
+          "sourceRect": [
+            984,
+            414,
+            226,
+            165
+          ],
+          "cell": 7
+        },
+        "algae": {
+          "rect": [
+            8,
+            391,
+            147,
+            90
+          ],
+          "sourceRect": [
+            51,
+            742,
+            220,
+            135
+          ],
+          "cell": 8
+        },
+        "bankStone": {
+          "rect": [
+            171,
+            374,
+            147,
+            107
+          ],
+          "sourceRect": [
+            352,
+            707,
+            236,
+            172
+          ],
+          "cell": 9
+        },
+        "waterLily": {
+          "rect": [
+            334,
+            386,
+            147,
+            95
+          ],
+          "sourceRect": [
+            667,
+            715,
+            238,
+            154
+          ],
+          "cell": 10
+        },
+        "rushes": {
+          "rect": [
+            497,
+            334,
+            147,
+            147
+          ],
+          "sourceRect": [
+            991,
+            683,
+            215,
+            215
+          ],
+          "cell": 11
+        },
+        "beachRocks": {
+          "rect": [
+            8,
+            543,
+            147,
+            101
+          ],
+          "sourceRect": [
+            48,
+            1009,
+            234,
+            160
+          ],
+          "cell": 12
+        },
+        "shellFragments": {
+          "rect": [
+            171,
+            546,
+            147,
+            98
+          ],
+          "sourceRect": [
+            375,
+            1030,
+            187,
+            125
+          ],
+          "cell": 13
+        },
+        "coastalGrass": {
+          "rect": [
+            335,
+            497,
+            145,
+            147
+          ],
+          "sourceRect": [
+            666,
+            956,
+            240,
+            243
+          ],
+          "cell": 14
+        },
+        "coral": {
+          "rect": [
+            497,
+            562,
+            147,
+            82
+          ],
+          "sourceRect": [
+            994,
+            1038,
+            208,
+            116
+          ],
+          "cell": 15
+        }
+      }
+    },
+    "neuralObservatory": {
+      "local": "assets/adventure/neural-city/observatory-22bff79bb2c2.webp",
+      "width": 508,
+      "height": 478,
+      "size": 119930,
+      "sha256": "22bff79bb2c295fa1598391db13183248c372f808a9e22287c2ed8500a905a0e",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+        "sourceRect": [
+          36,
+          74,
+          508,
+          478
+        ],
+        "prompt": "art-references/neural-city-prompts.json"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "observatory": {
+          "rect": [
+            0,
+            0,
+            508,
+            478
+          ]
+        }
+      },
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/observatory-22bff79bb2c2.webp"
+    },
+    "neuralMemory": {
+      "local": "assets/adventure/neural-city/memory-75e59f5dfc82.webp",
+      "width": 426,
+      "height": 489,
+      "size": 146990,
+      "sha256": "75e59f5dfc82c4d58c8db0dd53cf148b67ac0b37504632a6f7d7720973054abd",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+        "sourceRect": [
+          569,
+          57,
+          426,
+          489
+        ],
+        "prompt": "art-references/neural-city-prompts.json"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "memory": {
+          "rect": [
+            0,
+            0,
+            426,
+            489
+          ]
+        }
+      },
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/memory-75e59f5dfc82.webp"
+    },
+    "neuralLibrary": {
+      "local": "assets/adventure/neural-city/library-339023c4f46d.webp",
+      "width": 463,
+      "height": 425,
+      "size": 110294,
+      "sha256": "339023c4f46d64c3a723bb42f123d086f91ee48e7fd7f6e24cb4b9c0f73711f1",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+        "sourceRect": [
+          1030,
+          117,
+          463,
+          425
+        ],
+        "prompt": "art-references/neural-city-prompts.json"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "library": {
+          "rect": [
+            0,
+            0,
+            463,
+            425
+          ]
+        }
+      },
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/library-339023c4f46d.webp"
+    },
+    "neuralWelcome": {
+      "local": "assets/adventure/neural-city/welcome-5f0fcfe1eab2.webp",
+      "width": 488,
+      "height": 353,
+      "size": 86112,
+      "sha256": "5f0fcfe1eab2c9b2194fc39824721c4f98f9e3ace70153b3ee958c4cf41ed5b6",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+        "sourceRect": [
+          18,
+          604,
+          488,
+          353
+        ],
+        "prompt": "art-references/neural-city-prompts.json"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "welcome": {
+          "rect": [
+            0,
+            0,
+            488,
+            353
+          ]
+        }
+      },
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/welcome-5f0fcfe1eab2.webp"
+    },
+    "neuralFountain": {
+      "local": "assets/adventure/neural-city/fountain-924b94f0ff4b.webp",
+      "width": 427,
+      "height": 322,
+      "size": 193070,
+      "sha256": "924b94f0ff4b23d0cd46401ea782be20ef8630aecc81b49adb99eb4fda8a9e18",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+        "sourceRect": [
+          556,
+          632,
+          427,
+          322
+        ],
+        "prompt": "art-references/neural-city-prompts.json"
+      },
+      "encoding": {
+        "lossless": true,
+        "quality": 100
+      },
+      "frames": {
+        "fountain": {
+          "rect": [
+            0,
+            0,
+            427,
+            322
+          ]
+        }
+      },
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/fountain-924b94f0ff4b.webp"
+    },
+    "neuralWorkshop": {
+      "local": "assets/adventure/neural-city/workshop-7339d416ed3a.webp",
+      "width": 479,
+      "height": 403,
+      "size": 87752,
+      "sha256": "7339d416ed3aff0716bafc5b2d84cc40294a0573ad5c8dec39346f0b8c9ba583",
+      "source": {
+        "generator": "image_gen",
+        "sha256": "83d1c6ea608cccb14b7816aa639c0865de65d629ace55293728f8cf826b25f5e",
+        "sourceRect": [
+          1031,
+          573,
+          479,
+          403
+        ],
+        "prompt": "art-references/neural-city-prompts.json"
+      },
+      "encoding": {
+        "lossless": false,
+        "quality": 94
+      },
+      "frames": {
+        "workshop": {
+          "rect": [
+            0,
+            0,
+            479,
+            403
+          ]
+        }
+      },
+      "cdn": "https://cdn.keepwork.com/keepwork/haqi/adventure/neural-city/workshop-7339d416ed3a.webp"
+    }
+  }
+}

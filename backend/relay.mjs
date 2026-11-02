@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { Fault, hash, string } from './store.mjs';
+import { verifyWorkerDeliverable } from './market.mjs';
 
 export const TOOL_NAMES = ['files_list', 'files_read', 'files_write', 'artifacts_seal'];
 export const TOOLS = [
@@ -50,20 +51,70 @@ export function enqueueTool(store, cap, name, args) {
   store.run('INSERT INTO tool_calls(id,task,worker,epoch,name,args,created_at) VALUES(?,?,?,?,?,?,?)', id, cap.task, cap.worker, cap.epoch, name, JSON.stringify(args), store.now());
   return { id, state: 'pending' };
 }
+export function enqueueJudgeCall(store, taskId) {
+  const task = store.one('SELECT * FROM tasks WHERE id=?', taskId);
+  if (!task || task.state !== 'submitted') return null;
+  if (task.judge_mode !== 'consumer_ai' && !(task.judge_mode === 'whitelist_spotcheck' && task.payout_percent == null)) return null;
+  const existing = store.one("SELECT id FROM tool_calls WHERE task=? AND epoch=? AND name='judge_evaluate'", task.id, task.epoch);
+  if (existing) return existing;
+  const skill = store.market.skill(task.skill_id);
+  const deliverableSafety = verifyWorkerDeliverable({ category: task.category, skill_id: task.skill_id, result: task.result || '' });
+  const args = {
+    category: task.category || 'general_files',
+    skill_id: task.skill_id || 'sandbox-file-ops',
+    judge_guide: skill?.judge_guide || '',
+    judge_rubric: task.judge_rubric || 'Evaluate deliverable quality and adherence to instructions.',
+    min_payout_percent: task.min_payout_percent || 100,
+    expected_minutes: task.expected_minutes || 30,
+    model: task.model,
+    deliverable_envelope: {
+      untrusted_worker_result: task.result,
+      result_sha256: hash(task.result || ''),
+      deliverable_safety: deliverableSafety,
+    },
+    telemetry: task.telemetry_flags ? JSON.parse(task.telemetry_flags) : null,
+  };
+  const callId = `call_${randomUUID()}`;
+  store.run(
+    'INSERT INTO tool_calls(id,task,worker,epoch,name,args,created_at) VALUES(?,?,?,?,?,?,?)',
+    callId, task.id, task.worker, task.epoch, 'judge_evaluate', JSON.stringify(args), store.now(),
+  );
+  return { id: callId, state: 'pending' };
+}
 export function pendingTools(store, owner, taskId) {
   const task = store.task(owner, taskId);
   demand(task.owner === owner, 'forbidden', 'Only the Consumer may retrieve execution requests.', 403);
-  const calls = store.models.includes(task.model) && task.state === 'running' && task.lease_until > store.now()
-    ? store.all("SELECT * FROM tool_calls WHERE task=? AND epoch=? AND worker=? AND state='pending' ORDER BY created_at", taskId, task.epoch, task.worker) : [];
+  let calls = [];
+  if (store.models.includes(task.model) && task.state === 'running' && task.lease_until > store.now()) {
+    calls = store.all("SELECT * FROM tool_calls WHERE task=? AND epoch=? AND worker=? AND state='pending' ORDER BY created_at", taskId, task.epoch, task.worker);
+  } else if (task.state === 'submitted') {
+    calls = store.all("SELECT * FROM tool_calls WHERE task=? AND epoch=? AND name='judge_evaluate' AND state='pending' ORDER BY created_at", taskId, task.epoch);
+  }
   return { task, server_time: store.now(), calls: calls.map((call) => ({ ...call, args: JSON.parse(call.args) })) };
 }
 export function completeTool(store, owner, taskId, callId, result) {
   const task = store.task(owner, taskId);
   demand(task.owner === owner, 'forbidden', 'Only the Consumer may return execution results.', 403);
   const call = store.one('SELECT * FROM tool_calls WHERE id=? AND task=?', callId, taskId);
-  demand(call && task.state === 'running' && call.epoch === task.epoch && call.worker === task.worker && task.lease_until > store.now() && task.deadline > store.now(), 'lease_expired', 'Result belongs to a stale attempt.');
+  demand(call, 'lease_expired', 'Result belongs to a stale attempt.');
   demand(result && typeof result === 'object' && !Array.isArray(result) && typeof result.ok === 'boolean' && Buffer.byteLength(JSON.stringify(result)) <= 48000, 'invalid_result', 'Invalid or oversized tool result.', 400);
   demand(call.state === 'pending', 'already_completed', 'Tool result was already recorded.');
+  if (call.name === 'judge_evaluate') {
+    demand(task.state === 'submitted' && call.epoch === task.epoch, 'lease_expired', 'Judge call belongs to a stale attempt.');
+    if (result.ok) {
+      store.market.judgeTask(owner, taskId, {
+        payout_percent: result.payout_percent,
+        rating: result.rating,
+        reason: result.reason,
+        recommend_whitelist: result.recommend_whitelist,
+        suspect_model_spoofing: result.suspect_model_spoofing,
+        unsafe_deliverable: result.unsafe_deliverable,
+      });
+    }
+    store.run("UPDATE tool_calls SET state='done',result=? WHERE id=?", JSON.stringify(result), callId);
+    return { id: callId, state: 'done' };
+  }
+  demand(task.state === 'running' && call.epoch === task.epoch && call.worker === task.worker && task.lease_until > store.now() && task.deadline > store.now(), 'lease_expired', 'Result belongs to a stale attempt.');
   if (call.name === 'artifacts_seal' && result.ok) {
     demand(result.manifest && /^[a-f0-9]{64}$/.test(result.manifest.sha256) && Array.isArray(result.manifest.files) && result.manifest.files.length > 0, 'invalid_manifest', 'A nonempty output manifest is required.', 400);
   }
@@ -72,8 +123,10 @@ export function completeTool(store, owner, taskId, callId, result) {
 }
 export function bindSubmission(store, taskId, body) {
   const workspace = store.one('SELECT * FROM task_workspaces WHERE task=?', taskId);
-  if (!workspace?.required && !body.seal_id) return;
-  const seal = store.one("SELECT * FROM tool_calls WHERE id=? AND task=? AND epoch=? AND name='artifacts_seal' AND state='done'", body.seal_id || '', taskId, body.epoch);
-  demand(seal && JSON.parse(seal.result).ok, 'artifact_required', 'Consumer-sealed artifacts from this attempt are required.');
-  store.run('INSERT INTO task_workspaces(task,required,seal_id) VALUES(?,1,?) ON CONFLICT(task) DO UPDATE SET seal_id=excluded.seal_id', taskId, seal.id);
+  if (workspace?.required || body.seal_id) {
+    const seal = store.one("SELECT * FROM tool_calls WHERE id=? AND task=? AND epoch=? AND name='artifacts_seal' AND state='done'", body.seal_id || '', taskId, body.epoch);
+    demand(seal && JSON.parse(seal.result).ok, 'artifact_required', 'Consumer-sealed artifacts from this attempt are required.');
+    store.run('INSERT INTO task_workspaces(task,required,seal_id) VALUES(?,1,?) ON CONFLICT(task) DO UPDATE SET seal_id=excluded.seal_id', taskId, seal.id);
+  }
+  enqueueJudgeCall(store, taskId);
 }

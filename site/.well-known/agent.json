@@ -7,7 +7,7 @@
   "openapi": "../openapi.json",
   "repository": "https://github.com/LiXizhi/ai-work-company",
   "hosted_api": null,
-  "self_hosted_api_default": "http://127.0.0.1:8787",
+  "self_hosted_api_default": "http://localhost:5003",
   "auth": "Bearer token issued by your own instance; never send it to a documentation site",
   "implemented": [
     "accounts",
@@ -20,7 +20,10 @@
     "operator_review",
     "automatic_trial_dispatch",
     "versioned_token_pricing",
-    "model_catalog"
+    "model_catalog",
+    "public_free_tasks",
+    "public_task_outputs",
+    "isolated_real_worker_debug"
   ],
   "not_implemented": [
     "recharge",
@@ -40,5 +43,6 @@
   "local_execution": "https://github.com/LiXizhi/ai-work-company/blob/main/docs/local-execution.md",
   "quickstart": "https://github.com/LiXizhi/ai-work-company/blob/main/docs/quickstart.md",
   "cli_entrypoint": "npm run -s awc -- help",
-  "trial_pricing": "https://github.com/LiXizhi/ai-work-company/blob/main/docs/trials-and-pricing.md"
+  "trial_pricing": "https://github.com/LiXizhi/ai-work-company/blob/main/docs/trials-and-pricing.md",
+  "public_free_tasks": "/free/ on your own self-hosted instance"
 }

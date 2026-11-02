@@ -1,0 +1,35 @@
+[Unit]
+Description=AI Work Company marketplace
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=awc
+Group=awc
+WorkingDirectory=/opt/ai-work-company/current
+EnvironmentFile=/etc/ai-work-company/service.env
+ExecStart=/opt/ai-work-company/runtime/node backend/server.mjs
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+StateDirectory=ai-work-company
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/ai-work-company
+MemoryMax=512M
+TasksMax=64
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target
