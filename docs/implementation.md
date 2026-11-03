@@ -6,6 +6,30 @@ The current release implements the marketplace **control plane and restricted lo
 The [design directory](design/README.md) describes the broader product; it is not a
 list of shipped features. No hosted trading backend is deployed by GitHub Pages.
 
+## Offline Live2D art tooling (2026-11-03)
+
+`tools/live2d/` prepares local full-body artwork through a self-contained polygon
+mask editor, flat pixel-layer PSD import, PSD export with pixel roundtrip checks,
+and unbound motion templates including standing/breathing, arms and accessories.
+The Codex-driven workflow uses built-in imagegen for reference/part generation;
+`import-atlas` packages generated parts using an explicit reviewed layout.
+`build_native.py` constructs a basic humanoid mesh/warp rig and exports a real MOC3
+using the attributed MIT exporter. It loads the model through a separately supplied
+Cubism Core, checks neutral registration, finite geometry, five bound parameters
+and fixed feet, and assembles a local pixi-live2d-display viewer. Nested warps carry
+the upper body through shared breathing; verification also checks all 32 parameter
+extremes for finite geometry, fixed feet and non-flipped triangles. Generated Claude
+art was checked in native browser playback. The rig supports standing/breathing,
+head tilt, both arms and braid sway; independent face rigging, physics, elbow IK and
+CMO3 export remain unimplemented. Appearance and joint-quality approval remain
+separate from runtime checks. Optional joint-aware assembly derives placement,
+draw order and pivots from reviewed landmarks, stops on insufficient neutral paint
+coverage, and checks native attachment-point separation over all extreme poses.
+Landmark detection is not automated; Codex or an artist provides the recipe.
+The simpler `check-export` command is only file preflight.
+This development-only tool adds no marketplace API or game renderer. Private
+example art stays in ignored temporary folders. See [workflow](../tools/live2d/README.md).
+
 ## Architecture
 
 One Node.js 24 process serves static documentation (`/`), the server-served Live Agent

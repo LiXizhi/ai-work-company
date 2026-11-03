@@ -1,0 +1,46 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Native Live2D character · rig verification</title>
+<style>body{margin:0;background:#182130;color:#edf3fa;font:16px system-ui}main{display:flex;height:100vh;height:100dvh;overflow:hidden}aside{box-sizing:border-box;flex:0 0 328px;padding:24px;overflow:auto}h1{font-size:24px}#stage{position:relative;flex:1;min-width:0;min-height:0;overflow:hidden;background:#253447}canvas{position:absolute;inset:0;display:block}label{display:block;margin:20px 0}input[type=range]{width:100%}#status{color:#a1e7bf}small{color:#b0bfd1}button{padding:10px;font:inherit}@media(max-width:600px){main{flex-direction:column}aside{flex:0 0 32%;padding:12px 20px}}</style>
+<main><aside><h1>Native Live2D</h1><p>Generated artwork · parameter-bound MOC3</p><p id="status">Loading Cubism Core…</p>
+<label><input id="animate" type="checkbox" checked> Standing / breathing loop</label>
+<label>Breathing <input id="breath" type="range" min="0" max="1" step="0.01" value="0"></label>
+<label>Head tilt <input id="tilt" type="range" min="-1" max="1" step="0.01" value="0"></label>
+<label>Left arm <input id="arm" type="range" min="-1" max="1" step="0.01" value="0"></label>
+<label>Right arm <input id="rightArm" type="range" min="-1" max="1" step="0.01" value="0"></label>
+<label>Accessory sway <input id="sway" type="range" min="-1" max="1" step="0.01" value="0"></label>
+<label><input id="gestures" type="checkbox"> Play gesture demonstration</label>
+<small>Rendered from character.moc3 through Cubism Core and pixi-live2d-display. Art and joint quality remain prototype-level. No simulated PNG animation.</small>
+<pre id="metrics"></pre></aside><div id="stage"><canvas id="view"></canvas></div></main>
+<script src="lib/live2dcubismcore.min.js"></script><script src="lib/pixi.min.js"></script><script src="lib/cubism4.min.js"></script>
+<script>
+(async()=>{try{
+const stage=document.getElementById('stage');
+const app=new PIXI.Application({view:document.getElementById('view'),width:1,height:1,backgroundColor:0x253447,antialias:true});
+const model=await PIXI.live2d.Live2DModel.from('character.model3.json',{autoInteract:false});
+app.stage.addChild(model);model.anchor.set(.5,.5);
+// Capture unscaled dimensions once: fitting against the previous scaled width
+// compounds the scale on successive resizes. Resize the actual drawing surface,
+// rather than squeezing only its CSS width while leaving its height unchanged.
+const naturalWidth=model.width,naturalHeight=model.height;
+function fit(){
+ const width=Math.max(1,stage.clientWidth),height=Math.max(1,stage.clientHeight);
+ const padding=Math.min(30,width*.05,height*.05);
+ app.renderer.resize(width,height);
+ model.scale.set(Math.min((width-2*padding)/naturalWidth,(height-2*padding)/naturalHeight));
+ model.position.set(width/2,height/2);
+}
+const resizeObserver=new ResizeObserver(fit);resizeObserver.observe(stage);fit();
+const core=model.internalModel.coreModel;const start=performance.now();
+model.internalModel.on('beforeModelUpdate',()=>{
+ const t=(performance.now()-start)/1000,auto=document.getElementById('animate').checked,gestures=document.getElementById('gestures').checked;
+ const breath=auto?(1-Math.cos(t*Math.PI/2))/2:+document.getElementById('breath').value;
+ core.setParameterValueById('ParamBreath',breath);
+ core.setParameterValueById('ParamAngleZ',gestures?Math.sin(t*.7)*.5:+document.getElementById('tilt').value);
+ core.setParameterValueById('ParamArmLZ',gestures?Math.sin(t*1.5)*.6:+document.getElementById('arm').value);
+ core.setParameterValueById('ParamArmRZ',gestures?Math.sin(t*1.2)*.4:+document.getElementById('rightArm').value);
+ core.setParameterValueById('ParamAccessorySwing',gestures?Math.sin(t*.9)*.6:+document.getElementById('sway').value);
+ document.getElementById('metrics').textContent=`MOC loaded\nBreath: ${breath.toFixed(3)}\nTime: ${t.toFixed(1)} s`;
+});
+document.getElementById('status').textContent='Native model loaded · live playback';
+}catch(error){document.getElementById('status').textContent='FAILED: '+error.message;console.error(error)}})();
+</script></html>

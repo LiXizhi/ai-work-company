@@ -377,6 +377,15 @@ These are camera/UI changes only; navigation and HTTP contracts are unchanged.
 
 ## US deployment and URL prefixes
 
+Offline developer artwork preparation is available in repository `tools/live2d/`.
+It produces layered PSD handoffs; the native builder also creates a basic humanoid
+MOC3 rig with standing/breathing, head, arm and accessory bindings and verifies
+geometry through a separately supplied Cubism Core. Art quality needs review;
+independent facial rigging, physics and CMO3 project export remain unsupported.
+Optional assembly fits reviewed landmarks and layer-order constraints, checks
+neutral overlap and native attachment separation; it does not detect anatomy.
+It is not a Worker capability or HTTP endpoint and does not replace Haqi rendering.
+
 The self-hosted US instance uses `https://us1.gameserver.keepwork.com/ai-work-company`
 as its API base. Append `/v1/...` to this full base; do not discard the path prefix.
 The CLI `--server` accepts that full URL. The live market is `company/`, public

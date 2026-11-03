@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Live2D art preparation</title>
+<style>
+body{margin:0;font:16px system-ui;background:#161b25;color:#edf2ff}header,aside{padding:20px}header{border-bottom:1px solid #394256}main{display:flex;gap:20px;padding:20px}aside{width:290px;flex-shrink:0;background:#222b3a;border-radius:12px}canvas{max-width:100%;max-height:75vh;width:auto;height:auto;background:repeating-conic-gradient(#40485a 0% 25%,#303848 0% 50%) 0/24px 24px;touch-action:none}section{max-width:900px}button,input,select{font:inherit;margin:5px 0;padding:8px;max-width:100%}button{cursor:pointer}button:disabled{cursor:default}li{margin:8px 0}small{color:#bcc9de}#status{color:#9ee9ce}a{color:#a8c7ff}@media(max-width:750px){main{display:block}aside{width:auto}}
+</style>
+<header><h1>Image → layered art → Cubism</h1><p>Trace visible parts. Repair hidden artwork. Rig and export in Cubism.</p></header>
+<main><aside><h2>Part masks</h2><p>Click around a part, then save it. Coordinates stay at the original image size.</p>
+<label>Part name <input id="name" value="torso" pattern="[a-zA-Z0-9_-]+"></label>
+<button id="undo">Undo point</button> <button id="clear">Clear points</button><button id="add">Save part</button>
+<p><small>Suggested parts: back hair, legs, torso, arms, face, eyes, mouth, front hair, accessories. Order below is back → front.</small></p>
+<ol id="layers"></ol><button id="save">Download project.json</button>
+<label>Reload saved project <input id="load" type="file" accept=".json"></label>
+<p id="status" role="status"></p><p><strong>This does not reconstruct covered pixels.</strong> Replace cutouts with repaired transparent PNGs before rigging. A whole head cannot independently blink or talk.</p>
+</aside><section><canvas id="canvas"></canvas><p>Full-body idle: keep feet planted; bind chest/torso deformation to <code>ParamBreath</code>. Arm and accessory movement need separate parts and bindings.</p></section></main>
+<script>
+'use strict';
+let project=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob('__PROJECT__'),c=>c.charCodeAt(0))));
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d'),image=new Image();
+const status=document.getElementById('status'),nameInput=document.getElementById('name');let points=[];
+image.onload=()=>{canvas.width=image.width;canvas.height=image.height;render()};image.src='data:image/png;base64,__IMAGE__';
+function path(vertices,color,fill){if(!vertices.length)return;ctx.beginPath();vertices.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));if(fill)ctx.closePath();ctx.strokeStyle=color;ctx.lineWidth=Math.max(2,canvas.width/400);ctx.stroke();if(fill){ctx.fillStyle=color+'22';ctx.fill()}for(const [x,y] of vertices){ctx.fillStyle=color;ctx.fillRect(x-3,y-3,6,6)}}
+function render(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0);project.layers.forEach(s=>{if(s.polygon)path(s.polygon,'#74c9ff',true)});path(points,'#fff095',false);const list=document.getElementById('layers');list.replaceChildren();project.layers.forEach((s,i)=>{const li=document.createElement('li'),label=document.createElement('span');label.textContent=s.id+(s.image?' (PNG)':'');li.append(label);for(const [text,action] of [['↑',()=>{if(i){[project.layers[i-1],project.layers[i]]=[s,project.layers[i-1]];render()}}],['↓',()=>{if(i+1<project.layers.length){[project.layers[i+1],project.layers[i]]=[s,project.layers[i+1]];render()}}],['Remove',()=>{project.layers.splice(i,1);render()}]]){const b=document.createElement('button');b.textContent=text;b.onclick=action;li.append(b)}list.append(li)});document.getElementById('add').disabled=points.length<3}
+canvas.onclick=e=>{const r=canvas.getBoundingClientRect();points.push([Math.round((e.clientX-r.left)*canvas.width/r.width),Math.round((e.clientY-r.top)*canvas.height/r.height)]);render()};
+document.getElementById('undo').onclick=()=>{points.pop();render()};document.getElementById('clear').onclick=()=>{points=[];render()};
+document.getElementById('add').onclick=()=>{const id=nameInput.value.trim();if(!/^[a-zA-Z0-9_-]{1,80}$/.test(id)||project.layers.some(p=>p.id===id)){status.textContent='Use a unique name with letters, digits, hyphens or underscores.';return}project.layers.push({id,polygon:points,visible:true,repair_reviewed:false});points=[];status.textContent='Part saved. Check overlap and repair hidden areas.';render()};
+document.getElementById('save').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(project,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='project.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent='Save the file beside source.png, replacing project.json.'};
+document.getElementById('load').onchange=async e=>{try{const p=JSON.parse(await e.target.files[0].text());if(p.version!==1||JSON.stringify(p.canvas)!==JSON.stringify([image.width,image.height])||!Array.isArray(p.layers))throw Error('Project dimensions/version do not match');project=p;points=[];render();status.textContent='Project loaded.'}catch(err){status.textContent=err.message}};
+</script></html>

@@ -206,6 +206,11 @@ ledger, and earn nothing. Guests still see the four labelled demo residents. See
 Shared engine and art ownership, automatic subset sync, and home-land reuse:
 [Haqi reuse workflow](docs/haqi-reuse.md).
 
+Offline AI-generated Live2D artwork, PSD handoff, native humanoid rig/export and
+Core verification: [art pipeline](tools/live2d/native-pipeline.md). The tested rig
+supports standing/breathing, head tilt, arms and accessories; art and joint-quality
+review remains separate from runtime validation.
+
 ### Persistent simulated town population (2026-10-27)
 
 Six local simulated residents remain visible for guests and signed-in visitors,

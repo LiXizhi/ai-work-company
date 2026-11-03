@@ -1,0 +1,30 @@
+Use case: identity-preserve (use stylized-concept for a text-only design).
+Asset type: transparent cutout parts atlas for Live2D art preparation.
+Input: the approved full-body reference is the identity/outfit/style source.
+Generate exactly 12 isolated parts in a 4-column, 3-row equal-cell atlas.
+Use real transparency, generous empty gutters, no labels, lines, shadows or backdrop.
+Keep every part wholly inside its cell. Reconstruct hidden pixels and overlapping
+joint regions. Preserve identity, proportions, outfit details and drawing style.
+
+Cells left-to-right, top-to-bottom:
+1. Neutral head including short hair, no long braid or separate bow.
+2. Same head/scale, eyes closed. 3. Same head/scale, mouth open slightly.
+4. Complete neck, torso and dress with shoulder overlap, NO sleeves, arms or legs.
+5. Left-screen upper arm/sleeve from shoulder to elbow ONLY.
+6. Right-screen upper arm/sleeve from shoulder to elbow ONLY.
+7. Left-screen forearm from elbow through wrist and relaxed hand ONLY.
+8. Right-screen forearm from elbow through wrist and relaxed hand ONLY.
+9. Left-screen lower leg and boot. 10. Right-screen lower leg and boot.
+11. Separate long hair/braid accessory. 12. Separate bow/ornament accessory.
+
+Arms and legs point downward in the standing neutral pose. Do not duplicate a
+complete sleeve in both upper-arm and forearm cells. Matching pairs use matching
+scale. No assembled character. Facial variants are prototype replacements, not
+independent eye/mouth meshes; later detail passes will separate those structures.
+
+Cut boundaries are hidden overlap zones, not visible garment edges. Upper-arm
+elbow ends and forearm starts need filled cloth extensions: no hollow tubes,
+ellipse openings, rim outlines, extra cuffs or elbow bracelets. Only wrists have
+visible cuffs. Without independent elbow bending, prefer continuous shoulder-to-
+fingertip arms in a separate two-column atlas. After import, inspect local joint
+landmarks and make the assembly recipe in assembly.md. Fixed boxes are not a fit.
