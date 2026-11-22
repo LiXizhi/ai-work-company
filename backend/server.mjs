@@ -2,10 +2,12 @@ import { FreeTasks, freeOpenapiPaths } from './free-tasks.mjs';
 import { batchOpenapiPaths } from './batches.mjs';
 import { observerOpenapiPaths } from './market.mjs';
 import http from 'node:http';
+import { createHash } from 'node:crypto';
+import { gzipSync } from 'node:zlib';
 import { initAdmin, authenticateAdmin, adminGet, adminPost, adminOpenapiPaths } from './admin-web.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { Store, Fault } from './store.mjs';
 import { initRelay, mintToolCap, authorizeTool, enqueueTool, pendingTools, completeTool, bindSubmission } from './relay.mjs';
 
@@ -155,14 +157,56 @@ async function readBody(req) {
   });
 }
 
-export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', '[::1]'], adminToken = process.env.AWC_ADMIN_TOKEN } = {}) {
-  initRelay(store); initAdmin(store); store.freeTasks=new FreeTasks(store);
-  const staticFiles = new Map();
+export function collectWorldModulePreloads() {
+  const siteDir = resolve(root, 'site');
+  const seen = new Map();
+  function walk(absFile) {
+    const code = readFileSync(absFile, 'utf8');
+    for (const [, spec] of code.matchAll(/(?:import|export)\s+(?:[^'"]*?\s+from\s+)?['"](\.[^'"]+)['"]/g)) {
+      const [cleanPart, queryPart] = spec.split('?');
+      const targetAbs = resolve(dirname(absFile), cleanPart);
+      if (!targetAbs.startsWith(siteDir + '/') || !existsSync(targetAbs) || seen.has(targetAbs)) continue;
+      seen.set(targetAbs, relative(siteDir, targetAbs).replace(/\\/g, '/') + (queryPart ? `?${queryPart}` : ''));
+      walk(targetAbs);
+    }
+  }
+  const bootAbs = resolve(siteDir, 'world-boot.mjs');
+  if (existsSync(bootAbs)) seen.set(bootAbs, 'world-boot.mjs');
+  const entryAbs = resolve(siteDir, 'world.js');
+  if (existsSync(entryAbs)) {
+    seen.set(entryAbs, 'world.js');
+    walk(entryAbs);
+  }
+  return [...seen.values()];
+}
+
+export function injectWorldPreloads(html, preloads = collectWorldModulePreloads()) {
+  if (!preloads.length || html.includes('rel="modulepreload"')) return html;
+  const tags = preloads.map((href) => `  <link rel="modulepreload" href="${href}">`).join('\n');
+  return html.replace('</head>', `${tags}\n</head>`);
+}
+
+let cachedStaticFiles = null;
+function getStaticFiles() {
+  if (cachedStaticFiles) return cachedStaticFiles;
+  const files = new Map();
+  const put = (url, body, mime) => {
+    const buf = Buffer.isBuffer(body) ? body : Buffer.from(body, 'utf8');
+    const compressible = /^(?:text\/|application\/json$|image\/svg\+xml$)/.test(mime) && buf.length >= 512;
+    const cacheControl = (mime === 'text/html' || url === '/.well-known/agent.json')
+      ? 'no-store'
+      : (url.startsWith('/assets/') || url.startsWith('/vendor/'))
+        ? 'public, max-age=86400, stale-while-revalidate=604800'
+        : 'public, max-age=0, must-revalidate';
+    const etag = `"${createHash('sha256').update(buf).digest('base64url').slice(0, 20)}"`;
+    files.set(url, { body: buf, gzip: compressible ? gzipSync(buf, { level: 6 }) : null, mime, cacheControl, etag });
+  };
   for (const [url, name, mime] of [
     ['/', 'index.html', 'text/html'], ['/index.html', 'index.html', 'text/html'],
     ['/style.css', 'style.css', 'text/css'], ['/app.js', 'app.js', 'text/javascript'],
     ['/guide.html', 'guide.html', 'text/html'],
     ['/world.css', 'world.css', 'text/css'], ['/world-layout.css', 'world-layout.css', 'text/css'],
+    ['/world-boot.mjs', 'world-boot.mjs', 'text/javascript'],
     ['/world.js', 'world.js', 'text/javascript'], ['/world-state.mjs', 'world-state.mjs', 'text/javascript'],
     ['/personas.mjs', 'personas.mjs', 'text/javascript'],
     ['/ui-tokens.css', 'ui-tokens.css', 'text/css'], ['/world-ui.css', 'world-ui.css', 'text/css'],
@@ -182,14 +226,14 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       .map((id) => [`/skills/${id}.md`, `skills/${id}.md`, 'text/markdown']),
   ]) {
     const path = resolve(root, 'site', name);
-    if (existsSync(path)) staticFiles.set(url, { body: readFileSync(path), mime });
+    if (existsSync(path)) put(url, readFileSync(path), mime);
   }
   // Only build-time catalog entries are public; request paths never select disk files.
   const artwork = JSON.parse(readFileSync(resolve(root, 'site/assets/ainiang/manifest.json'), 'utf8'));
   for (const asset of artwork.assets) {
     if (!/^2d\/[a-z-]+\/[a-zA-Z0-9.-]+\.webp$/.test(asset.path)) throw new Error('Invalid artwork path');
     const url = `/assets/ainiang/${asset.path}`;
-    staticFiles.set(url, { body: readFileSync(resolve(root, 'site' + url)), mime: 'image/webp' });
+    put(url, readFileSync(resolve(root, 'site' + url)), 'image/webp');
   }
   // Build-time pinned assets only; this is not a user-controlled filesystem route.
   const haqiIndex=resolve(root,'site/vendor/haqi/provenance.json');
@@ -199,24 +243,41 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       if(!/^(?:vendor\/haqi(?:-data)?|assets)\/[a-zA-Z0-9_./-]+$/.test(name)||name.split('/').includes('..'))throw Error('Invalid shared asset path');
       const mime=name.endsWith('.js')?'text/javascript':name.endsWith('.json')?'application/json':name.endsWith('.webp')?'image/webp':null;
       if(!mime)throw Error('Unsupported shared asset type');
-      staticFiles.set('/'+name,{body:readFileSync(resolve(root,'site',name)),mime});
+      put('/'+name,readFileSync(resolve(root,'site',name)),mime);
     }
   }
   for (const name of ['business-model-analysis-v1.html', 'business-plan-v2.html', 'business-plan-v2.md']) {
-    staticFiles.set('/'+name, {body:readFileSync(resolve(root,'docs',name)),mime:name.endsWith('.md')?'text/markdown':'text/html'});
+    put('/'+name, readFileSync(resolve(root,'docs',name)), name.endsWith('.md')?'text/markdown':'text/html');
   }
-  if(existsSync(resolve(root,'docs/report.css'))) staticFiles.set('/report.css',{body:readFileSync(resolve(root,'docs/report.css')),mime:'text/css'});
+  if(existsSync(resolve(root,'docs/report.css'))) put('/report.css',readFileSync(resolve(root,'docs/report.css')),'text/css');
   for (const name of ['business-model-analysis','autonomous-operation-plan']) for (const ext of ['md','html']) {
     const path=resolve(root,'docs',`${name}.${ext}`);
-    if(existsSync(path)) staticFiles.set(`/${name}.${ext}`,{body:readFileSync(path),mime:ext==='html'?'text/html':'text/markdown'});
+    if(existsSync(path)) put(`/${name}.${ext}`,readFileSync(path),ext==='html'?'text/html':'text/markdown');
   }
   for (const [url,name,mime] of [['/admin/','index.html','text/html'],['/admin/app.js','app.js','text/javascript'],['/admin/style.css','style.css','text/css']]) {
-    const path=resolve(root,'admin',name); if(existsSync(path)) staticFiles.set(url,{body:readFileSync(path),mime});
+    const path=resolve(root,'admin',name); if(existsSync(path)) put(url,readFileSync(path),mime);
   }
   for (const [url,name,mime] of [['/company/','index.html','text/html'],['/company/app.js','app.js','text/javascript'],['/company/style.css','style.css','text/css'],['/company/free-preview.js','free-preview.js','text/javascript']]) {
-    const path=resolve(root,'company',name); if(existsSync(path)) staticFiles.set(url,{body:readFileSync(path),mime});
+    const path=resolve(root,'company',name); if(existsSync(path)) put(url,readFileSync(path),mime);
   }
-  for(const [url,name,mime] of [['/free/','index.html','text/html'],['/free/app.js','app.js','text/javascript'],['/free/style.css','style.css','text/css']]) staticFiles.set(url,{body:readFileSync(resolve(root,'free',name)),mime});
+  for(const [url,name,mime] of [['/free/','index.html','text/html'],['/free/app.js','text/javascript'==='text/html'?'text/html':'text/javascript'],['/free/style.css','style.css','text/css']]) {
+    const fileName=url==='/free/'?'index.html':url==='/free/app.js'?'app.js':'style.css';
+    const fileMime=url==='/free/'?'text/html':url==='/free/app.js'?'text/javascript':'text/css';
+    put(url,readFileSync(resolve(root,'free',fileName)),fileMime);
+  }
+  const preloads = collectWorldModulePreloads().filter((href) => files.has('/' + href.split('?')[0]));
+  if (files.has('/index.html')) {
+    const enhancedHtml = injectWorldPreloads(files.get('/index.html').body.toString('utf8'), preloads);
+    put('/', enhancedHtml, 'text/html');
+    put('/index.html', enhancedHtml, 'text/html');
+  }
+  cachedStaticFiles = files;
+  return cachedStaticFiles;
+}
+
+export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', '[::1]'], adminToken = process.env.AWC_ADMIN_TOKEN } = {}) {
+  initRelay(store); initAdmin(store); store.freeTasks=new FreeTasks(store);
+  const staticFiles = getStaticFiles();
   const buckets = new Map();
   const server = http.createServer(async (req, res) => {
     const send = (status, value) => { res.writeHead(status, { ...securityHeaders, ...jsonHeaders }); res.end(JSON.stringify(value)); };
@@ -235,8 +296,25 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       if (method === 'GET' && staticFiles.has(path)) {
         const file = staticFiles.get(path);
         const headers = worldPages.has(path) ? { ...securityHeaders, 'Content-Security-Policy': worldPagePolicy() } : securityHeaders;
+        if (file.cacheControl !== 'no-store' && req.headers['if-none-match'] === file.etag) {
+          res.writeHead(304, { ...headers, 'Cache-Control': file.cacheControl, ETag: file.etag, Vary: 'Accept-Encoding' });
+          res.end();
+          return;
+        }
         const contentType = /^(?:text\/|application\/json$|image\/svg\+xml$)/.test(file.mime) ? `${file.mime}; charset=utf-8` : file.mime;
-        res.writeHead(200, { ...headers, 'Cache-Control':'no-store', 'Content-Type': contentType }); res.end(file.body); return;
+        const useGzip = Boolean(file.gzip && /\bgzip\b/i.test(req.headers['accept-encoding'] || ''));
+        const payload = useGzip ? file.gzip : file.body;
+        res.writeHead(200, {
+          ...headers,
+          'Cache-Control': file.cacheControl,
+          ETag: file.etag,
+          Vary: 'Accept-Encoding',
+          'Content-Type': contentType,
+          'Content-Length': String(payload.length),
+          ...(useGzip ? { 'Content-Encoding': 'gzip' } : {}),
+        });
+        res.end(payload);
+        return;
       }
       if (method === 'GET' && path === '/openapi.json') { send(200, openapi()); return; }
       if (method === 'GET' && path === '/health') { send(200, { status: 'ok', version: '0.2.0' }); return; }

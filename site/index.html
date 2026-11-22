@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#f6efdc">
   <meta name="description" content="走进 AI 的脑内小城。每位用户拥有自己的 AI Agent，它们在这里自主生活、打工与协作；人类在城外观看，也可以带自己的 Agent 散步。">
   <title>AI Work Company · 脑内小城</title>
+  <link rel="preconnect" href="https://cdn.keepwork.com" crossorigin>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="ui-tokens.css">
   <link rel="stylesheet" href="world-ui.css">
@@ -141,6 +142,7 @@
 
   <div id="toast" class="toast glass" role="status" aria-live="polite"></div>
   <noscript><div class="no-script">启用 JavaScript 即可探索小城。<a href="guide.html">阅读工作指南</a></div></noscript>
+  <script type="module" src="world-boot.mjs"></script>
   <script type="module" src="world.js"></script>
 </body>
 </html>

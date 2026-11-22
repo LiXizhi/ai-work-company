@@ -11,11 +11,12 @@ import {Store} from '../backend/store.mjs';
 import {createServer} from '../backend/server.mjs';
 const read=name=>readFileSync(new URL('../'+name,import.meta.url),'utf8');
 
-test('scene uses upstream Haqi home-land and renderer modules directly without source patches',()=>{
- const sceneCode=read('site/world-scene.mjs');
- assert.ok(sceneCode.includes("from './vendor/haqi/adventure_renderer.js'"));
+test('scene uses upstream Haqi home-land and renderer modules directly without source patches or unused adventure bundles',()=>{
+ const sceneCode=read('site/world-scene.mjs'),rigCode=read('site/world-rig.mjs');
+ assert.ok(rigCode.includes("from './vendor/haqi/hero_renderer.js'"));
  assert.ok(sceneCode.includes("from './vendor/haqi/home_terrain_cache.js'"));
  assert.ok(sceneCode.includes("from './vendor/haqi/home_building_cache.js'"));
+ assert.ok(!sceneCode.includes('adventure_renderer.js'));
  assert.ok(!sceneCode.includes('groundedPose'));
  assert.ok(!read('site/index.html').includes('world-city.png'));
 });
@@ -113,6 +114,19 @@ test('self-hosted scene modules, home catalog, and WebP atlases are served from 
   ];
   for(const path of paths){const response=await fetch(base+'/'+path);assert.equal(response.status,200,path);await response.arrayBuffer();}
   assert.equal((await fetch(base+'/assets/adventure/environment/private.webp')).status,404);
+  const homeHtml=await fetch(base+'/');
+  assert.equal(homeHtml.headers.get('cache-control'),'no-store');
+  const htmlBody=await homeHtml.text();
+  assert.match(htmlBody,/rel="modulepreload" href="vendor\/haqi\/hero_renderer\.js"/);
+  const catRes=await fetch(base+'/vendor/haqi-data/data/adventure/home/catalog.json',{headers:{'Accept-Encoding':'gzip'}});
+  assert.equal(catRes.status,200);
+  assert.equal(catRes.headers.get('content-encoding'),'gzip');
+  assert.match(catRes.headers.get('cache-control')||'',/max-age=86400/);
+  const etag=catRes.headers.get('etag');
+  assert.ok(etag);
+  await catRes.arrayBuffer();
+  const reval=await fetch(base+'/vendor/haqi-data/data/adventure/home/catalog.json',{headers:{'If-None-Match':etag}});
+  assert.equal(reval.status,304);
  }finally{await new Promise(resolve=>server.close(resolve));store.close();}
 });
 

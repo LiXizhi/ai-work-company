@@ -1,9 +1,8 @@
-import {createRenderer} from './vendor/haqi/adventure_renderer.js';
 import {loadEnvironmentArt} from './vendor/haqi/adventure_environment_art.js';
 import {socialActions,socialGesturePose} from './vendor/haqi/adventure_social_actions_core.js';
 import {createHomeTerrainCache} from './vendor/haqi/home_terrain_cache.js';
 import {createHomeBuildingCache} from './vendor/haqi/home_building_cache.js';
-import {buildingItem,buildingBounds,buildingConnectionMask,homeDoorIsOpen,isRoofDecoration} from './vendor/haqi/home_building_core.js';
+import {buildingItem,buildingBounds,homeDoorIsOpen,isRoofDecoration} from './vendor/haqi/home_building_core.js';
 import {drawBuilding} from './vendor/haqi/view_home_building.js';
 import {collectHomeWorldTrees,drawHomeWorldTree,drawHomeObject} from './vendor/haqi/view_home_art.js';
 import {sceneResolution} from './vendor/haqi/scene_resolution_core.js';
@@ -12,18 +11,43 @@ import {followCameraEdge,createPlaza,createTownCast,createResidents,stepResident
 
 const ACTOR_SCALE=1.08;
 
+let preloadedResources=null;
+export function preloadSceneResources({preferCdn=false}={}){
+ return preloadedResources??=(async()=>{
+  const boot=globalThis.__awcBoot;
+  const fetchJson=async(key,rel,errMsg)=>{
+   const early=boot?.[key]?await boot[key]:null;
+   if(boot)boot[key]=null;
+   if(early)return early;
+   const r=await fetch(new URL(rel,import.meta.url));
+   if(!r.ok)throw Error(errMsg);
+   return r.json();
+  };
+  const [sceneManifest,catalogData,city]=await Promise.all([
+   fetchJson('scene','./assets/haqi-scene.json','Scene manifest unavailable'),
+   fetchJson('catalog','./vendor/haqi-data/data/adventure/home/catalog.json','Home catalog unavailable'),
+   fetchJson('city','./vendor/haqi-data/data/adventure/neural-city-art.json','City art catalogue unavailable'),
+  ]);
+  let art=await loadEnvironmentArt(preferCdn?'cdn':'local',async()=>sceneManifest);
+  // Neural-city terrain is procedural; only campTrees (119 KB) is used for perimeter trees.
+  try{
+   await art.ensure('campTrees');
+  }catch{
+   if(preferCdn){
+    art=await loadEnvironmentArt('local',async()=>sceneManifest);
+    await art.ensure('campTrees');
+   }
+  }
+  return {art,catalogData,city};
+ })().catch(e=>{preloadedResources=null;throw e;});
+}
+
 // `labelFor(profile)` supplies display names; profiles carry `persona` (renderer)
 // and `kind` ('demo' | 'mine' | 'remote'). Remote Agents are display-only.
-export async function createWorldScene(canvas,rig,labelFor){
- const art=await loadEnvironmentArt('local',async()=>{
-  const response=await fetch(new URL('./assets/haqi-scene.json',import.meta.url));
-  if(!response.ok)throw Error('Scene manifest unavailable');
-  return response.json();
- });
- const catalogResponse=await fetch(new URL('./vendor/haqi-data/data/adventure/home/catalog.json',import.meta.url));
- if(!catalogResponse.ok)throw Error('Home catalog unavailable');
- const catalogData=await catalogResponse.json();
- await Promise.all(Object.keys(art.manifest.atlases).map(art.ensure));
+export async function createWorldScene(canvas,rig,labelFor,options={}){
+ const {preferCdn=false,onAssetReady=null}=options;
+ const {art,catalogData,city}=options.resources||await preloadSceneResources({preferCdn});
+ art.onAtlas=()=>onAssetReady?.();
 
  const spriteImages=new Map();
  function imageFor(artSpec){
@@ -32,14 +56,22 @@ export async function createWorldScene(canvas,rig,labelFor){
   if(spriteImages.has(rel))return spriteImages.get(rel);
   const img=new Image();
   img.decoding='async';
-  img.src=new URL('./'+rel,import.meta.url).href;
+  const localHref=new URL('./'+rel,import.meta.url).href;
+  const primaryHref=preferCdn&&artSpec.cdn?artSpec.cdn:localHref;
+  if(primaryHref!==localHref)img.crossOrigin='anonymous';
+  img.onload=()=>{onAssetReady?.();};
+  img.onerror=()=>{
+   if(img.src!==localHref){
+    img.onerror=null;
+    img.removeAttribute('crossorigin');
+    img.src=localHref;
+   }
+  };
+  img.src=primaryHref;
   spriteImages.set(rel,img);
   return img;
  }
 
- const cityResponse=await fetch(new URL('./vendor/haqi-data/data/adventure/neural-city-art.json',import.meta.url));
- if(!cityResponse.ok)throw Error('City art catalogue unavailable');
- const city=await cityResponse.json();
  const world=createPlaza([...catalogData.items.map(item=>item.building?{...item,building:{...item.building,theme:'neural-city'}}:item),...city.homeItems]);
  installCityLandmarks(world,city.homeItems);
  installCityDecorations(world);
@@ -60,7 +92,6 @@ export async function createWorldScene(canvas,rig,labelFor){
  let remote=[];
  const terrainCache=createHomeTerrainCache({theme:'neural-city'});
  const buildingCache=createHomeBuildingCache({imageFor});
- void createRenderer;
 
  const camera={x:world.center.x,y:180,zoom:0.90};
  let viewport={width:canvas.clientWidth||1280,height:canvas.clientHeight||800,scale:1,pixelRatio:1};
@@ -178,7 +209,7 @@ export async function createWorldScene(canvas,rig,labelFor){
      }
      if(g.dynamic){
       for(const row of g.rows){
-       const {o,item}=row,img=imageFor(item.art);
+       const {o,item}=row,img=imageFor(row.item.art);
        if(item.building){
         drawBuilding(c,item,o,img?.complete&&img.naturalWidth?img:null,row.connections,row.ao);
        }else{

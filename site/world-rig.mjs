@@ -13,21 +13,41 @@ export function plazaWorld(){return {
   paths:[{a:{x:630,y:520},b:{x:1060,y:520},width:130},{a:{x:630,y:630},b:{x:1060,y:630},width:100}],
   landmarks:[{id:'plaza',name:'中央广场',x:800,y:550}],npcs:[],encounters:[],buildings:[],trees:[],decorations:[],
 };}
-let pending;
-export function loadRig(){return pending??=(async()=>{
-  const response=await fetch(new URL('assets/personas/manifest.json',import.meta.url));
-  if(!response.ok)throw Error('Character manifest unavailable');
-  const manifest=await response.json(),world=plazaWorld();
-  const actors=createSocialActors(world,residents.map(r=>({id:r.id,name:r.name})),7419);
-  const entries=await Promise.all(residents.map(async r=>{
-    const renderer=new HeroRenderer(manifest,{mounts:[]},{local:true,baseURL:new URL('./',import.meta.url)});
+
+async function prepareRigEntries(manifest,actors,local){
+  // Share a single HeroRenderer so shared walk-cycle sheets download & decode once.
+  const renderer=new HeroRenderer(manifest,{mounts:[]},{local,baseURL:new URL('./',import.meta.url)});
+  return Promise.all(residents.map(async r=>{
     const appearance={gender:'female',...manifest.personas[r.id]};
-    const result=await renderer.ensure(appearance);if(result.fallback)throw Error(result.errors?.join(',')||'Character texture unavailable');
+    const result=await renderer.ensure(appearance);
+    if(result.fallback)throw Error(result.errors?.join(',')||'Character texture unavailable');
     const social=actors.find(a=>a.profile.id===r.id);
     return {resident:r,renderer,appearance,social,actor:renderer.createActor(7419+r.index),previewActor:renderer.createActor(880+r.index),previous:{...social.position},pose:null};
   }));
+}
+
+let pending;
+export function loadRig({preferCdn=false}={}){return pending??=(async()=>{
+  const boot=globalThis.__awcBoot;
+  let manifest=boot?.personas?await boot.personas:null;
+  if(boot)boot.personas=null;
+  if(!manifest){
+    const response=await fetch(new URL('assets/personas/manifest.json',import.meta.url));
+    if(!response.ok)throw Error('Character manifest unavailable');
+    manifest=await response.json();
+  }
+  const world=plazaWorld();
+  const actors=createSocialActors(world,residents.map(r=>({id:r.id,name:r.name})),7419);
+  let entries;
+  if(preferCdn){
+    try{entries=await prepareRigEntries(manifest,actors,false);}
+    catch{entries=await prepareRigEntries(manifest,actors,true);}
+  }else{
+    entries=await prepareRigEntries(manifest,actors,true);
+  }
   return {world,actors,entries,lastTime:null};
 })().catch(e=>{pending=null;throw e;});}
+
 export function stepRigScene(assets,time,{paused=false,reducedMotion=false}={}){
   const dt=assets.lastTime===null?0:Math.max(0,Math.min(.055,time-assets.lastTime));assets.lastTime=time;
   stepSocialActors(assets.actors,assets.world,dt,{paused:paused||reducedMotion});

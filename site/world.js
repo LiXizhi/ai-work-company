@@ -1,7 +1,7 @@
 import {residents,loadNames,saveName,cleanName,layoutNameplates} from './world-state.mjs?v=20261122-steady-ui';
-import {loadRig,pauseBackgroundScene} from './world-rig.mjs';
-import {createWorldScene} from './world-scene.mjs';
-import {createWorldMap} from './world-map.mjs';
+import {loadRig,pauseBackgroundScene} from './world-rig.mjs?v=20261122-fast';
+import {createWorldScene,preloadSceneResources} from './world-scene.mjs?v=20261122-fast';
+import {createWorldMap} from './world-map.mjs?v=20261122-fast';
 import {socialActions} from './vendor/haqi/adventure_social_actions_core.js';
 import {PERSONAS,MAX_ROLES,emptyRoles,validateRoles,createRole,renameRole,deleteRole,activateRole,activeRole,remoteCast} from './world-roles-core.mjs';
 import {createKeepworkSession} from './keepwork-session.mjs';
@@ -188,7 +188,14 @@ $('roles-logout').addEventListener('click',async()=>{
 async function openRoles(){
  if(!account.signedIn&&!await signIn())return;
  showCreate(false);renderRoles();
- if(!$('roles-backdrop').src)fetch('vendor/haqi-data/data/adventure/neural-city-art.json').then(r=>r.ok?r.json():null).then(m=>{if(m?.map?.local)$('roles-backdrop').src=m.map.local;}).catch(()=>{});
+ if(!$('roles-backdrop').src){
+  fetch('vendor/haqi-data/data/adventure/neural-city-art.json').then(r=>r.ok?r.json():null).then(m=>{
+   if(!m?.map)return;
+   const backdrop=$('roles-backdrop'),preferCdn=!['127.0.0.1','localhost','[::1]'].includes(location.hostname);
+   backdrop.onerror=()=>{if(m.map.local&&backdrop.src!==m.map.local){backdrop.onerror=null;backdrop.src=m.map.local;}};
+   backdrop.src=preferCdn&&m.map.cdn?m.map.cdn:m.map.local;
+  }).catch(()=>{});
+ }
  if(!$('roles-dialog').open)$('roles-dialog').showModal();
  if(!catalog.roles.length)openCreate();
 }
@@ -461,13 +468,16 @@ motionQuery.addEventListener('change',e=>{paused=e.matches;syncMotion();});docum
 window.addEventListener('storage',e=>{if(e.key==='awc.world.names.v1')names=loadNames(storage);});
 window.addEventListener('pagehide',()=>{presence?.stop();clearObserver();});
 
-createWorldMap($('map-toggle'),()=>worldScene);
+const preferCdn=!['127.0.0.1','localhost','[::1]'].includes(location.hostname);
+createWorldMap($('map-toggle'),()=>worldScene,{preferCdn});
 renderAccount();renderStatus();syncMotion();
-loadRig().then(rig=>createWorldScene($('world-canvas'),rig,labelFor)).then(async scene=>{
- worldScene=scene;document.body.classList.add('scene-ready');applyCast();
- const remembered=(()=>{try{return storage?.getItem('awc.world.keepwork')==='1';}catch{return false;}})();
- if(devUser)await signIn();else if(remembered)await signIn({interactive:false});
-}).catch(error=>{console.error(error);toast('场景资源加载失败，请刷新重试。');});
+Promise.all([loadRig({preferCdn}),preloadSceneResources({preferCdn})])
+ .then(([rig,resources])=>createWorldScene($('world-canvas'),rig,labelFor,{preferCdn,resources,onAssetReady:renderView}))
+ .then(async scene=>{
+  worldScene=scene;document.body.classList.add('scene-ready');applyCast();
+  const remembered=(()=>{try{return storage?.getItem('awc.world.keepwork')==='1';}catch{return false;}})();
+  if(devUser)await signIn();else if(remembered)await signIn({interactive:false});
+ }).catch(error=>{console.error(error);toast('场景资源加载失败，请刷新重试。');});
 
 // Static Pages keeps the task guide; a self-hosted server exposes the live market.
 fetch('v1/market').then(res=>res.ok?res.json():null).then(market=>{if(market?.stats)$('tasks-link').href='company/';}).catch(()=>{});

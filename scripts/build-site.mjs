@@ -1,14 +1,15 @@
 import { buildDocs, documents } from './build-docs.mjs';
-import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
-import { openapi } from '../backend/server.mjs';
+import { openapi, injectWorldPreloads } from '../backend/server.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const out = resolve(root, 'dist');
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 cpSync(resolve(root, 'site'), out, { recursive: true });
+writeFileSync(resolve(out, 'index.html'), injectWorldPreloads(readFileSync(resolve(out, 'index.html'), 'utf8')));
 buildDocs();
 cpSync(resolve(root,'docs','report.css'),resolve(out,'report.css'));
 for (const name of documents) for (const ext of ['md','html']) cpSync(resolve(root,'docs',`${name}.${ext}`),resolve(out,`${name}.${ext}`));
