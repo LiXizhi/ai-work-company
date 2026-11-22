@@ -3,11 +3,12 @@ import { batchOpenapiPaths } from './batches.mjs';
 import { observerOpenapiPaths } from './market.mjs';
 import http from 'node:http';
 import { createHash } from 'node:crypto';
-import { gzipSync } from 'node:zlib';
+import { brotliCompressSync, constants as zlibConstants, gzipSync } from 'node:zlib';
+import { buildWorldBundle, rewriteWorldIndexHtml } from './world-bundle.mjs';
 import { initAdmin, authenticateAdmin, adminGet, adminPost, adminOpenapiPaths } from './admin-web.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, relative, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { Store, Fault } from './store.mjs';
 import { initRelay, mintToolCap, authorizeTool, enqueueTool, pendingTools, completeTool, bindSubmission } from './relay.mjs';
 
@@ -157,40 +158,11 @@ async function readBody(req) {
   });
 }
 
-export function collectWorldModulePreloads() {
-  const siteDir = resolve(root, 'site');
-  const seen = new Map();
-  function walk(absFile) {
-    const code = readFileSync(absFile, 'utf8');
-    for (const [, spec] of code.matchAll(/(?:import|export)\s+(?:[^'"]*?\s+from\s+)?['"](\.[^'"]+)['"]/g)) {
-      const [cleanPart, queryPart] = spec.split('?');
-      const targetAbs = resolve(dirname(absFile), cleanPart);
-      if (!targetAbs.startsWith(siteDir + '/') || !existsSync(targetAbs) || seen.has(targetAbs)) continue;
-      seen.set(targetAbs, relative(siteDir, targetAbs).replace(/\\/g, '/') + (queryPart ? `?${queryPart}` : ''));
-      walk(targetAbs);
-    }
-  }
-  const bootAbs = resolve(siteDir, 'world-boot.mjs');
-  if (existsSync(bootAbs)) seen.set(bootAbs, 'world-boot.mjs');
-  const entryAbs = resolve(siteDir, 'world.js');
-  if (existsSync(entryAbs)) {
-    seen.set(entryAbs, 'world.js');
-    walk(entryAbs);
-  }
-  return [...seen.values()];
-}
-
-export function injectWorldPreloads(html, preloads = collectWorldModulePreloads()) {
-  if (!preloads.length || html.includes('rel="modulepreload"')) return html;
-  const tags = preloads.map((href) => `  <link rel="modulepreload" href="${href}">`).join('\n');
-  return html.replace('</head>', `${tags}\n</head>`);
-}
-
 let cachedStaticFiles = null;
 function getStaticFiles() {
   if (cachedStaticFiles) return cachedStaticFiles;
   const files = new Map();
-  const put = (url, body, mime) => {
+  const put = (url, body, mime, { brotli = false } = {}) => {
     const buf = Buffer.isBuffer(body) ? body : Buffer.from(body, 'utf8');
     const compressible = /^(?:text\/|application\/json$|image\/svg\+xml$)/.test(mime) && buf.length >= 512;
     const cacheControl = (mime === 'text/html' || url === '/.well-known/agent.json')
@@ -198,15 +170,18 @@ function getStaticFiles() {
       : (url.startsWith('/assets/') || url.startsWith('/vendor/'))
         ? 'public, max-age=86400, stale-while-revalidate=604800'
         : 'public, max-age=0, must-revalidate';
-    const etag = `"${createHash('sha256').update(buf).digest('base64url').slice(0, 20)}"`;
-    files.set(url, { body: buf, gzip: compressible ? gzipSync(buf, { level: 6 }) : null, mime, cacheControl, etag });
+    const hashHex = createHash('sha256').update(buf).digest('base64url');
+    const etag = `"${hashHex.slice(0, 20)}"`;
+    const br = (brotli && compressible)
+      ? brotliCompressSync(buf, { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 8 } })
+      : null;
+    files.set(url, { body: buf, gzip: compressible ? gzipSync(buf, { level: 6 }) : null, br, mime, cacheControl, etag, version: hashHex.slice(0, 10) });
   };
   for (const [url, name, mime] of [
     ['/', 'index.html', 'text/html'], ['/index.html', 'index.html', 'text/html'],
     ['/style.css', 'style.css', 'text/css'], ['/app.js', 'app.js', 'text/javascript'],
     ['/guide.html', 'guide.html', 'text/html'],
     ['/world.css', 'world.css', 'text/css'], ['/world-layout.css', 'world-layout.css', 'text/css'],
-    ['/world-boot.mjs', 'world-boot.mjs', 'text/javascript'],
     ['/world.js', 'world.js', 'text/javascript'], ['/world-state.mjs', 'world-state.mjs', 'text/javascript'],
     ['/personas.mjs', 'personas.mjs', 'text/javascript'],
     ['/ui-tokens.css', 'ui-tokens.css', 'text/css'], ['/world-ui.css', 'world-ui.css', 'text/css'],
@@ -265,11 +240,15 @@ function getStaticFiles() {
     const fileMime=url==='/free/'?'text/html':url==='/free/app.js'?'text/javascript':'text/css';
     put(url,readFileSync(resolve(root,'free',fileName)),fileMime);
   }
-  const preloads = collectWorldModulePreloads().filter((href) => files.has('/' + href.split('?')[0]));
+  put('/world.bundle.js', buildWorldBundle(root), 'text/javascript', { brotli: true });
   if (files.has('/index.html')) {
-    const enhancedHtml = injectWorldPreloads(files.get('/index.html').body.toString('utf8'), preloads);
-    put('/', enhancedHtml, 'text/html');
-    put('/index.html', enhancedHtml, 'text/html');
+    const enhancedHtml = rewriteWorldIndexHtml(files.get('/index.html').body.toString('utf8'), {
+      tokens: files.get('/ui-tokens.css')?.version || '1',
+      worldUi: files.get('/world-ui.css')?.version || '1',
+      bundle: files.get('/world.bundle.js').version,
+    });
+    put('/', enhancedHtml, 'text/html', { brotli: true });
+    put('/index.html', enhancedHtml, 'text/html', { brotli: true });
   }
   cachedStaticFiles = files;
   return cachedStaticFiles;
@@ -296,22 +275,27 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       if (method === 'GET' && staticFiles.has(path)) {
         const file = staticFiles.get(path);
         const headers = worldPages.has(path) ? { ...securityHeaders, 'Content-Security-Policy': worldPagePolicy() } : securityHeaders;
-        if (file.cacheControl !== 'no-store' && req.headers['if-none-match'] === file.etag) {
-          res.writeHead(304, { ...headers, 'Cache-Control': file.cacheControl, ETag: file.etag, Vary: 'Accept-Encoding' });
+        const cacheHeader = (file.cacheControl !== 'no-store' && url.searchParams.has('v'))
+          ? 'public, max-age=31536000, immutable'
+          : file.cacheControl;
+        if (cacheHeader !== 'no-store' && req.headers['if-none-match'] === file.etag) {
+          res.writeHead(304, { ...headers, 'Cache-Control': cacheHeader, ETag: file.etag, Vary: 'Accept-Encoding' });
           res.end();
           return;
         }
         const contentType = /^(?:text\/|application\/json$|image\/svg\+xml$)/.test(file.mime) ? `${file.mime}; charset=utf-8` : file.mime;
-        const useGzip = Boolean(file.gzip && /\bgzip\b/i.test(req.headers['accept-encoding'] || ''));
-        const payload = useGzip ? file.gzip : file.body;
+        const acceptEnc = req.headers['accept-encoding'] || '';
+        const useBr = Boolean(file.br && /\bbr\b/i.test(acceptEnc));
+        const useGzip = !useBr && Boolean(file.gzip && /\bgzip\b/i.test(acceptEnc));
+        const payload = useBr ? file.br : useGzip ? file.gzip : file.body;
         res.writeHead(200, {
           ...headers,
-          'Cache-Control': file.cacheControl,
+          'Cache-Control': cacheHeader,
           ETag: file.etag,
           Vary: 'Accept-Encoding',
           'Content-Type': contentType,
           'Content-Length': String(payload.length),
-          ...(useGzip ? { 'Content-Encoding': 'gzip' } : {}),
+          ...(useBr ? { 'Content-Encoding': 'br' } : useGzip ? { 'Content-Encoding': 'gzip' } : {}),
         });
         res.end(payload);
         return;

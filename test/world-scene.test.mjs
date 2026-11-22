@@ -117,7 +117,14 @@ test('self-hosted scene modules, home catalog, and WebP atlases are served from 
   const homeHtml=await fetch(base+'/');
   assert.equal(homeHtml.headers.get('cache-control'),'no-store');
   const htmlBody=await homeHtml.text();
-  assert.match(htmlBody,/rel="modulepreload" href="vendor\/haqi\/hero_renderer\.js"/);
+  assert.match(htmlBody,/src="world\.bundle\.js\?v=[A-Za-z0-9_-]+"/);
+  const bundleMatch=htmlBody.match(/world\.bundle\.js\?v=[A-Za-z0-9_-]+/);
+  assert.ok(bundleMatch);
+  const bundleRes=await fetch(`${base}/${bundleMatch[0]}`,{headers:{'Accept-Encoding':'br, gzip'}});
+  assert.equal(bundleRes.status,200);
+  assert.equal(bundleRes.headers.get('content-encoding'),'br');
+  assert.match(bundleRes.headers.get('cache-control')||'',/immutable/);
+  await bundleRes.arrayBuffer();
   const catRes=await fetch(base+'/vendor/haqi-data/data/adventure/home/catalog.json',{headers:{'Accept-Encoding':'gzip'}});
   assert.equal(catRes.status,200);
   assert.equal(catRes.headers.get('content-encoding'),'gzip');
