@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import { freeWork } from '../worker/free-work.mjs';
-import { mkdir, readFile, writeFile, rename, lstat, rm, mkdtemp, realpath } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, rename, rm, mkdtemp, realpath } from 'node:fs/promises';
 import { resolve, relative, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash, randomUUID } from 'node:crypto';
 import { Api } from '../worker/client.mjs';
 import { runContinuous, stopContinuous, readState } from '../worker/continuous.mjs';
-import { workOnce } from '../worker/run.mjs';
+import { workOnce, SUPPORTED_ADAPTERS } from '../worker/run.mjs';
+import { assertPrivateDirectory, assertPrivateFile } from '../worker/platform.mjs';
 import { runTrial } from '../worker/trial.mjs';
 import { consume, startBroker } from '../consumer/run.mjs';
 
@@ -14,15 +15,20 @@ const project = fileURLToPath(new URL('../', import.meta.url));
 const digest = value => createHash('sha256').update(value).digest('hex');
 const emit = value => console.log(JSON.stringify(value));
 const help = `AI Work Company — local CLI (JSON output, no interactive prompts)
-  npm run -s awc -- work --accept-trial [--model gpt-6-astra] [--wait-seconds 300] [--trial-tasks 100]
+  npm run -s awc -- work --accept-trial [--model gpt-6-astra] [--adapter codex|claude] [--wait-seconds 300] [--trial-tasks 100]
   npm run -s awc -- hire --request REPORT-1 --input ./input --task "Write output/report.txt" --budget 100
-  npm run -s awc -- free-work --id free_UUID --worker worker_UUID --public
+  npm run -s awc -- batch-hire --request BATCH-1 --manifest ./batch.json
+  npm run -s awc -- batch-status [--id batch_UUID]
+  npm run -s awc -- batch-release --id batch_UUID
+  npm run -s awc -- batch-retry --id batch_UUID
+  npm run -s awc -- batch-cancel --id batch_UUID
+  npm run -s awc -- free-work --id free_UUID --worker worker_UUID --public [--adapter codex|claude]
   npm run -s awc -- work --continuous --policy /private/policy.json
   npm run -s awc -- work-stop
   npm run -s awc -- status
   npm run -s awc -- accept --id TASK_ID --rating 5
   npm run -s awc -- cancel --id TASK_ID
-Options: --server URL (default http://localhost:5003), --model MODEL, --name NAME
+Options: --server URL (default http://localhost:5003), --model MODEL, --name NAME, --adapter codex|claude
 Tokens: AWC_TOKEN imports an existing account; otherwise first work/hire creates one.
 Local state: AWC_CLIENT_DIR or repository data/client; never commit this directory.
 Budget: integer minor units; 100 = 1 internal credit. No recharge/withdrawal.
@@ -33,10 +39,26 @@ Hire stays foreground serving files until submission; Ctrl-C stops local executi
 not the funded order. Reuse --request with identical arguments to recover publication.
 Acceptance is explicit and still requires operator evidence review.`;
 
+const BATCH_COMMANDS = ['batch-hire', 'batch-status', 'batch-release', 'batch-retry', 'batch-cancel'];
+
 export function parse(argv) {
   const [command = 'help', ...rest] = argv;
-  if (!['help', 'free-work', 'work', 'work-stop', 'hire', 'status', 'accept', 'cancel'].includes(command)) throw new Error('unknown_command');
-  const allowed = { help: [], 'free-work':['server','id','worker','public'], work: ['server','model','name','accept-trial','wait-seconds','trial-tasks','continuous','policy'], 'work-stop':['server'], hire: ['server','model','name','request','input','task','budget'], status: ['server'], accept: ['server','id','rating'], cancel: ['server','id'] }[command];
+  if (!['help', 'free-work', 'work', 'work-stop', 'hire', ...BATCH_COMMANDS, 'status', 'accept', 'cancel'].includes(command)) throw new Error('unknown_command');
+  const allowed = {
+    help: [],
+    'free-work': ['server', 'id', 'worker', 'public', 'adapter'],
+    work: ['server', 'model', 'name', 'accept-trial', 'wait-seconds', 'trial-tasks', 'continuous', 'policy', 'adapter'],
+    'work-stop': ['server'],
+    hire: ['server', 'model', 'name', 'request', 'input', 'task', 'budget'],
+    'batch-hire': ['server', 'request', 'manifest'],
+    'batch-status': ['server', 'id'],
+    'batch-release': ['server', 'id'],
+    'batch-retry': ['server', 'id'],
+    'batch-cancel': ['server', 'id'],
+    status: ['server'],
+    accept: ['server', 'id', 'rating'],
+    cancel: ['server', 'id'],
+  }[command];
   const options = {};
   for (let i=0; i<rest.length; i++) {
     const key = rest[i].slice(2);
@@ -52,9 +74,7 @@ function integer(value, max) {
 }
 function contains(parent, child) { const r = relative(parent, child); return !r || (!r.startsWith('..') && !isAbsolute(r)); }
 async function secureDirectory(path) {
-  await mkdir(path, { recursive: true, mode: 0o700 });
-  const info = await lstat(path);
-  if (!info.isDirectory() || info.isSymbolicLink() || (info.mode & 0o077)) throw new Error('client_directory_must_be_private');
+  await assertPrivateDirectory(path, { errorCode: 'client_directory_must_be_private' });
 }
 async function save(path, state) {
   const temporary = path + '.' + randomUUID();
@@ -63,8 +83,7 @@ async function save(path, state) {
 }
 async function load(path) {
   try {
-    const info = await lstat(path);
-    if (!info.isFile() || info.isSymbolicLink() || info.nlink !== 1 || (info.mode & 0o077)) throw new Error('unsafe_client_state');
+    await assertPrivateFile(path, { errorCode: 'unsafe_client_state' });
     return JSON.parse(await readFile(path, 'utf8'));
   } catch (e) { if (e.code === 'ENOENT') return { jobs: {} }; throw e; }
 }
@@ -74,10 +93,21 @@ export async function main(argv, { env = process.env, output = emit, runWorker =
   if (command === 'help') { output({ help }); return; }
   const base = new Api(o.server || env.AWC_BASE_URL || 'http://localhost:5003', 'validation').base;
   const model = o.model || 'gpt-6-astra';
+  const adapter = o.adapter || env.AWC_ADAPTER || 'codex';
+  if (!SUPPORTED_ADAPTERS.includes(adapter) || (adapter === 'command' && !o.continuous)) throw new Error('invalid_adapter');
   let amount;
   if (command === 'hire') {
     amount = integer(o.budget, 1000000);
     if (!o.input || !o.task || !o.request || !/^[a-zA-Z0-9_-]{1,64}$/.test(o.request)) throw new Error('hire_requires_input_task_budget_and_request');
+  }
+  if (command === 'batch-hire' && (!o.manifest || !o.request || !/^[a-zA-Z0-9_-]{1,64}$/.test(o.request))) {
+    throw new Error('batch_hire_requires_manifest_and_request');
+  }
+  if (['batch-release', 'batch-retry', 'batch-cancel'].includes(command) && !/^batch_[a-f0-9-]{36}$/.test(o.id || '')) {
+    throw new Error('invalid_batch_id');
+  }
+  if (command === 'batch-status' && o.id && !/^batch_[a-f0-9-]{36}$/.test(o.id)) {
+    throw new Error('invalid_batch_id');
   }
   if (['accept','cancel'].includes(command) && !/^task_[a-f0-9-]{36}$/.test(o.id || '')) throw new Error('invalid_task_id');
   const rating = command === 'accept' ? integer(o.rating, 5) : undefined;
@@ -118,7 +148,37 @@ export async function main(argv, { env = process.env, output = emit, runWorker =
     }
     const api = new Api(base, state.token);
     if(command==='free-work') {
-      if(!o.public)throw new Error('public_delivery_consent_required');await unlock();output(await freeWork({api,home,workerId:o.worker,taskId:o.id,signal:abort.signal}));return;
+      if(!o.public)throw new Error('public_delivery_consent_required');await unlock();output(await freeWork({api,home,workerId:o.worker,taskId:o.id,signal:abort.signal,adapter}));return;
+    }
+    if (command === 'batch-status') {
+      output(o.id ? await api.request(`/v1/batches/${o.id}`) : await api.request('/v1/batches'));
+      return;
+    }
+    if (['batch-release', 'batch-retry', 'batch-cancel'].includes(command)) {
+      const action = command === 'batch-retry' ? 'retry-failed' : command.slice(6);
+      output(await api.request(`/v1/batches/${o.id}/${action}`, {}, `cli:${command}:${o.id}`));
+      return;
+    }
+    if (command === 'batch-hire') {
+      const manifestBody = JSON.parse(await readFile(resolve(o.manifest), 'utf8'));
+      state.batches ||= {};
+      const sig = digest(JSON.stringify(manifestBody));
+      let record = state.batches[o.request];
+      if (record && record.signature !== sig) throw new Error('request_conflict_use_original_arguments_or_new_request');
+      if (!record) {
+        record = { signature: sig, key: randomUUID() };
+        state.batches[o.request] = record;
+        await save(statePath, state);
+      }
+      if (!record.id) {
+        const created = await api.request('/v1/batches', manifestBody, record.key);
+        record.id = created.id;
+        await save(statePath, state);
+        output({ state: 'batch_published', request: o.request, batch: created });
+        return;
+      }
+      output({ state: 'batch_recovered', request: o.request, batch: await api.request(`/v1/batches/${record.id}`) });
+      return;
     }
     if(o.continuous) {
       const policy=await readState(resolve(o.policy));
@@ -146,7 +206,7 @@ export async function main(argv, { env = process.env, output = emit, runWorker =
         await unlock();
         const reviewDeadline=Date.now()+wait*1000; let completedTrials=0;
         while(completedTrials<trialLimit && !abort.signal.aborted) {
-          const result=await trialRunner({api,workerId:worker.id,runDir:await mkdtemp(resolve(home,'trial-')),signal:abort.signal,onEvent:output});
+          const result=await trialRunner({api,workerId:worker.id,runDir:await mkdtemp(resolve(home,'trial-')),signal:abort.signal,onEvent:output,adapter});
           output({...result, state:result.state==='price_required'?'qualification_required':result.state,trial_state:result.state,worker_id:worker.id,next_action:result.state==='price_required'?'Operator must configure model pricing and trial tasks.':'Only independently reviewed usage counts; trial wages are zero.'});
           worker=(await api.request('/v1/workers')).workers.find(w=>w.id===worker.id);
           if(worker.qualified) break;
@@ -167,7 +227,7 @@ export async function main(argv, { env = process.env, output = emit, runWorker =
         const queue = await api.request(`/v1/queue?worker_id=${worker.id}`);
         if (queue.tasks.length) {
           const runDir = await mkdtemp(resolve(home, 'run-'));
-          const result = await runWorker({ api, workerId: worker.id, taskId: queue.tasks[0].id, runDir, signal: abort.signal, onEvent: output });
+          const result = await runWorker({ api, workerId: worker.id, taskId: queue.tasks[0].id, runDir, signal: abort.signal, onEvent: output, adapter });
           output({ state: 'submitted', ...result, next_action: 'Wait for operator evidence review and Consumer acceptance; submission is not yet earnings.' }); return;
         }
         if (Date.now() >= end) break;

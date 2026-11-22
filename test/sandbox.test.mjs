@@ -7,7 +7,9 @@ import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { startBroker } from '../consumer/run.mjs';
 
-test('file broker confines hostile paths and links, enforces leases, CAS and sealing', async () => {
+const posixOnly = process.platform === 'win32' ? 'POSIX capability file broker fails closed on Windows' : false;
+
+test('file broker confines hostile paths and links, enforces leases, CAS and sealing', { skip: posixOnly }, async () => {
   const dir = await mkdtemp(join(tmpdir(), 'awc-security-'));
   const source = join(dir, 'source'), root = join(dir, 'sandbox');
   await mkdir(source); await writeFile(join(source, 'data.txt'), 'selected input');
@@ -45,7 +47,7 @@ test('file broker confines hostile paths and links, enforces leases, CAS and sea
   const again = startBroker(root, source); await assert.rejects(again.ready); again.stop();
 });
 
-for (const kind of ['symlink', 'hardlink']) test(`input snapshot rejects ${kind} to outside files`, async () => {
+for (const kind of ['symlink', 'hardlink']) test(`input snapshot rejects ${kind} to outside files`, { skip: posixOnly }, async () => {
   const dir = await mkdtemp(join(tmpdir(), 'awc-input-')), source = join(dir, 'source');
   await mkdir(source); await writeFile(join(dir, 'outside'), 'synthetic secret');
   await (kind === 'symlink' ? symlink : link)(join(dir, 'outside'), join(source, 'escape'));

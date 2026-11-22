@@ -1,4 +1,4 @@
-import { runCodex } from './run.mjs';
+import { runAdapter } from './run.mjs';
 import { identifier } from './client.mjs';
 // Normalize cached reads out of total input. Nonzero cache writes need a verified adapter mapping.
 // Preserve raw usage separately; only an independent reviewer can certify it.
@@ -9,7 +9,7 @@ export function normalizeUsage(raw) {
   if(!Object.values(value).every(n=>Number.isSafeInteger(n)&&n>=0)) throw new Error('unsupported_usage_accounting');
   return value;
 }
-export async function runTrial({ api,workerId,runDir,signal,onEvent=()=>{},execute=runCodex }) {
+export async function runTrial({ api,workerId,runDir,signal,onEvent=()=>{},adapter,commandConfig,execute=runAdapter }) {
   identifier(workerId); if(signal?.aborted) throw new Error('worker_stopped');
   const lease=await api.request('/v1/trials/claim',{worker_id:workerId});
   if(lease.state!=='running') return lease;
@@ -18,7 +18,7 @@ export async function runTrial({ api,workerId,runDir,signal,onEvent=()=>{},execu
   let failed;
   const timer=setInterval(async()=>{ try{await api.request(`/v1/trials/${lease.id}/heartbeat`,{epoch:lease.epoch});}catch(e){failed=e;stop();}},15000);
   try {
-    const result=await execute({base:api.base,lease,runDir,signal:abort.signal,onEvent});
+    const result=await execute({base:api.base,lease,runDir,signal:abort.signal,onEvent,adapter,commandConfig});
     if(abort.signal.aborted) throw failed || new Error('worker_stopped');
     if(failed) throw failed;
     const usage=normalizeUsage(result.usage);

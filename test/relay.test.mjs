@@ -10,7 +10,7 @@ import { createServer } from '../backend/server.mjs';
 import { Api } from '../worker/client.mjs';
 import { consume } from '../consumer/run.mjs';
 
-test('real CLI relay cannot escape Consumer files or promote task capability; seal binds submission', async () => {
+test('real CLI relay cannot escape Consumer files or promote task capability; seal binds submission', { skip: process.platform === 'win32' && 'POSIX capability file broker fails closed on Windows' }, async () => {
   const store = new Store(), server = createServer(store);
   await new Promise(done => server.listen(0, '127.0.0.1', done));
   const base = `http://127.0.0.1:${server.address().port}`;

@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { Fault, hash, string } from './store.mjs';
 import { verifyWorkerDeliverable } from './market.mjs';
+import { verifyDeliverableStructure } from './verifiers.mjs';
 
 export const TOOL_NAMES = ['files_list', 'files_read', 'files_write', 'artifacts_seal'];
 export const TOOLS = [
@@ -59,6 +60,7 @@ export function enqueueJudgeCall(store, taskId) {
   if (existing) return existing;
   const skill = store.market.skill(task.skill_id);
   const deliverableSafety = verifyWorkerDeliverable({ category: task.category, skill_id: task.skill_id, result: task.result || '' });
+  const structurePreflight = verifyDeliverableStructure({ category: task.category, skill_id: task.skill_id, result: task.result || '' });
   const args = {
     category: task.category || 'general_files',
     skill_id: task.skill_id || 'sandbox-file-ops',
@@ -71,6 +73,7 @@ export function enqueueJudgeCall(store, taskId) {
       untrusted_worker_result: task.result,
       result_sha256: hash(task.result || ''),
       deliverable_safety: deliverableSafety,
+      structure_preflight: structurePreflight,
     },
     telemetry: task.telemetry_flags ? JSON.parse(task.telemetry_flags) : null,
   };

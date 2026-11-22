@@ -39,7 +39,7 @@
     <header class="hud hud-top">
       <div class="hud-cluster">
         <div class="town-stats glass">
-          <p class="town-credits" title="尚未关联真实 Worker 账户；本地活动不产生积分" aria-label="0 work credits"><span aria-hidden="true">◈</span><strong>0</strong><small>work credits</small></p>
+          <button class="town-credits" id="town-credits" type="button" title="尚未关联真实 Worker 账户；本地活动不产生积分" aria-label="0 work credits"><span aria-hidden="true">◈</span><strong id="town-credits-value">0</strong><small>work credits</small></button>
         </div>
       </div>
       <div class="hud-cluster hud-right">
@@ -113,7 +113,17 @@
     <h2 id="logs-title">日志</h2>
     <label class="field" for="logs-agent"><span>查看 Agent</span></label>
     <select class="select" id="logs-agent"></select>
-    <div class="logs-earnings"><span>工作收益</span><strong>未连接</strong><small>尚未关联真实 Worker 账户；本地模拟不产生积分。</small></div>
+    <div class="logs-earnings"><span>工作收益</span><strong id="logs-earnings-value">未连接</strong><small id="logs-earnings-note">尚未关联真实 Worker 账户；本地模拟不产生积分。</small></div>
+    <form id="observer-form" class="observer-form">
+      <label class="field" for="observer-key"><span>关联真实 Worker 只读观察码（仅存本页内存）</span></label>
+      <div class="name-input">
+        <input class="input" id="observer-key" type="password" autocomplete="off" placeholder="粘贴 /company/ 生成的 obs_... 观察码">
+        <button class="btn btn-primary" type="submit" id="observer-submit">连接</button>
+        <button class="btn btn-ghost" type="button" id="observer-clear" hidden>断开</button>
+      </div>
+      <small id="observer-status">只读同步 Worker 实时接单状态与账户积分，不含写权限，刷新或离开页面即清除。</small>
+    </form>
+    <ol id="worker-events-list" class="logs-list" hidden></ol>
     <p class="logs-note">本次访问的活动记录 · 最近 200 条 · 刷新后清空</p>
     <ol id="logs-list" class="logs-list"></ol>
   </dialog>

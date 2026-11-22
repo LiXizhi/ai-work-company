@@ -4,6 +4,7 @@ import { mkdirSync, chmodSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { usageValue, Trials } from './trials.mjs';
 import { Market, workerTrustTier } from './market.mjs';
+import { Batches } from './batches.mjs';
 
 export const DAY = 86_400_000;
 export const LEASE = 60_000;
@@ -28,8 +29,16 @@ export function integer(value, name, min = 1, max = 1_000_000) {
 }
 
 export class Store {
-  constructor(path = ':memory:', { debug = false, now = Date.now, models = ['claude-opus-5.5', 'gpt-6-astra'] } = {}) {
+  constructor(path = ':memory:', {
+    debug = false,
+    now = Date.now,
+    models = ['claude-opus-5.5', 'gpt-6-astra'],
+    requiredMinutes = Number(process.env.AWC_REQUIRED_MINUTES ?? 120),
+    policyMode = process.env.AWC_POLICY_MODE || 'v0_2',
+  } = {}) {
     this.now = now;
+    this.requiredMinutes = Number.isSafeInteger(requiredMinutes) && requiredMinutes >= 0 ? requiredMinutes : 120;
+    this.policyMode = ['v0_2', 'bp_v2'].includes(policyMode) ? policyMode : 'v0_2';
 
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
     this.db = new DatabaseSync(path, { timeout: 5000 });
@@ -102,6 +111,7 @@ export class Store {
     this.ensureColumns();
     this.trials = new Trials(this, models);
     this.market = new Market(this);
+    this.batches = new Batches(this);
   }
   ensureColumns() {
     const alterIfMissing = (table, col, def) => {
@@ -129,6 +139,7 @@ export class Store {
       ['judge_rubric', 'TEXT'], ['min_payout_percent', 'INTEGER NOT NULL DEFAULT 100'],
       ['payout_percent', 'INTEGER'], ['judge_verdict', 'TEXT'], ['telemetry_flags', 'TEXT'],
       ['claimed_at', 'INTEGER'], ['consumer_rating', 'INTEGER'],
+      ['batch_id', 'TEXT'], ['batch_index', 'INTEGER'],
     ]) alterIfMissing('tasks', col, def);
   }
   get models() { return this.all('SELECT model FROM model_catalog WHERE enabled=1').map(row=>row.model); }
@@ -186,9 +197,10 @@ export class Store {
     const reserved = this.one("SELECT COALESCE(SUM(amount),0) AS n FROM tasks WHERE owner=? AND state IN ('running','submitted')", owner).n;
     const minutes=this.one("SELECT COALESCE(SUM((t.expected_minutes * t.payout_percent) / 100),0) n FROM tasks t JOIN workers w ON w.id=t.worker WHERE w.owner=? AND t.source='consumer' AND t.state='completed'",owner).n;
     const platform=this.one('SELECT role FROM accounts WHERE id=?',owner).role==='platform';
-    const eligible=platform || minutes>=120;
+    const required = this.policyMode === 'bp_v2' ? 0 : this.requiredMinutes;
+    const eligible=platform || minutes>=required;
     const trialLocked=this.all("SELECT r.price,r.reviewed_usage FROM trial_runs r JOIN workers w ON w.id=r.worker WHERE w.owner=? AND r.state='approved'",owner).reduce((n,r)=>n+usageValue(JSON.parse(r.price),JSON.parse(r.reviewed_usage)).credit_minor,0);
-    return { ...a, spendable_minor:eligible?a.available:0, locked_earnings_minor:eligible?0:a.available, trial_locked_minor:trialLocked, qualifying_minutes:minutes, required_minutes:120, can_hire:eligible, spent_24h: spent, reserved_daily: reserved, unit: 'work_credit_minor', withdrawable: false };
+    return { ...a, spendable_minor:eligible?a.available:0, locked_earnings_minor:eligible?0:a.available, trial_locked_minor:trialLocked, qualifying_minutes:minutes, required_minutes:required, policy_mode:this.policyMode, can_hire:eligible, spent_24h: spent, reserved_daily: reserved, unit: 'work_credit_minor', withdrawable: false };
   }
   registerWorker(owner, body) {
     requireThat(body.accept_trial === true, 'trial_consent_required', 'Owner must authorize approximately $20 of unpaid reference-token service.', 400);
@@ -218,7 +230,7 @@ export class Store {
     const meta = this.market.validateTaskMetadata(body);
     const a = this.wallet(owner);
     requireThat(a.available >= amount, 'insufficient_balance', 'Earn settled work credits before hiring. Recharge is unavailable.', 402);
-    requireThat(a.can_hire, 'work_threshold_required', 'Complete 120 accepted minutes of non-system work before spending earnings.', 409);
+    requireThat(a.can_hire, 'work_threshold_required', `Complete ${a.required_minutes} accepted minutes of non-system work before spending earnings.`, 409);
     requireThat(amount <= a.daily_limit, 'milestone_too_large', 'This release supports one milestone per task. Split the job or change the owner budget locally.', 400);
     const task = id('task');
     this.run(

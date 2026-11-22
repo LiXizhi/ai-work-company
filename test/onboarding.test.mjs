@@ -25,10 +25,10 @@ test('worker one-command onboarding preserves consent, zero balance and qualific
   assert.equal(store.one('SELECT COUNT(*) n FROM workers').n,1);
   assert.equal(store.one('SELECT available FROM accounts').available,0);
   const instance=(await readdir(env.AWC_CLIENT_DIR))[0];
-  assert.equal((await stat(join(env.AWC_CLIENT_DIR,instance,'account.json'))).mode & 0o777,0o600);
+  if (process.platform !== 'win32') assert.equal((await stat(join(env.AWC_CLIENT_DIR,instance,'account.json'))).mode & 0o777,0o600);
   assert.ok(!JSON.stringify(output).includes('token'));
 });
-test('hire snapshots selected input, recovers same request without duplicate freeze and requires explicit acceptance', async t => {
+test('hire snapshots selected input, recovers same request without duplicate freeze and requires explicit acceptance', { skip: process.platform === 'win32' && 'POSIX capability file broker fails closed on Windows' }, async t => {
   const { root, store, env } = await fixture(t);
   const payer=store.provisionPlatform('Fixture',10000); env.AWC_TOKEN=payer.token;
   const input=join(root,'input'); await mkdir(input); await writeFile(join(input,'data.txt'),'hello');

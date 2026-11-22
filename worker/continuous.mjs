@@ -1,7 +1,9 @@
-import { mkdir, readFile, writeFile, rename, rm, mkdtemp, lstat } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, rename, rm, mkdtemp } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
-import { workOnce } from './run.mjs';
+import { workOnce, SUPPORTED_ADAPTERS } from './run.mjs';
+import { validateCommandAdapterConfig } from './adapters/command.mjs';
+import { assertPrivateDirectory, assertPrivateFile } from './platform.mjs';
 import { runTrial } from './trial.mjs';
 import { identifier } from './client.mjs';
 
@@ -13,8 +15,7 @@ export async function atomic(path, value) {
 }
 export async function readState(path, fallback = {}) {
   try {
-    const s = await lstat(path);
-    if (!s.isFile() || s.isSymbolicLink() || s.nlink !== 1 || (s.mode & 0o077)) throw new Error('unsafe_runtime_state');
+    await assertPrivateFile(path, { errorCode: 'unsafe_runtime_state' });
     return JSON.parse(await readFile(path, 'utf8'));
   } catch (e) { if (e.code === 'ENOENT') return fallback; throw e; }
 }
@@ -24,6 +25,8 @@ export function validatePolicy(p, base) {
   const until = Date.parse(p.expires_at);
   if (!Number.isFinite(until) || !/Z$|[+-]\d\d:\d\d$/.test(p.expires_at)) throw new Error('invalid_policy_expiry');
   if (!Array.isArray(p.categories) || !p.categories.length || p.categories.some(x => !['general_files','art_works','mini_games','reverse_engineering'].includes(x))) throw new Error('invalid_policy_categories');
+  if (p.adapter !== undefined && !SUPPORTED_ADAPTERS.includes(p.adapter)) throw new Error('invalid_policy_adapter');
+  if (p.adapter === 'command') validateCommandAdapterConfig(p.command_adapter);
   const positive = n => Number.isSafeInteger(n) && n > 0;
   if (!positive(p.max_attempts_per_window) || !positive(p.max_consecutive_failures ?? 3)) throw new Error('invalid_policy_limits');
   let end = 0;
@@ -36,9 +39,7 @@ export function validatePolicy(p, base) {
   return p;
 }
 export async function workerLock(directory) {
-  await mkdir(directory, { recursive: true, mode: 0o700 });
-  const info = await lstat(directory);
-  if (!info.isDirectory() || info.isSymbolicLink() || (info.mode & 0o077)) throw new Error('unsafe_runtime_directory');
+  await assertPrivateDirectory(directory, { errorCode: 'unsafe_runtime_directory' });
   const lock = resolve(directory, 'lock');
   const acquire = async () => { await mkdir(lock, { mode: 0o700 }); await atomic(resolve(lock,'owner.json'), { pid: process.pid }); };
   try { await acquire(); }
@@ -133,7 +134,7 @@ export async function runContinuous({ api, home, policy, signal, output=()=>{}, 
         if(abort.signal.aborted) abortAttempt();
         const windowTimer=setInterval(()=>{if(now()>=Date.parse(w.end)) abortAttempt();},100);
         try {
-          const result=await (trial?trialExecute:execute)({api:durable,workerId:worker.id,taskId:task?.id,runDir:await mkdtemp(resolve(directory,'attempt-')),signal:attemptAbort.signal,onEvent:()=>{}});
+          const result=await (trial?trialExecute:execute)({api:durable,workerId:worker.id,taskId:task?.id,runDir:await mkdtemp(resolve(directory,'attempt-')),signal:attemptAbort.signal,onEvent:()=>{},adapter:policy.adapter,commandConfig:policy.command_adapter});
           state.current=null; state.failures=0; networkFailures=0;
           await transition(result.state==='aborted_unsafe_prompt'?'security_stopped':trial && result.state!=='submitted'?result.state:'evidence_pending');
           await persist();

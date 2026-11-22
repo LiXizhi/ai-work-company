@@ -1,3 +1,5 @@
+* text=auto eol=lf
+
 # Shared engine and artwork must retain the exact pinned upstream bytes.
 site/vendor/** -text
 site/assets/** -text

@@ -278,7 +278,46 @@
 
         <div class="card">
           <h3>My Registered Workers</h3>
+          <p class="muted">Generate a read-only World Observer Key (<code>obs_...</code>) to display live work status and earned credits on your avatar in the World homepage without exposing your account Bearer token.</p>
           <div id="my-workers-list" class="table-wrap"></div>
+        </div>
+
+        <div class="card">
+          <h3>Consumer: Batch Campaign Pipeline (2-Sample Gate → Parallel Fan-Out)</h3>
+          <p class="muted">Publish standardized multi-item campaigns (e.g. Hanzi 6-shot animations, LifeStory era scenes, Poly Code3D parts, or document audits). Only sample subtasks freeze and run first; release the rest after inspecting sample quality.</p>
+          <form id="post-batch-form" class="grid">
+            <label>Campaign Title
+              <input name="title" maxlength="160" required placeholder="e.g. Hanzi Story Animation Batch #1">
+            </label>
+            <label>Category
+              <select name="category" id="batch-category" required>
+                <option value="art_works">Three.js &amp; Hanzi Story Animations</option>
+                <option value="general_files">Poly Code3D / LifeStory / Doc Audit</option>
+                <option value="mini_games">Single-Shot Mini-Games</option>
+                <option value="reverse_engineering">Reverse Engineering</option>
+              </select>
+            </label>
+            <label>Company Skill
+              <select name="skill_id" id="batch-skill" required></select>
+            </label>
+            <label>Required Model
+              <select name="model" id="batch-model" required></select>
+            </label>
+            <label>Unit Budget per Subtask (Minor Units)
+              <input name="unit_amount_minor" type="number" min="1" max="1000000" value="100" required>
+            </label>
+            <label>Sample Gate Size (1–20)
+              <input name="sample_size" type="number" min="1" max="20" value="2" required>
+            </label>
+            <label>Expected Minutes per Subtask
+              <input name="expected_minutes" type="number" min="1" max="4320" value="30" required>
+            </label>
+            <label class="wide">Subtask Items (One per line: <code>Title :: Description</code>)
+              <textarea name="items_lines" rows="4" required placeholder="汉字分镜：山 :: 为汉字「山」生成 6 镜故事动画方案与双语旁白&#10;汉字分镜：水 :: 为汉字「水」生成 6 镜故事动画方案与双语旁白&#10;汉字分镜：火 :: 为汉字「火」生成 6 镜故事动画方案与双语旁白"></textarea>
+            </label>
+            <div><button class="primary" type="submit">Start Sample Gate &amp; Create Batch</button></div>
+          </form>
+          <div id="my-batches-list" class="table-wrap"></div>
         </div>
 
         <div class="card">

@@ -1,5 +1,6 @@
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { Fault, hash, integer, string } from './store.mjs';
+import { verifyDeliverableStructure } from './verifiers.mjs';
 
 export const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 
@@ -77,6 +78,34 @@ export const DEFAULT_SKILLS = [
     title: 'Sandboxed Workspace File Operations',
     worker_preamble: 'Operate strictly within the awc POSIX file workspace (input/, work/, output/) and seal deliverables with artifacts_seal.',
     judge_guide: 'Inspect file diffs, tool call trace, and apply whitelist spot-checking or human review.',
+  },
+  {
+    id: 'poly-code3d-art',
+    category: 'general_files',
+    title: 'ParaPoly / Code3D Parametric Art & Parts',
+    worker_preamble: 'Author editable, parametric Code3D / ParaPoly scripts rather than static meshes. Keep sub-parts (e.g. head/body, trunk/crown) in separate functions with named parameters, include a parameter location map, and append a static printability wall-thickness/overhang checklist. Zero external network calls.',
+    judge_guide: 'Verify editable parametric code, separate part functions, parameter map, and printability checklist without opaque meshes or external URLs. See /skills/poly-code3d-art.md.',
+  },
+  {
+    id: 'hanzi-story-animation',
+    category: 'art_works',
+    title: 'Hanzi Story 6-Shot Animation Pipeline',
+    worker_preamble: 'Produce a structured Hanzi story animation specification with etymology verification, 6 numbered storyboard shots (hook, origin, form evolution, compound usage, climax, recap), character motion cues, bilingual zh/en narration, and child-safety factual check. Zero external network calls.',
+    judge_guide: 'Verify accurate etymology, complete 6-shot storyboard, motion cues, bilingual narration, and child-safe content. See /skills/hanzi-story-animation.md.',
+  },
+  {
+    id: 'lifestory-history-scene',
+    category: 'general_files',
+    title: 'LifeStory Era Scroll & Daily-Life Scene',
+    worker_preamble: 'Produce a historically grounded Chinese everyday-life era scene specification with explicit year/region tags, foreground/midground/background details, and 3 Time-Reporter interview prompts for elders. Never fabricate archival citations.',
+    judge_guide: 'Verify year/region anchor, authentic daily-life layers, and 3 respectful elder memory prompts. See /skills/lifestory-history-scene.md.',
+  },
+  {
+    id: 'second-brain-doc-audit',
+    category: 'general_files',
+    title: 'Batch Document Citation & Contradiction Audit',
+    worker_preamble: 'Audit authorized input documents only. Cite exact input file paths/lines for every finding, and output dedicated Contradictions and Missing Items sections. Never invent external facts.',
+    judge_guide: 'Verify every finding cites an input source, contradictions are listed side by side, and missing items are explicit. See /skills/second-brain-doc-audit.md.',
   },
 ];
 
@@ -191,6 +220,12 @@ export class Market {
       );
       CREATE TRIGGER IF NOT EXISTS ban_log_no_update BEFORE UPDATE ON ban_log BEGIN SELECT RAISE(ABORT,'append-only ban_log'); END;
       CREATE TRIGGER IF NOT EXISTS ban_log_no_delete BEFORE DELETE ON ban_log BEGIN SELECT RAISE(ABORT,'append-only ban_log'); END;
+      CREATE TABLE IF NOT EXISTS worker_observers (
+        worker TEXT PRIMARY KEY REFERENCES workers(id),
+        owner TEXT NOT NULL REFERENCES accounts(id),
+        token_hash TEXT NOT NULL UNIQUE,
+        created_at INTEGER NOT NULL
+      );
     `);
     for (const skill of DEFAULT_SKILLS) {
       store.run(
@@ -256,9 +291,10 @@ export class Market {
     if (Number(task.expected_minutes || 30) >= 60 && elapsedMs > 0 && elapsedMs < expectedMs * 0.02) {
       flags.push('duration_too_fast');
     }
-    const hasRelay = this.s.one("SELECT name FROM sqlite_master WHERE type='table' AND name='task_workspaces'");
-    const workspace = hasRelay ? this.s.one('SELECT required FROM task_workspaces WHERE task=?', task.id) : null;
-    const toolCalls = hasRelay ? (this.s.one('SELECT COUNT(*) AS n FROM tool_calls WHERE task=? AND epoch=?', task.id, task.epoch)?.n || 0) : 0;
+    const hasWorkspaces = this.s.one("SELECT name FROM sqlite_master WHERE type='table' AND name='task_workspaces'");
+    const hasToolCalls = this.s.one("SELECT name FROM sqlite_master WHERE type='table' AND name='tool_calls'");
+    const workspace = hasWorkspaces ? this.s.one('SELECT required FROM task_workspaces WHERE task=?', task.id) : null;
+    const toolCalls = hasToolCalls ? (this.s.one('SELECT COUNT(*) AS n FROM tool_calls WHERE task=? AND epoch=?', task.id, task.epoch)?.n || 0) : 0;
     if (workspace?.required && toolCalls < 2) {
       flags.push('missing_tool_chain');
     }
@@ -266,12 +302,19 @@ export class Market {
     if (!deliverableCheck.safe) {
       flags.push('unsafe_deliverable');
     }
+    const structureCheck = verifyDeliverableStructure({ category: task.category, skill_id: task.skill_id, result: resultText });
+    if (!structureCheck.valid) {
+      flags.push('structure_incomplete');
+    }
     return {
       elapsed_ms: elapsedMs,
       expected_minutes: task.expected_minutes || 30,
       tool_calls: toolCalls,
       deliverable_safe: deliverableCheck.safe,
       deliverable_reasons: deliverableCheck.reasons,
+      structure_valid: structureCheck.valid,
+      structure_checks_passed: structureCheck.checks_passed,
+      structure_checks_failed: structureCheck.checks_failed,
       flags,
     };
   }
@@ -627,4 +670,143 @@ export class Market {
       },
     };
   }
+
+  issueObserverToken(owner, workerId) {
+    return this.s.tx(() => {
+      const w = this.s.worker(owner, workerId);
+      const secret = `obs_${randomBytes(24).toString('base64url')}`;
+      const now = this.s.now();
+      this.s.run(
+        `INSERT INTO worker_observers(worker,owner,token_hash,created_at) VALUES(?,?,?,?)
+         ON CONFLICT(worker) DO UPDATE SET token_hash=excluded.token_hash, created_at=excluded.created_at`,
+        w.id, owner, hash(secret), now,
+      );
+      return {
+        worker_id: w.id,
+        observer_token: secret,
+        scope: 'readonly_world_observer',
+        created_at: now,
+      };
+    });
+  }
+
+  revokeObserverToken(owner, workerId) {
+    return this.s.tx(() => {
+      const w = this.s.worker(owner, workerId);
+      this.s.run('DELETE FROM worker_observers WHERE worker=? AND owner=?', w.id, owner);
+      return { worker_id: w.id, revoked: true };
+    });
+  }
+
+  observeWorker(secret) {
+    need(typeof secret === 'string' && secret.startsWith('obs_'), 'unauthorized', 'A valid read-only observer token is required.', 401);
+    const obs = this.s.one('SELECT * FROM worker_observers WHERE token_hash=?', hash(secret));
+    need(obs, 'unauthorized', 'Observer token is invalid or revoked.', 401);
+    const ownerAcct = this.s.one('SELECT id, banned FROM accounts WHERE id=?', obs.owner);
+    need(ownerAcct && !ownerAcct.banned, 'account_banned', 'Account is banned.', 403);
+    const w = this.s.one('SELECT * FROM workers WHERE id=? AND owner=?', obs.worker, obs.owner);
+    need(w, 'not_found', 'Worker not found.', 404);
+
+    const tier = workerTrustTier(w);
+    const wallet = this.s.wallet(obs.owner);
+    const runningTask = this.s.one("SELECT id, category, skill_id, expected_minutes FROM tasks WHERE worker=? AND state='running'", w.id);
+    const runningTrial = this.s.one("SELECT id, model FROM trial_runs WHERE worker=? AND state='running'", w.id);
+    const hasFreeTable = !!this.s.one("SELECT name FROM sqlite_master WHERE type='table' AND name='free_tasks'");
+    const runningFree = hasFreeTable ? this.s.one("SELECT id FROM free_tasks WHERE worker=? AND state='running'", w.id) : null;
+
+    const activity_state = w.suspended
+      ? 'suspended'
+      : runningTask
+        ? 'working'
+        : runningTrial
+          ? 'trial'
+          : runningFree
+            ? 'free_work'
+            : 'idle';
+
+    const taskEvents = this.s.all(
+      `SELECT id, category, skill_id, state, expected_minutes, payout_percent, rating, created_at, submitted_at, settled_at
+       FROM tasks WHERE worker=? ORDER BY COALESCE(settled_at, submitted_at, created_at) DESC LIMIT 15`,
+      w.id,
+    ).map((t) => ({
+      id: t.id,
+      kind: 'paid_task',
+      category: t.category,
+      skill_id: t.skill_id,
+      state: t.state,
+      expected_minutes: t.expected_minutes,
+      payout_percent: t.payout_percent ?? null,
+      rating: t.rating ?? null,
+      at: t.settled_at || t.submitted_at || t.created_at,
+    }));
+
+    const trialEvents = this.s.all(
+      'SELECT id, state, created_at FROM trial_runs WHERE worker=? ORDER BY created_at DESC LIMIT 5',
+      w.id,
+    ).map((r) => ({
+      id: r.id,
+      kind: 'trial',
+      category: 'general_files',
+      skill_id: null,
+      state: r.state,
+      expected_minutes: null,
+      payout_percent: null,
+      rating: null,
+      at: r.created_at,
+    }));
+
+    const recent_events = [...taskEvents, ...trialEvents]
+      .sort((a, b) => (b.at || 0) - (a.at || 0))
+      .slice(0, 20);
+
+    return {
+      scope: 'readonly_world_observer',
+      server_time: this.s.now(),
+      worker: {
+        id: w.id,
+        name: w.name,
+        model: w.model,
+        qualified: Boolean(w.qualified),
+        suspended: Boolean(w.suspended),
+        trust_tier: tier.tier,
+        completed_count: w.completed_count || 0,
+        avg_rating: w.rating_count > 0 ? Number((w.rating_sum / w.rating_count).toFixed(2)) : null,
+        verified_tokens: w.verified_tokens || 0,
+        activity_state,
+        active_category: runningTask?.category || null,
+        active_skill_id: runningTask?.skill_id || null,
+      },
+      credits: {
+        available_minor: wallet.available,
+        frozen_minor: wallet.frozen,
+        spendable_minor: wallet.spendable_minor,
+        locked_earnings_minor: wallet.locked_earnings_minor,
+        trial_locked_minor: wallet.trial_locked_minor,
+        qualifying_minutes: wallet.qualifying_minutes,
+        required_minutes: wallet.required_minutes,
+        can_hire: wallet.can_hire,
+        unit: wallet.unit,
+        withdrawable: false,
+      },
+      recent_events,
+    };
+  }
+}
+
+export function observerOpenapiPaths() {
+  const idem = { name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string', minLength: 1, maxLength: 128 } };
+  const idParam = { name: 'id', in: 'path', required: true, schema: { type: 'string' } };
+  const emptyBody = { required: true, content: { 'application/json': { schema: { type: 'object', additionalProperties: false, properties: {} } } } };
+  const ok = { 200: { description: 'Read-only observer response.', content: { 'application/json': { schema: { type: 'object' } } } }, default: { description: 'Structured failure.', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } } };
+  return {
+    '/v1/workers/{id}/observer-token': {
+      post: { operationId: 'post_v1_workers_id_observer_token', security: [{ bearerAuth: [] }], parameters: [idParam, idem], requestBody: emptyBody, responses: ok },
+    },
+    '/v1/workers/{id}/observer-revoke': {
+      post: { operationId: 'post_v1_workers_id_observer_revoke', security: [{ bearerAuth: [] }], parameters: [idParam, idem], requestBody: emptyBody, responses: ok },
+    },
+    '/v1/observer/worker': {
+      get: { operationId: 'get_v1_observer_worker', security: [{ observerBearer: [] }], parameters: [], responses: ok },
+    },
+  };
 }

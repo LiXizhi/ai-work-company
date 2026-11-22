@@ -6,13 +6,12 @@ import {socialActions} from './vendor/haqi/adventure_social_actions_core.js';
 import {PERSONAS,MAX_ROLES,emptyRoles,validateRoles,createRole,renameRole,deleteRole,activateRole,activeRole,remoteCast} from './world-roles-core.mjs';
 import {createKeepworkSession} from './keepwork-session.mjs';
 import {createRoleStore} from './world-roles.mjs';
+import {personaLabel,applyPersonaPortrait as portrait} from './personas.mjs';
 import {createWorldPresence,gatewayFromQuery} from './world-presence.mjs';
 
 const $=id=>document.getElementById(id);
 let storage;try{storage=window.localStorage;}catch{storage=null;}
 const personaInfo=Object.fromEntries(residents.map(r=>[r.id,r]));
-const personaPortraits={astra:'assets/avatars/gpt.webp',claude:'assets/avatars/claude.webp',deepseek:'assets/ainiang/2d/fullbody/deepseek-chibi.webp',gemini:'assets/avatars/gemini.webp'};
-const personaLabel={astra:'GPT · OPENAI',claude:'CLAUDE · ANTHROPIC',deepseek:'DEEPSEEK',gemini:'GEMINI · GOOGLE'};
 const motionQuery=matchMedia('(prefers-reduced-motion: reduce)');
 let paused=motionQuery.matches;
 let names=loadNames(storage),worldScene=null,toastTimer,selectedProfile=null;
@@ -105,8 +104,6 @@ async function saveCatalog(next,success){
 
 /* ---------- Roles screen ---------- */
 let pendingRoleId=null,pickedPersona=PERSONAS[0];
-// Partner artwork is UI presentation; persona IDs and shared world rigs stay stable.
-function portrait(el,persona){el.style.backgroundImage=`url("${personaPortraits[persona]||personaPortraits.astra}")`;el.style.backgroundSize='contain';el.style.backgroundPosition='center';}
 
 function renderRoles(){
  const grid=$('roles-grid');grid.replaceChildren();
@@ -191,8 +188,80 @@ async function openRoles(){
 }
 $('account-button').addEventListener('click',openRoles);
 
-/* ---------- Journal ---------- */
+/* ---------- Journal & Read-Only Worker Observer ---------- */
 const journal=[],observedActivity=new Map();let observedEvent=0;
+let observerSecret='',observerState=null,observerTimer=null;
+
+function renderObserver(){
+ const c=observerState?.credits,w=observerState?.worker;
+ if(!c||!w){
+  $('town-credits-value').textContent='0';
+  $('town-credits').title='尚未关联真实 Worker 账户；本地活动不产生积分';
+  $('town-credits').setAttribute('aria-label','0 work credits');
+  $('logs-earnings-value').textContent='未连接';
+  $('logs-earnings-note').textContent='尚未关联真实 Worker 账户；本地模拟不产生积分。';
+  $('observer-clear').hidden=true;
+  $('worker-events-list').hidden=true;
+  $('worker-events-list').replaceChildren();
+  return;
+ }
+ const avail=(c.available_minor/100).toFixed(2),spend=(c.spendable_minor/100).toFixed(2),locked=(c.locked_earnings_minor/100).toFixed(2);
+ $('town-credits-value').textContent=avail;
+ $('town-credits').title=`已只读关联 ${w.name}（${w.model}）· 可消费 ${spend} / 待解锁 ${locked} work credits（${c.qualifying_minutes}/${c.required_minutes}m）`;
+ $('town-credits').setAttribute('aria-label',`${avail} work credits`);
+ $('logs-earnings-value').textContent=`${avail} credits（可雇工 ${spend}）`;
+ $('logs-earnings-note').textContent=`已只读关联 Worker「${w.name}」· 状态：${w.activity_state} · 信誉：${w.trust_tier} · 已完成 ${w.completed_count} 单 · 资格工时 ${c.qualifying_minutes}/${c.required_minutes} 分钟`;
+ $('observer-clear').hidden=false;
+ const evList=$('worker-events-list');evList.replaceChildren();
+ const events=observerState.recent_events||[];
+ evList.hidden=!events.length;
+ for(const ev of events.slice(0,8)){
+  const li=node('li','');
+  const time=node('time','',new Date(ev.at||Date.now()).toLocaleTimeString('zh-CN',{hour12:false}));
+  const desc=`[真实账本] ${ev.kind==='trial'?'试用任务':'正式任务'} ${ev.id.slice(0,12)}… · ${ev.skill_id||ev.category} · ${ev.state}${ev.payout_percent!=null?` (${ev.payout_percent}%)`:''}`;
+  li.append(time,node('span','',desc));evList.append(li);
+ }
+}
+
+async function refreshObserver(){
+ if(!observerSecret)return;
+ try{
+  const res=await fetch('v1/observer/worker',{headers:{Authorization:`Bearer ${observerSecret}`},cache:'no-store',credentials:'omit'});
+  const body=await res.json();
+  if(!res.ok)throw new Error(body.error?.message||'观察码无效或已撤销');
+  observerState=body;
+  $('observer-status').textContent=`已连接只读账本（${body.worker.name} · 上次同步 ${new Date().toLocaleTimeString('zh-CN',{hour12:false})}）`;
+  renderObserver();paintActors(clock/1000,true);
+ }catch(error){
+  observerSecret='';observerState=null;clearInterval(observerTimer);observerTimer=null;
+  $('observer-status').textContent=error.message||'只读账本连接已断开。';
+  renderObserver();paintActors(clock/1000,true);
+ }
+}
+
+function clearObserver(message='已断开只读观察码。'){
+ observerSecret='';observerState=null;clearInterval(observerTimer);observerTimer=null;
+ $('observer-key').value='';$('observer-status').textContent=message;
+ renderObserver();paintActors(clock/1000,true);
+}
+
+$('observer-form').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const raw=$('observer-key').value.trim();
+ if(!raw.startsWith('obs_')){$('observer-status').textContent='请输入以 obs_ 开头的只读观察码（在 /company/ 的 Worker 列表中生成）。';return;}
+ observerSecret=raw;$('observer-key').value='';
+ await refreshObserver();
+ if(observerSecret){clearInterval(observerTimer);observerTimer=setInterval(()=>{if(!document.hidden)refreshObserver();},15000);}
+});
+$('observer-clear').addEventListener('click',()=>clearObserver());
+
+function openLogsDialog(){
+ const actors=worldScene?.state.actors||[];
+ $('logs-agent').replaceChildren(...actors.map(a=>{const o=node('option','',`${labelFor(a.profile)} · ${personaLabel[a.profile.persona]}`);o.value=a.profile.id;return o;}));
+ if(actors.length)$('logs-agent').value=worldScene.selectedAgent()||actors[0].profile.id;
+ renderObserver();renderLogs();$('logs-dialog').showModal();
+}
+
 function recordActivity(ids,message){journal.unshift({ids,message,time:new Date()});if(journal.length>200)journal.length=200;}
 function observeActivity(){
  for(const actor of worldScene.state.actors){
@@ -218,12 +287,8 @@ function renderLogs(){
  }
  if(!entries.length)list.append(node('li','logs-empty','还没有活动记录。场景加载后，Agent 的行动会记录在这里。'));
 }
-$('logs-toggle').addEventListener('click',()=>{
- const actors=worldScene?.state.actors||[];
- $('logs-agent').replaceChildren(...actors.map(a=>{const o=node('option','',`${labelFor(a.profile)} · ${personaLabel[a.profile.persona]}`);o.value=a.profile.id;return o;}));
- if(actors.length)$('logs-agent').value=worldScene.selectedAgent()||actors[0].profile.id;
- renderLogs();$('logs-dialog').showModal();
-});
+$('logs-toggle').addEventListener('click',openLogsDialog);
+$('town-credits').addEventListener('click',openLogsDialog);
 $('logs-agent').addEventListener('change',renderLogs);
 
 /* ---------- Actors and character profile ---------- */
@@ -240,7 +305,7 @@ function viewFor(actor){
  let view=actorViews.get(id);
  if(!view){
   const el=node('button','actor '+profile.kind);el.type='button';
-  const plate=node('span','nameplate'),dot=node('i'),label=node('span'),badge=node('b','','我的'),tag=node('em');
+  const plate=node('span','nameplate'),dot=node('i'),label=node('span'),badge=node('b','','我的');
   plate.append(dot,label);if(profile.kind==='mine')plate.append(badge);
   const work=node('span','work-indicator',profile.workIcon||'');work.hidden=true;
   work.setAttribute('role','img');work.setAttribute('aria-label',profile.workLabel||'工作中');
@@ -248,7 +313,7 @@ function viewFor(actor){
   el.append(plate);
   el.addEventListener('click',e=>{e.stopPropagation();const current=actorViews.get(id)?.actor;if(current)openCharacter(current.profile);});
   $('actors').append(el);
-  view={el,label,plate,tag,work,actor};actorViews.set(id,view);
+  view={el,label,plate,work,actor};actorViews.set(id,view);
  }
  view.actor=actor;
  return view;
@@ -270,8 +335,16 @@ function paintActors(time,still=false){
   const view=viewFor(actor),profile=actor.profile;seen.add(profile.id);
   const name=labelFor(profile);
   if(view.label.textContent!==name)view.label.textContent=name;
-  view.work.hidden=!(profile.workSpot&&actor.mode==='autonomous'&&!actor.moving&&actor.route.length===0);
-  view.work.title=profile.workLabel||'';
+  const liveWork=profile.kind==='mine'&&observerState?.worker;
+  if(liveWork&&['working','trial','free_work'].includes(liveWork.activity_state)){
+   view.work.textContent=liveWork.activity_state==='working'?'⚒️':liveWork.activity_state==='trial'?'🧪':'🌱';
+   view.work.title=liveWork.activity_state==='working'?'真实付费任务执行中':liveWork.activity_state==='trial'?'真实试用任务执行中':'公开免费任务执行中';
+   view.work.hidden=false;
+  }else{
+   view.work.textContent=profile.workIcon||'';
+   view.work.hidden=!(profile.workSpot&&actor.mode==='autonomous'&&!actor.moving&&actor.route.length===0);
+   view.work.title=profile.workLabel||'';
+  }
   view.el.style.setProperty('--accent',personaInfo[profile.persona]?.color||'#4fb0a7');
   view.el.style.setProperty('--s',String(Math.max(.6,Math.min(1.6,point.scale/0.8))));
   view.el.style.left=`${point.x}px`;view.el.style.top=`${point.y}px`;view.el.style.zIndex=String(Math.round(point.y));
@@ -302,7 +375,7 @@ function openCharacter(profile){
  $('character-title').textContent=labelFor(profile);
  $('character-owner').textContent=profile.kind==='mine'?`我的 Agent · Keepwork ${account.username}`:profile.kind==='remote'?'其他在线用户的 Agent · 只读':'示例居民 · 本地模拟';
  $('character-description').textContent=profile.workLabel?`${profile.workLabel}中。这位本地居民展示工作情景，不代表真实任务执行或积分收入。`:info.description;
- $('character-role').textContent=profile.kind==='demo'?`${info.role} · 常去：${info.homeName}`:`${info.role} · 常去：${info.homeName}`;
+ $('character-role').textContent=`${info.role} · 常去：${info.homeName}`;
  $('portrait-caption').textContent=profile.kind==='mine'?'MY AGENT':profile.kind==='remote'?'ONLINE AGENT':'WORLD RESIDENT / DEMO';
  portrait($('portrait'),profile.persona,'center');
  $('direct-actions').hidden=!editable;$('name-form').hidden=!editable||(profile.kind==='demo'&&!personaInfo[profile.id]);
@@ -368,7 +441,7 @@ function draw(time){frame=null;if(paused||document.hidden)return;clock+=Math.min
 function syncMotion(){document.body.classList.toggle('paused',paused);if(frame)cancelAnimationFrame(frame);frame=null;last=0;if(!paused&&!document.hidden)frame=requestAnimationFrame(draw);else paintActors(clock/1000,true);}
 motionQuery.addEventListener('change',e=>{paused=e.matches;syncMotion();});document.addEventListener('visibilitychange',syncMotion);
 window.addEventListener('storage',e=>{if(e.key==='awc.world.names.v1')names=loadNames(storage);});
-window.addEventListener('pagehide',()=>presence?.stop());
+window.addEventListener('pagehide',()=>{presence?.stop();clearObserver();});
 
 createWorldMap($('map-toggle'),()=>worldScene);
 renderAccount();renderStatus();syncMotion();

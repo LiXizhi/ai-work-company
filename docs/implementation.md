@@ -48,9 +48,9 @@ or general MCP forwarding. The broker is a capability file API, not an OS sandbo
 
 ## CLI onboarding
 
-`npm run -s awc -- work|hire|status|accept|cancel` provides a local client over the
-existing API. See [quickstart](quickstart.md). It saves per-instance private identity
-and durable publish keys, snapshots selected input before freezing funds, and keeps
+`npm run -s awc -- work|hire|batch-hire|batch-status|batch-release|batch-retry|batch-cancel|free-work|status|accept|cancel`
+provides a local client over the existing API. See [quickstart](quickstart.md). It saves per-instance private identity
+and durable publish keys, supports `--adapter codex|claude` (plus `command` in continuous policy mode), snapshots selected input before freezing funds, and keeps
 trial qualification and acceptance explicit.
 
 ## Money and task invariants
@@ -60,8 +60,9 @@ trial qualification and acceptance explicit.
 - One local operator provision creates a bounded platform employer budget. Only
   actual accepted work transfers that budget to other owners. No recharge emulator.
 - Task creation freezes the complete price and records `category` (`art_works` for
-  Three.js 2D/3D & shader assets, `mini_games`, `reverse_engineering`, `general_files`),
-  optional company `skill_id`, `system_prompt`, `expected_minutes`, `judger_mode`, and
+  Three.js 2D/3D, shader & 6-shot Hanzi storyboards, `mini_games`, `reverse_engineering`,
+  `general_files` including ParaPoly Code3D, LifeStory era scenes & batch document audits),
+  optional company `skill_id`, `system_prompt`, `expected_minutes`, `judge_mode`, and
   `min_payout_percent`.
 - Claim checks model, qualification, progressive worker trust tier (`probation` &le;60m,
   `standard` &le;240m, `trusted` &le;4320m), ownership, deadline, attempts, consumer
@@ -351,3 +352,10 @@ See [deployment operations](deployment.md) for service, credential, backup and
 rollback details. Existing origin checks and the aggregate backend limit remain
 active behind per-IP proxy limits. This remains a single-instance reference
 marketplace, with explicit operator evidence review and no recharge endpoints.
+
+## Multi-model adapters, standardized skills, batch campaigns & world observer (2026-11-22)
+
+- **Cross-platform & multi-adapter Worker runtime**: `worker/platform.mjs` preserves strict `0700`/`0600` mode and single-link checks on POSIX while allowing Windows NTFS private client/continuous directories and process-tree termination without shell interpolation (`taskkill /PID /T /F`). `worker/run.mjs` adds `claude` (Claude Code CLI with `--strict-mcp-config`, disabled host tools, and isolated `awc` stdio MCP) and `command` (owner-configured non-shell JSON executable in continuous policy) alongside the default `codex` adapter. Each adapter tags `evidence_kind` explicitly and never self-attests model identity. The Consumer file broker (`consumer/file_broker.py`) remains POSIX-only (`O_DIRECTORY | O_NOFOLLOW`) and fails closed on Windows.
+- **Standardized Company Skills & deterministic preflight**: Added `poly-code3d-art`, `hanzi-story-animation`, `lifestory-history-scene`, `second-brain-doc-audit` (`backend/market.mjs`, `/skills/*.md`), and Second Brain shift guide `/skills/awc-night-shift.md`. `backend/verifiers.mjs` runs static, zero-execution structural checks on submitted deliverables and includes `structure_preflight` in `judge_evaluate` envelopes and submission telemetry.
+- **Sample-gated Batch Campaigns (`backend/batches.mjs`)**: `POST /v1/batches` validates full campaign funding and eligibility, materializing only the first `sample_size` (default `2`) subtasks into funded `queued` tasks while holding remaining items in `held_for_sample`. After at least one sample is submitted or accepted, `POST /v1/batches/{id}/release` dispatches the remaining subtasks for parallel Worker claims. `POST /v1/batches/{id}/retry-failed` allows one recovery pass for failed/expired subtasks without affecting completed sibling settlements; `POST /v1/batches/{id}/cancel` cancels unsettled items.
+- **Read-only World Observer (`obs_...`) & unified portraits**: `site/personas.mjs` unifies partner WebP portraits across `site/world.js` and `site/sprite-lab.js`. `POST /v1/workers/{id}/observer-token` issues a SHA-256-hashed revocable read-only token (`POST .../observer-revoke` revokes it); `GET /v1/observer/worker` returns sanitized Worker activity state, credit summary, and recent status transitions without exposing prompts, deliverables, or write access. The World homepage holds `obs_...` in page memory only (never storage, URLs, Keepwork workspace, or `awc:city` presence).

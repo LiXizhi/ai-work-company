@@ -136,13 +136,16 @@ function renderTable(targetId, headers, rows, emptyText = 'No records in this vi
 
 function populateSkillSelect() {
   if (!marketData) return;
-  const cat = $('post-category').value;
-  const select = $('post-skill');
-  select.replaceChildren();
-  for (const s of marketData.skills.filter((item) => item.category === cat)) {
-    const opt = el('option', `${s.title} (${s.id})`);
-    opt.value = s.id;
-    select.append(opt);
+  for (const [catId, skillId] of [['post-category', 'post-skill'], ['batch-category', 'batch-skill']]) {
+    const catEl = $(catId), select = $(skillId);
+    if (!catEl || !select) continue;
+    const cat = catEl.value;
+    select.replaceChildren();
+    for (const s of marketData.skills.filter((item) => item.category === cat)) {
+      const opt = el('option', `${s.title} (${s.id})`);
+      opt.value = s.id;
+      select.append(opt);
+    }
   }
 }
 
@@ -287,8 +290,9 @@ async function loadMarket() {
   const currentFilter = filterModel.value;
   filterModel.replaceChildren(el('option', 'All Models'));
   filterModel.firstChild.value = '';
-  for (const targetId of ['post-model', 'worker-model']) {
+  for (const targetId of ['post-model', 'worker-model', 'batch-model']) {
     const sel = $(targetId);
+    if (!sel) continue;
     sel.replaceChildren();
     for (const m of models) {
       const opt = el('option', m);
@@ -315,10 +319,11 @@ async function loadWorkspace() {
     $('connection-pill').className = 'status';
     return;
   }
-  const [wallet, workersResp, tasksResp] = await Promise.all([
+  const [wallet, workersResp, tasksResp, batchesResp] = await Promise.all([
     api('/v1/me', undefined, true),
     api('/v1/workers', undefined, true),
     api('/v1/tasks', undefined, true),
+    api('/v1/batches', undefined, true),
   ]);
   $('auth-gate').hidden = true;
   $('member-workspace').hidden = false;
@@ -329,8 +334,8 @@ async function loadWorkspace() {
 
   const summary = $('wallet-summary');
   summary.replaceChildren(
-    el('strong', `${wallet.name} · Available: ${credits(wallet.available)} · Frozen: ${credits(wallet.frozen)}`),
-    el('div', `Account ID: ${wallet.id} · Daily Limit: ${credits(wallet.daily_limit)} · Avg Payout: ${wallet.settled_tasks_count ? Math.round(wallet.payout_pct_sum / wallet.settled_tasks_count) : 100}%`, 'muted'),
+    el('strong', `${wallet.name} · Available: ${credits(wallet.available)} · Spendable: ${credits(wallet.spendable_minor)} · Frozen: ${credits(wallet.frozen)}`),
+    el('div', `Account ID: ${wallet.id} · Qualifying Work: ${wallet.qualifying_minutes}/${wallet.required_minutes}m · Daily Limit: ${credits(wallet.daily_limit)} · Avg Payout: ${wallet.settled_tasks_count ? Math.round(wallet.payout_pct_sum / wallet.settled_tasks_count) : 100}%`, 'muted'),
   );
 
   renderTable(
@@ -345,7 +350,13 @@ async function loadWorkspace() {
         await loadMarket();
         notice(`Worker ${w.name} is now marked ONLINE.`);
       }));
-      act.append(pingBtn);
+      const obsBtn = el('button', 'World Observer Key');
+      obsBtn.type = 'button';
+      obsBtn.addEventListener('click', () => perform(async () => {
+        const issued = await api(`/v1/workers/${w.id}/observer-token`, {}, true);
+        notice(`Read-only World Observer Key for ${w.name} (save once, paste in World Logs): ${issued.observer_token}`);
+      }));
+      act.append(pingBtn, obsBtn);
       return [
         w.id,
         w.name,
@@ -356,6 +367,55 @@ async function loadWorkspace() {
       ];
     }),
     'No workers registered under this account yet.',
+  );
+
+  renderTable(
+    'my-batches-list',
+    ['Batch ID & Title', 'Skill & Model', 'State', 'Progress (Held / Queued / Done / Failed)', 'Actions'],
+    (batchesResp.batches || []).map((b) => {
+      const actions = el('div', null, 'actions');
+      if (b.state === 'sampling') {
+        const relBtn = el('button', 'Release Remaining Batch', 'primary');
+        relBtn.type = 'button';
+        relBtn.addEventListener('click', () => perform(async () => {
+          await api(`/v1/batches/${b.id}/release`, {}, true);
+          await loadWorkspace();
+          await loadMarket();
+          notice(`Released remaining subtasks for batch ${b.id}.`);
+        }));
+        actions.append(relBtn);
+      }
+      if (b.counts.failed_or_expired > 0 && b.state !== 'cancelled') {
+        const retryBtn = el('button', 'Retry Failed Once');
+        retryBtn.type = 'button';
+        retryBtn.addEventListener('click', () => perform(async () => {
+          await api(`/v1/batches/${b.id}/retry-failed`, {}, true);
+          await loadWorkspace();
+          await loadMarket();
+          notice(`Re-dispatched failed subtasks for batch ${b.id}.`);
+        }));
+        actions.append(retryBtn);
+      }
+      if (b.state !== 'cancelled' && b.state !== 'completed') {
+        const cancelBtn = el('button', 'Cancel Unsettled', 'danger');
+        cancelBtn.type = 'button';
+        cancelBtn.addEventListener('click', () => perform(async () => {
+          await api(`/v1/batches/${b.id}/cancel`, {}, true);
+          await loadWorkspace();
+          await loadMarket();
+          notice(`Cancelled batch ${b.id}.`);
+        }));
+        actions.append(cancelBtn);
+      }
+      return [
+        `${b.title} (${b.id})`,
+        `${b.skill_id} · ${b.model}`,
+        pill(b.state.toUpperCase()),
+        `Held ${b.counts.held_for_sample} · Queued ${b.counts.queued + b.counts.running + b.counts.submitted} · Done ${b.counts.completed}/${b.total_items} · Failed ${b.counts.failed_or_expired}`,
+        actions,
+      ];
+    }),
+    'No batch campaigns created yet.',
   );
 
   renderTable(
@@ -505,6 +565,7 @@ $('refresh-market').addEventListener('click', () => perform(async () => {
 $('filter-category').addEventListener('change', renderMarket);
 $('filter-model').addEventListener('change', renderMarket);
 $('post-category').addEventListener('change', populateSkillSelect);
+$('batch-category')?.addEventListener('change', populateSkillSelect);
 
 $('verify-prompt-form').addEventListener('submit', (e) => {
   e.preventDefault();
@@ -628,6 +689,39 @@ $('whitelist-form').addEventListener('submit', (e) => {
     }, true);
     f.reset();
     notice('Worker saved to your trusted category whitelist.');
+  });
+});
+
+$('post-batch-form')?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  perform(async () => {
+    const f = e.target;
+    const items = f.elements.items_lines.value
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line, i) => {
+        const sep = line.indexOf('::');
+        if (sep < 0) return { title: `${f.elements.title.value} #${i + 1}`, description: line };
+        return { title: line.slice(0, sep).trim(), description: line.slice(sep + 2).trim() };
+      });
+    if (!items.length) throw new Error('Provide at least one subtask line.');
+    const batch = await api('/v1/batches', {
+      title: f.elements.title.value.trim(),
+      category: f.elements.category.value,
+      skill_id: f.elements.skill_id.value,
+      model: f.elements.model.value,
+      unit_amount_minor: Number(f.elements.unit_amount_minor.value),
+      sample_size: Number(f.elements.sample_size.value),
+      expected_minutes: Number(f.elements.expected_minutes.value),
+      judge_mode: 'consumer_ai',
+      items,
+    }, true);
+    f.reset();
+    populateSkillSelect();
+    await loadMarket();
+    await loadWorkspace();
+    notice(`Created batch ${batch.id} (${batch.sample_size} sample task(s) dispatched, ${batch.counts.held_for_sample} held for sample approval).`);
   });
 });
 

@@ -3,12 +3,16 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Api, pause, identifier } from '../worker/client.mjs';
+import { resolvePythonExecutable } from '../worker/platform.mjs';
 import { verifyWorkerDeliverable } from '../backend/market.mjs';
 
 const brokerPath = fileURLToPath(new URL('./file_broker.py', import.meta.url));
-export function startBroker(root, input, python = process.env.AWC_PYTHON || '/usr/bin/python3') {
+export function startBroker(root, input, python = resolvePythonExecutable()) {
+  const env = process.platform === 'win32'
+    ? { SystemRoot: process.env.SystemRoot || 'C:\\Windows', PATH: process.env.PATH || '', PYTHONUTF8: '1' }
+    : { PATH: '/usr/bin:/bin:/usr/local/bin', LANG: 'en_US.UTF-8' };
   const child = spawn(python, ['-I', '-B', brokerPath, root, input], {
-    env: { PATH: '/usr/bin:/bin', LANG: 'en_US.UTF-8' }, stdio: ['pipe', 'pipe', 'pipe'],
+    env, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true,
   });
   const pending = new Map(); let buffer = '', closed = false, readyResolve, readyReject;
   const ready = new Promise((resolveReady, rejectReady) => { readyResolve = resolveReady; readyReject = rejectReady; });

@@ -1,4 +1,6 @@
 import { FreeTasks, freeOpenapiPaths } from './free-tasks.mjs';
+import { batchOpenapiPaths } from './batches.mjs';
+import { observerOpenapiPaths } from './market.mjs';
 import http from 'node:http';
 import { initAdmin, authenticateAdmin, adminGet, adminPost, adminOpenapiPaths } from './admin-web.mjs';
 import { readFileSync, existsSync } from 'node:fs';
@@ -117,9 +119,15 @@ export function openapi() {
   paths['/v1/me'].get.responses[200].description='Wallet: available is unfrozen ledger balance; spendable_minor is available only for platform employer or qualifying_minutes >= required_minutes (120). locked_earnings_minor is gated income. trial_locked_minor is permanent non-spendable approved trial contribution. No recharge or withdrawal.';
   return {
     openapi: '3.1.0', info: { title: 'AI Work Company', version: '0.2.0', description: 'Self-hosted reference API. Bounded continuous local Workers reuse existing lease and idempotency endpoints; independent evidence review and Consumer acceptance remain required. No hosted marketplace API is advertised by the documentation site.' },
-    servers: [{ url: './', description: 'This instance, including any reverse-proxy path prefix' }], paths: {...paths,...adminOpenapiPaths(),...freeOpenapiPaths()},
+    servers: [{ url: './', description: 'This instance, including any reverse-proxy path prefix' }],
+    paths: { ...paths, ...batchOpenapiPaths(), ...observerOpenapiPaths(), ...adminOpenapiPaths(), ...freeOpenapiPaths() },
     components: {
-      securitySchemes: { adminBearer: {type:'http',scheme:'bearer',description:'Separate operator credential; account and task tokens are not accepted.'}, bearerAuth: { type: 'http', scheme: 'bearer' }, taskCapability: { type: 'http', scheme: 'bearer', description: 'Claim tool_token, scoped to task and lease epoch; cannot access account APIs.' } },
+      securitySchemes: {
+        adminBearer: { type: 'http', scheme: 'bearer', description: 'Separate operator credential; account and task tokens are not accepted.' },
+        bearerAuth: { type: 'http', scheme: 'bearer' },
+        observerBearer: { type: 'http', scheme: 'bearer', description: 'Read-only Worker observer token (obs_...); cannot mutate state or read task prompts/results.' },
+        taskCapability: { type: 'http', scheme: 'bearer', description: 'Claim tool_token, scoped to task and lease epoch; cannot access account APIs.' },
+      },
       schemas: { Error: { type: 'object', required: ['error'], properties: { error: { type: 'object', properties: { code: { type: 'string' }, message: { type: 'string' } } } } } },
     },
   };
@@ -151,10 +159,12 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
   initRelay(store); initAdmin(store); store.freeTasks=new FreeTasks(store);
   const staticFiles = new Map();
   for (const [url, name, mime] of [
-    ['/', 'index.html', 'text/html'], ['/style.css', 'style.css', 'text/css'], ['/app.js', 'app.js', 'text/javascript'],
+    ['/', 'index.html', 'text/html'], ['/index.html', 'index.html', 'text/html'],
+    ['/style.css', 'style.css', 'text/css'], ['/app.js', 'app.js', 'text/javascript'],
     ['/guide.html', 'guide.html', 'text/html'],
     ['/world.css', 'world.css', 'text/css'], ['/world-layout.css', 'world-layout.css', 'text/css'],
     ['/world.js', 'world.js', 'text/javascript'], ['/world-state.mjs', 'world-state.mjs', 'text/javascript'],
+    ['/personas.mjs', 'personas.mjs', 'text/javascript'],
     ['/ui-tokens.css', 'ui-tokens.css', 'text/css'], ['/world-ui.css', 'world-ui.css', 'text/css'],
     ...['world-roles-core.mjs','world-roles.mjs','keepwork-session.mjs','world-presence.mjs'].map(name=>['/'+name,name,'text/javascript']),
     ['/assets/persona-portraits.png', 'assets/persona-portraits.png', 'image/png'],
@@ -168,7 +178,8 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
     ...['claude', 'gpt', 'gemini'].map((id) => [`/assets/avatars/${id}.webp`, `assets/avatars/${id}.webp`, 'image/webp']),
     ['/assets/avatars/README.md', 'assets/avatars/README.md', 'text/markdown'],
     ['/assets/ainiang/manifest.json', 'assets/ainiang/manifest.json', 'application/json'],
-    ['/skills/public-pages-handoff.md','skills/public-pages-handoff.md','text/markdown'],
+    ...['public-pages-handoff', 'poly-code3d-art', 'hanzi-story-animation', 'lifestory-history-scene', 'second-brain-doc-audit', 'awc-night-shift']
+      .map((id) => [`/skills/${id}.md`, `skills/${id}.md`, 'text/markdown']),
   ]) {
     const path = resolve(root, 'site', name);
     if (existsSync(path)) staticFiles.set(url, { body: readFileSync(path), mime });
@@ -199,10 +210,10 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
     const path=resolve(root,'docs',`${name}.${ext}`);
     if(existsSync(path)) staticFiles.set(`/${name}.${ext}`,{body:readFileSync(path),mime:ext==='html'?'text/html':'text/markdown'});
   }
-  for (const [url,name,mime] of [['/admin/','index.html','text/html'],['/admin','index.html','text/html'],['/admin/app.js','app.js','text/javascript'],['/admin/style.css','style.css','text/css']]) {
+  for (const [url,name,mime] of [['/admin/','index.html','text/html'],['/admin/app.js','app.js','text/javascript'],['/admin/style.css','style.css','text/css']]) {
     const path=resolve(root,'admin',name); if(existsSync(path)) staticFiles.set(url,{body:readFileSync(path),mime});
   }
-  for (const [url,name,mime] of [['/company/','index.html','text/html'],['/company','index.html','text/html'],['/company/app.js','app.js','text/javascript'],['/company/style.css','style.css','text/css'],['/company/free-preview.js','free-preview.js','text/javascript']]) {
+  for (const [url,name,mime] of [['/company/','index.html','text/html'],['/company/app.js','app.js','text/javascript'],['/company/style.css','style.css','text/css'],['/company/free-preview.js','free-preview.js','text/javascript']]) {
     const path=resolve(root,'company',name); if(existsSync(path)) staticFiles.set(url,{body:readFileSync(path),mime});
   }
   for(const [url,name,mime] of [['/free/','index.html','text/html'],['/free/app.js','app.js','text/javascript'],['/free/style.css','style.css','text/css']]) staticFiles.set(url,{body:readFileSync(resolve(root,'free',name)),mime});
@@ -218,17 +229,21 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       }
       const url = new URL(req.url, 'http://localhost');
       const path = url.pathname, method = req.method;
+      if (method === 'GET' && (path === '/admin' || path === '/company' || path === '/free')) {
+        res.writeHead(308, { ...securityHeaders, Location: `${path.slice(1)}/${url.search}` }); res.end(); return;
+      }
       if (method === 'GET' && staticFiles.has(path)) {
         const file = staticFiles.get(path);
         const headers = worldPages.has(path) ? { ...securityHeaders, 'Content-Security-Policy': worldPagePolicy() } : securityHeaders;
-        res.writeHead(200, { ...headers, 'Cache-Control':'no-store', 'Content-Type': `${file.mime}; charset=utf-8` }); res.end(file.body); return;
+        const contentType = /^(?:text\/|application\/json$|image\/svg\+xml$)/.test(file.mime) ? `${file.mime}; charset=utf-8` : file.mime;
+        res.writeHead(200, { ...headers, 'Cache-Control':'no-store', 'Content-Type': contentType }); res.end(file.body); return;
       }
       if (method === 'GET' && path === '/openapi.json') { send(200, openapi()); return; }
       if (method === 'GET' && path === '/health') { send(200, { status: 'ok', version: '0.2.0' }); return; }
       if (method === 'GET' && path === '/v1/capabilities') {
         send(200, { version: '0.2.0', debug: !!store.debug, ledger_scope: store.debug?'isolated_test_only':'ordinary', models: store.models, unit: 'work_credit_minor', minor_per_credit: 100,
-          defaults: { deadline_hours: 72, daily_limit_minor: 1000, consumer_concurrency: 1, max_attempts: 3, lease_seconds: 60 },
-          available: ['public_free_tasks', 'public_task_outputs', 'work_to_hire_threshold', 'admin_system_text_tasks', 'bounded_local_continuous_worker', 'accounts', 'workers', 'queue', 'leases', 'text_deliverables', 'ledger', 'ratings', 'operator_review', 'task_tool_relay', 'posix_file_broker', 'worker_cli', 'worker_stdio_mcp', 'automatic_trial_dispatch', 'versioned_token_pricing', 'model_catalog', 'operator_console', 'categorized_market', 'company_skills', 'worker_prompt_verification', 'consumer_ai_judger', 'trust_tiers', 'whitelist_spotcheck', 'fraud_ban_enforcement'],
+          defaults: { deadline_hours: 72, daily_limit_minor: 1000, consumer_concurrency: 1, max_attempts: 3, lease_seconds: 60, policy_mode: store.policyMode, required_minutes: store.policyMode === 'bp_v2' ? 0 : store.requiredMinutes },
+          available: ['public_free_tasks', 'public_task_outputs', 'work_to_hire_threshold', 'admin_system_text_tasks', 'bounded_local_continuous_worker', 'multi_model_worker_adapters', 'batch_task_campaigns', 'deterministic_deliverable_preflight', 'world_readonly_observer', 'accounts', 'workers', 'queue', 'leases', 'text_deliverables', 'ledger', 'ratings', 'operator_review', 'task_tool_relay', 'posix_file_broker', 'worker_cli', 'worker_stdio_mcp', 'automatic_trial_dispatch', 'versioned_token_pricing', 'model_catalog', 'operator_console', 'categorized_market', 'company_skills', 'worker_prompt_verification', 'consumer_ai_judger', 'trust_tiers', 'whitelist_spotcheck', 'fraud_ban_enforcement'],
           unavailable: ['recharge', 'cashout', 'automatic_model_attestation', 'arbitrary_code_sandbox', 'image_generation', 'alive_tasks'],
           evidence: 'operator_reviewed; not cryptographic model attestation' }); return;
       }
@@ -267,6 +282,10 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       }
       const authorization = req.headers.authorization || '';
       const secret = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
+      if (method === 'GET' && path === '/v1/observer/worker') {
+        store.sweep();
+        send(200, store.market.observeWorker(secret)); return;
+      }
       const toolRoute = path.match(/^\/v1\/tasks\/([^/]+)\/(tools|tool-results\/([^/]+))$/);
       if (toolRoute && ((method === 'POST' && toolRoute[2] === 'tools') || method === 'GET')) {
         store.sweep();
@@ -306,6 +325,37 @@ export function createServer(store, { allowedHosts = ['127.0.0.1', 'localhost', 
       if (method === 'POST' && toolRoute && toolRoute[3]) {
         const body = await readBody(req); validate(body, ['result'], ['result']);
         send(200, store.mutation(account.id, path, req.headers['idempotency-key'], body, () => completeTool(store, account.id, toolRoute[1], toolRoute[3], body.result))); return;
+      }
+      const observerRoute = path.match(/^\/v1\/workers\/([^/]+)\/(observer-token|observer-revoke)$/);
+      if (method === 'POST' && observerRoute) {
+        const body = await readBody(req); validate(body, [], []);
+        send(200, store.mutation(account.id, path, req.headers['idempotency-key'], body, () => (
+          observerRoute[2] === 'observer-token'
+            ? store.market.issueObserverToken(account.id, observerRoute[1])
+            : store.market.revokeObserverToken(account.id, observerRoute[1])
+        ))); return;
+      }
+      if (method === 'GET' && path === '/v1/batches') { send(200, { batches: store.batches.list(account.id) }); return; }
+      if (method === 'GET' && /^\/v1\/batches\/batch_[a-f0-9-]+$/.test(path)) { send(200, store.batches.get(account.id, path.split('/')[3])); return; }
+      if (method === 'POST' && path === '/v1/batches') {
+        const body = await readBody(req);
+        validate(
+          body,
+          ['title', 'category', 'skill_id', 'model', 'system_prompt', 'judge_mode', 'judge_rubric', 'expected_minutes', 'min_trust_tier', 'min_payout_percent', 'unit_amount_minor', 'sample_size', 'deadline', 'workspace_required', 'items'],
+          ['title', 'model', 'unit_amount_minor', 'items'],
+        );
+        send(200, store.mutation(account.id, path, req.headers['idempotency-key'], body, () => store.batches.create(account.id, body))); return;
+      }
+      const batchAction = path.match(/^\/v1\/batches\/(batch_[a-f0-9-]+)\/(release|retry-failed|cancel)$/);
+      if (method === 'POST' && batchAction) {
+        const body = await readBody(req); validate(body, [], []);
+        send(200, store.mutation(account.id, path, req.headers['idempotency-key'], body, () => (
+          batchAction[2] === 'release'
+            ? store.batches.release(account.id, batchAction[1])
+            : batchAction[2] === 'retry-failed'
+              ? store.batches.retryFailed(account.id, batchAction[1])
+              : store.batches.cancel(account.id, batchAction[1])
+        ))); return;
       }
       if (method === 'GET') {
         if (path === '/v1/me') { send(200, store.wallet(account.id)); return; }
