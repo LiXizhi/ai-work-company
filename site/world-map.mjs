@@ -3,9 +3,13 @@ import {applyUiIcon} from './vendor/haqi/adventure_ui_art.js';
 
 const el=(tag,cls,...children)=>{const n=document.createElement(tag);n.className=cls;n.append(...children);return n;};
 // Illustrated overview: authored landmark anchors, not a claim of pixel-exact terrain.
-const pins=[['memory',50,26],['observatory',28,34],['library',76,36],['welcome',24,55],['plaza',50,55],['workshop',79,60],['home',88,20]];
+const pins=[['memory',50,25],['observatory',26,34],['library',74,36],['welcome',23,57],['plaza',50,55],['workshop',78,61],['home',83,20]];
 export function createWorldMap(trigger,getScene){
  const dialog=new DetailDialog(document.body,{el,title:'脑内小城 · 世界地图',className:'world-map-dialog'});
+ if(dialog.closeButton&&!dialog.closeButton.textContent.trim()){
+  const closeGlyph=dialog.closeButton.querySelector('[data-ui-icon]');
+  if(closeGlyph)closeGlyph.textContent='×';
+ }
  const chart=el('div','world-map-chart'),picture=el('img','world-map-picture');
  picture.alt='象牙白浮岛、记忆树、观星台、图书馆与珊瑚色屋顶围绕中央广场的世界地图';
  chart.append(picture);dialog.body.append(chart);
@@ -19,7 +23,9 @@ export function createWorldMap(trigger,getScene){
  async function loadIcons(){
   const response=await fetch('vendor/haqi-data/data/adventure/ui-art.json');if(!response.ok)throw Error('图标加载失败');
   const manifest=await response.json(),image=new Image();image.src=manifest.local;await image.decode();
-  for(const icon of [trigger.querySelector('[data-ui-icon]'),dialog.closeButton.querySelector('[data-ui-icon]')])applyUiIcon(icon,manifest,icon.dataset.uiIcon,'local');
+  for(const icon of [trigger?.querySelector('[data-ui-icon]'),dialog.closeButton?.querySelector('[data-ui-icon]')]){
+   if(icon){icon.textContent='';applyUiIcon(icon,manifest,icon.dataset.uiIcon,'local');}
+  }
  }
  loadIcons().catch(()=>{});
  trigger.addEventListener('click',async()=>{

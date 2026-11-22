@@ -26,16 +26,17 @@ test('cosmetic names survive reload, ignore unrelated keys and tolerate corrupt 
 });
 
 
-test('nameplates avoid nearby characters and each other in a vertical crowd',async()=>{
+test('nameplates stay steadily centered below each character without jumping when nearby',async()=>{
  const {layoutNameplates}=await import('../site/world-state.mjs');
- const rows=[{id:'rear',x:180,y:160,w:100,h:28,body:{x:150,y:65,w:60,h:100}},
-  {id:'front',selected:true,x:180,y:210,w:130,h:28,body:{x:150,y:115,w:60,h:100}}];
+ const rows=[{id:'rear',x:180,y:160,w:100,h:28,scale:1,body:{x:150,y:65,w:60,h:100}},
+  {id:'front',selected:true,x:184,y:190,w:130,h:28,scale:1,body:{x:154,y:95,w:60,h:100}}];
  const result=layoutNameplates(rows,400,500);
- const overlaps=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
- for(const row of rows){const box=result.get(row.id);assert.ok(box);assert.ok(rows.every(r=>!overlaps(box,r.body)));}
- assert.ok(!overlaps(result.get('front'),result.get('rear')));
- const narrow=layoutNameplates(rows,160,260);
- for(const box of narrow.values())if(box){assert.ok(box.x>=0&&box.x+box.w<=160);assert.ok(rows.every(r=>!overlaps(box,r.body)));}
+ assert.equal(result.get('rear').x,130,'rear nameplate stays horizontally centered on rear character');
+ assert.equal(result.get('rear').y,168,'rear nameplate stays right below rear character feet');
+ assert.equal(result.get('front').x,119,'front nameplate stays horizontally centered on front character');
+ assert.equal(result.get('front').y,198,'front nameplate stays right below front character feet');
+ const edge=layoutNameplates([{id:'edge',x:12,y:200,w:120,h:28,scale:1}],160,260);
+ assert.ok(edge.get('edge').x>=6&&edge.get('edge').x+edge.get('edge').w<=154);
 });
 
 test('nameplates never occupy the bottom dock, including its portrait overhang',async()=>{

@@ -23,10 +23,10 @@ export function worldPagePolicy(devPresence = process.env.AWC_WORLD_DEV_PRESENCE
   "default-src 'self'",
   "script-src 'self' https://cdn.keepwork.com",
   "style-src 'self' 'unsafe-inline' https://cdn.keepwork.com",
-  "img-src 'self' data: blob: https://cdn.keepwork.com https://keepwork.com https://*.keepwork.com",
+  "img-src 'self' data: blob: https://cdn.keepwork.com https://keepwork.com https://*.keepwork.com https://open.weixin.qq.com https://*.weixin.qq.com",
   "font-src 'self' data: https://cdn.keepwork.com",
   "connect-src 'self' https://api.keepwork.com https://keepwork.com https://cdn.keepwork.com https://*.gameserver.keepwork.com wss://*.gameserver.keepwork.com" + (devPresence ? ' http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*' : ''),
-  "frame-src https://keepwork.com https://*.keepwork.com",
+  "frame-src https://keepwork.com https://*.keepwork.com https://open.weixin.qq.com",
   "object-src 'none'", "frame-ancestors 'none'", "base-uri 'none'", "form-action 'self'",
 ].join('; '); }
 const worldPages = new Set(['/', '/index.html']);

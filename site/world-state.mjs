@@ -35,20 +35,23 @@ export function saveName(storage,names,id,value) {
 }
 
 // Screen-space UI placement only; Haqi owns character geometry and movement.
+// Keep every nameplate steadily anchored directly beneath its own character's feet
+// (never teleporting sideways or downward when characters pass each other), while
+// hiding labels that enter reserved HUD / bottom-dock regions.
 export function layoutNameplates(rows,width,height,reserved=[]){
- const overlap=(a,b)=>a.x<b.x+b.w+4&&a.x+a.w+4>b.x&&a.y<b.y+b.h+4&&a.y+a.h+4>b.y;
- const bodies=[...rows.map(r=>r.body),...reserved],placed=[],result=new Map();
- for(const row of [...rows].sort((a,b)=>Number(b.selected)-Number(a.selected)||b.y-a.y)){
-  let box=null;
-  for(let down=0;down<=144&&!box;down+=12){
-   for(const dx of [0,-row.w/2-24,row.w/2+24,-row.w-32,row.w+32]){
-    const candidate={x:Math.max(4,Math.min(width-row.w-4,row.x-row.w/2+dx)),y:row.y+14+down,w:row.w,h:row.h};
-    if(candidate.y+candidate.h>height-4)continue;
-    if(!bodies.some(b=>overlap(candidate,b))&&!placed.some(b=>overlap(candidate,b))){box=candidate;break;}
-   }
+ const overlap=(a,b)=>a.x<b.x+b.w+2&&a.x+a.w+2>b.x&&a.y<b.y+b.h+2&&a.y+a.h+2>b.y;
+ const result=new Map();
+ for(const row of rows){
+  const scale=Number.isFinite(row.scale)?row.scale:1;
+  const w=Math.min(row.w,Math.max(40,width-12));
+  const x=Math.max(6,Math.min(Math.max(6,width-w-6),Math.round(row.x-w/2)));
+  const y=Math.round(row.y+8*scale);
+  const candidate={x,y,w,h:row.h};
+  if(y<4||y+row.h>height-4||reserved.some(r=>overlap(candidate,r))){
+   result.set(row.id,null);
+   continue;
   }
-  result.set(row.id,box);
-  if(box)placed.push(box);
+  result.set(row.id,candidate);
  }
  return result;
 }

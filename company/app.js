@@ -465,11 +465,20 @@ function showTaskDetail(task, wallet, myWorkers) {
   }, null, 2));
   host.append(meta);
 
-  const bar = el('div', null, 'actions');
   const isOwner = task.owner === wallet.id;
   const assignedWorker = myWorkers.find((w) => w.id === task.worker);
 
   if (!isOwner && task.state === 'running' && assignedWorker) {
+    const form = el('form', null, 'inline-action-form');
+    const lbl = el('label', 'Deliverable Content (UTF-8 Markdown / Three.js Scene Code)');
+    const ta = el('textarea');
+    ta.rows = 5;
+    ta.required = true;
+    ta.placeholder = 'Paste multi-line deliverable summary or Three.js source code here...';
+    lbl.append(ta);
+    const bar = el('div', null, 'actions');
+    const submitBtn = el('button', 'Submit Deliverable', 'primary');
+    submitBtn.type = 'submit';
     const abortBtn = el('button', 'Worker Guard: Abort Unsafe Consumer Prompt', 'danger');
     abortBtn.type = 'button';
     abortBtn.addEventListener('click', () => perform(async () => {
@@ -480,43 +489,54 @@ function showTaskDetail(task, wallet, myWorkers) {
       host.hidden = true;
       notice('Aborted unsafe task without Worker penalty; Consumer strike recorded.');
     }));
-    const submitBtn = el('button', 'Submit Deliverable', 'primary');
-    submitBtn.type = 'button';
-    submitBtn.addEventListener('click', () => perform(async () => {
-      const text = prompt('Enter UTF-8 deliverable summary / Three.js scene code:');
-      if (!text) return;
-      await api(`/v1/tasks/${task.id}/submit`, { epoch: task.epoch, result: text }, true);
-      await loadWorkspace();
-      await loadMarket();
-      host.hidden = true;
-      notice('Deliverable submitted.');
-    }));
     bar.append(submitBtn, abortBtn);
+    form.append(lbl, bar);
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = ta.value.trim();
+      if (!text) return;
+      perform(async () => {
+        await api(`/v1/tasks/${task.id}/submit`, { epoch: task.epoch, result: text }, true);
+        await loadWorkspace();
+        await loadMarket();
+        host.hidden = true;
+        notice('Deliverable submitted.');
+      });
+    });
+    host.append(form);
   }
 
   if (isOwner && task.state === 'submitted') {
-    const judgeBtn = el('button', 'Run Consumer AI Judger Verdict', 'primary');
-    judgeBtn.type = 'button';
-    judgeBtn.addEventListener('click', () => perform(async () => {
-      const pct = Number(prompt(`Enter payout_percent (${task.min_payout_percent || 100}..100, or 0 to flag/reject):`, String(task.payout_percent ?? 100)));
-      const rating = Number(prompt('Enter rating (1..5):', '5'));
-      await api(`/v1/tasks/${task.id}/judge`, {
-        payout_percent: pct,
-        rating,
-        reason: 'Evaluated via Company Portal Consumer Judger',
-        recommend_whitelist: pct >= 95 && rating >= 5,
-        suspect_model_spoofing: pct === 0,
-      }, true);
-      await loadWorkspace();
-      await loadMarket();
-      notice(`Judger verdict recorded (${pct}% payout).`);
-    }));
+    const form = el('form', null, 'inline-action-form');
+    const grid = el('div', null, 'grid');
+    const pctLabel = el('label', `Payout Percent (${task.min_payout_percent || 100}..100, or 0 to flag/reject)`);
+    const pctInput = el('input');
+    pctInput.type = 'number';
+    pctInput.min = '0';
+    pctInput.max = '100';
+    pctInput.value = String(task.payout_percent ?? 100);
+    pctInput.required = true;
+    pctLabel.append(pctInput);
+
+    const rateLabel = el('label', 'Worker Rating (1..5 ★)');
+    const rateInput = el('input');
+    rateInput.type = 'number';
+    rateInput.min = '1';
+    rateInput.max = '5';
+    rateInput.value = String(task.rating || 5);
+    rateInput.required = true;
+    rateLabel.append(rateInput);
+    grid.append(pctLabel, rateLabel);
+
+    const bar = el('div', null, 'actions');
+    const judgeBtn = el('button', 'Record Consumer AI Judger Verdict');
+    judgeBtn.type = 'submit';
     const acceptBtn = el('button', 'Accept & Settle Credits', 'primary');
     acceptBtn.type = 'button';
     acceptBtn.addEventListener('click', () => perform(async () => {
       await api(`/v1/tasks/${task.id}/accept`, {
-        rating: task.rating || 5,
-        payout_percent: task.payout_percent ?? 100,
+        rating: Number(rateInput.value || task.rating || 5),
+        payout_percent: Number(pctInput.value ?? task.payout_percent ?? 100),
       }, true);
       await loadWorkspace();
       await loadMarket();
@@ -524,23 +544,56 @@ function showTaskDetail(task, wallet, myWorkers) {
       notice('Task accepted and settled.');
     }));
     bar.append(judgeBtn, acceptBtn);
+    form.append(grid, bar);
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const pct = Number(pctInput.value);
+      const rating = Number(rateInput.value);
+      perform(async () => {
+        await api(`/v1/tasks/${task.id}/judge`, {
+          payout_percent: pct,
+          rating,
+          reason: 'Evaluated via Company Portal Consumer Judger',
+          recommend_whitelist: pct >= 95 && rating >= 5,
+          suspect_model_spoofing: pct === 0,
+        }, true);
+        await loadWorkspace();
+        await loadMarket();
+        notice(`Judger verdict recorded (${pct}% payout).`);
+      });
+    });
+    host.append(form);
   }
 
   if (!isOwner && task.state === 'completed' && assignedWorker && !task.consumer_rating) {
-    const rateBtn = el('button', 'Rate Consumer Fairness (1-5 ★)', 'primary');
-    rateBtn.type = 'button';
-    rateBtn.addEventListener('click', () => perform(async () => {
-      const rating = Number(prompt('Rate this Consumer (1..5):', '5'));
-      await api(`/v1/tasks/${task.id}/rate-consumer`, { rating }, true);
-      await loadWorkspace();
-      await loadMarket();
-      host.hidden = true;
-      notice('Consumer fairness rating recorded.');
-    }));
-    bar.append(rateBtn);
+    const form = el('form', null, 'inline-action-form');
+    const bar = el('div', null, 'actions');
+    const rateLabel = el('label', 'Consumer Fairness Rating (1..5 ★)');
+    rateLabel.className = 'inline-label';
+    const rateInput = el('input');
+    rateInput.type = 'number';
+    rateInput.min = '1';
+    rateInput.max = '5';
+    rateInput.value = '5';
+    rateInput.required = true;
+    rateLabel.append(rateInput);
+    const rateBtn = el('button', 'Submit Fairness Rating', 'primary');
+    rateBtn.type = 'submit';
+    bar.append(rateLabel, rateBtn);
+    form.append(bar);
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const rating = Number(rateInput.value);
+      perform(async () => {
+        await api(`/v1/tasks/${task.id}/rate-consumer`, { rating }, true);
+        await loadWorkspace();
+        await loadMarket();
+        host.hidden = true;
+        notice('Consumer fairness rating recorded.');
+      });
+    });
+    host.append(form);
   }
-
-  host.append(bar);
 }
 
 function switchTab(nextTab) {

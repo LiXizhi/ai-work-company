@@ -1,4 +1,4 @@
-import {residents,loadNames,saveName,cleanName,layoutNameplates} from './world-state.mjs?v=20261027-hud-clearance';
+import {residents,loadNames,saveName,cleanName,layoutNameplates} from './world-state.mjs?v=20261122-steady-ui';
 import {loadRig,pauseBackgroundScene} from './world-rig.mjs';
 import {createWorldScene} from './world-scene.mjs';
 import {createWorldMap} from './world-map.mjs';
@@ -23,7 +23,7 @@ let gateway;
 try{gateway=gatewayFromQuery(location.search);}catch(error){gateway={url:undefined,dev:false};console.warn(error.message);}
 const devUser=gateway.dev?cleanName(new URLSearchParams(location.search).get('dev-user')||''):'';
 const keepwork=devUser?createDevSession(devUser):createKeepworkSession();
-let account={username:null,signedIn:false},catalog=emptyRoles(),roleStore=null,presence=null,presenceMessage='';
+let account={username:null,signedIn:false},catalog=emptyRoles(),roleStore=null,presence=null,presenceMessage='',signingIn=false;
 
 // Loopback-only development identity for protocol testing against a local gateway.
 function createDevSession(username){
@@ -68,28 +68,34 @@ function renderStatus(){
  $('account-button').title=presenceMessage||'管理我的 Agent';
 }
 function renderAccount(){
- const role=ownedRole(),avatar=$('account-avatar');
- $('account-name').textContent=role?role.name:account.signedIn?account.username:'登录 Keepwork';
- $('account-role').textContent=account.signedIn?(role?`${personaLabel[role.persona].split(' · ')[0]} · ${account.username}`:'尚未选择 Agent'):'创建你的 Agent';
+ const role=ownedRole(),avatar=$('account-avatar'),btn=$('account-button');
+ btn.disabled=signingIn;
+ $('account-name').textContent=signingIn?'连接中…':role?role.name:account.signedIn?account.username:'登录 Keepwork';
+ $('account-role').textContent=signingIn?'正在打开登录窗口':account.signedIn?(role?`${personaLabel[role.persona].split(' · ')[0]} · ${account.username}`:'尚未选择 Agent'):'创建你的 Agent';
  avatar.classList.toggle('portrait',Boolean(role));
- $('account-button').classList.toggle('has-role',Boolean(role));
+ btn.classList.toggle('has-role',Boolean(role));
  if(role){portrait(avatar,role.persona);avatar.style.backgroundSize='cover';avatar.style.backgroundPosition='center 35%';}
  else{avatar.style.backgroundImage='';avatar.style.backgroundSize='';avatar.style.backgroundPosition='';}
 }
 
 async function signIn({interactive=true}={}){
+ if(signingIn)return false;
+ if(interactive){signingIn=true;renderAccount();}
  try{
   account=await keepwork.connect({interactive});
   if(!account.signedIn)return false;
   roleStore=devUser?createDevStore(account.username):createRoleStore({sdk:keepwork.sdk(),owner:account.username});
   catalog=await roleStore.load();
   try{storage?.setItem('awc.world.keepwork','1');}catch{}
+  signingIn=false;
   applyCast();
   return true;
  }catch(error){
   if(interactive)toast(error.message||'登录失败，请稍后重试。');
-  account={username:null,signedIn:false};renderAccount();renderStatus();
+  account={username:null,signedIn:false};
   return false;
+ }finally{
+  signingIn=false;renderAccount();renderStatus();
  }
 }
 keepwork.onChange(next=>{
@@ -141,7 +147,7 @@ function renderPersonaPicker(){
  for(const id of PERSONAS){
   const option=node('button','persona-option');option.type='button';option.setAttribute('role','radio');
   option.setAttribute('aria-checked',String(id===pickedPersona));
-  const art=node('div','avatar-art');portrait(art,id,'20%');
+  const art=node('div','avatar-art');portrait(art,id,'center');
   option.append(art,node('strong','',personaInfo[id].role.split(' · ')[0]+' · '+personaInfo[id].name),node('small','',personaLabel[id]));
   option.addEventListener('click',()=>{pickedPersona=id;renderPersonaPicker();});
   picker.append(option);
@@ -153,7 +159,7 @@ function openCreate(){
  $('role-name').value='';$('role-name').focus();
 }
 function showCreate(on){
- $('role-create').hidden=!on;$('roles-grid').hidden=on;$('roles-enter').hidden=on;
+ $('role-create').hidden=!on;$('roles-grid').hidden=on;$('roles-enter').hidden=on;$('roles-sub').hidden=on;
  $('roles-title').textContent=on?'创建新的 Agent':catalog.roles.length?'选择你的 Agent':'创建你的第一位 Agent';
 }
 $('role-create-cancel').addEventListener('click',()=>{showCreate(false);if(!catalog.roles.length)$('roles-dialog').close();});
@@ -327,8 +333,14 @@ function paintActors(time,still=false){
  }
  const scenePaused=pauseBackgroundScene({stage:'world',hidden:document.hidden,dialog:document.querySelector('dialog[open]')});
  const viewportRect=viewport.getBoundingClientRect(),dockRect=document.querySelector('.dock').getBoundingClientRect();
- // Include the medallion and ornamental border outside the dock's box.
- const dockBounds={x:dockRect.left-viewportRect.left-28,y:dockRect.top-viewportRect.top-24,w:dockRect.width+56,h:dockRect.height+48};
+ // Include the medallion and ornamental border outside the dock's box, plus top HUD controls.
+ const dockBounds={x:dockRect.left-viewportRect.left-28,y:dockRect.top-viewportRect.top-18,w:dockRect.width+56,h:dockRect.height+42};
+ const hudReserved=[dockBounds];
+ for(const cluster of document.querySelectorAll('.hud-top .hud-cluster')){
+  const r=cluster.getBoundingClientRect();
+  if(r.width>0&&r.height>0)hudReserved.push({x:r.left-viewportRect.left-6,y:r.top-viewportRect.top-6,w:r.width+12,h:r.height+12});
+ }
+ const hitHud=(box)=>hudReserved.some(r=>box.x<r.x+r.w&&box.x+box.w>r.x&&box.y<r.y+r.h&&box.y+box.h>r.y);
  const positions=worldScene.render(time,{paused:still||paused||scenePaused,usableBottom:dockBounds.y});
  const seen=new Set(),selected=worldScene.selectedAgent(),labelRows=[];
  for(const {actor,point} of positions){
@@ -345,19 +357,21 @@ function paintActors(time,still=false){
    view.work.hidden=!(profile.workSpot&&actor.mode==='autonomous'&&!actor.moving&&actor.route.length===0);
    view.work.title=profile.workLabel||'';
   }
-  view.el.style.setProperty('--accent',personaInfo[profile.persona]?.color||'#4fb0a7');
-  view.el.style.setProperty('--s',String(Math.max(.6,Math.min(1.6,point.scale/0.8))));
-  view.el.style.left=`${point.x}px`;view.el.style.top=`${point.y}px`;view.el.style.zIndex=String(Math.round(point.y));
-  view.el.classList.toggle('selected',profile.id===selected);
   const scale=Math.max(.6,Math.min(1.6,point.scale/0.8));
+  const priority=profile.id===selected?3000:profile.kind==='mine'?2000:0;
+  view.el.style.setProperty('--accent',personaInfo[profile.persona]?.color||'#4fb0a7');
+  view.el.style.setProperty('--s',String(scale));
+  view.el.style.left=`${point.x}px`;view.el.style.top=`${point.y}px`;view.el.style.zIndex=String(priority+Math.round(point.y));
+  view.el.classList.toggle('selected',profile.id===selected);
+  view.work.classList.toggle('occluded',!view.work.hidden&&hitHud({x:point.x-14,y:point.y-92*scale,w:28,h:28}));
   labelRows.push({id:profile.id,x:point.x,y:point.y,w:view.plate.offsetWidth,h:view.plate.offsetHeight,
-   selected:profile.id===selected,scale,body:{x:point.x-32*scale,y:point.y-96*scale,w:64*scale,h:104*scale}});
+   selected:profile.id===selected,scale});
   view.el.setAttribute('aria-label',`${name}，${personaLabel[profile.persona]}${profile.kind==='remote'?'，其他用户的 Agent':profile.kind==='mine'?'，我的 Agent':'，示例居民'}`);
  }
- const labelPositions=layoutNameplates(labelRows,viewport.clientWidth,viewport.clientHeight,[dockBounds]);
+ const labelPositions=layoutNameplates(labelRows,viewport.clientWidth,viewport.clientHeight,hudReserved);
  for(const row of labelRows){
   const plate=actorViews.get(row.id).plate,box=labelPositions.get(row.id);
-  plate.style.visibility=box?'visible':'hidden';
+  plate.classList.toggle('occluded',!box);
   if(box){
    plate.style.left=`calc(50% + ${box.x+box.w/2-row.x}px)`;
    plate.style.transform=`translate(-50%,${box.y-row.y-8*row.scale}px)`;
@@ -391,13 +405,17 @@ function commandAgentTo(profile,target,prefix){
 }
 $('dialog-go-home').addEventListener('click',()=>{
  if(!selectedProfile||!worldScene)return;$('character-dialog').close();
- const actor=worldScene.state.actors.find(a=>a.profile.id===selectedProfile.id),h=actor&&worldScene.world.homes[actor.homeId];
+ const idx=worldScene.state.actors.findIndex(a=>a.profile.id===selectedProfile.id);
+ const actor=worldScene.state.actors[idx],h=actor&&worldScene.world.homes[actor.homeId];
  if(!h)return;worldScene.focusHome(h.id);
- commandAgentTo(selectedProfile,{cellX:h.indoor.x,cellY:h.indoor.y,label:h.name},`已让 ${labelFor(selectedProfile)} 回到「${h.name}」`);
+ const ox=idx>0?((idx%3)-1)*0.55:0,oy=idx>0?(idx%2)*0.4:0;
+ commandAgentTo(selectedProfile,{cellX:h.indoor.x+ox,cellY:h.indoor.y+oy,label:h.name},`已让 ${labelFor(selectedProfile)} 回到「${h.name}」`);
 });
 $('dialog-go-plaza').addEventListener('click',()=>{
  if(!selectedProfile||!worldScene)return;$('character-dialog').close();worldScene.focusScene('plaza');
- commandAgentTo(selectedProfile,{cellX:0,cellY:0.6,label:'中央广场'},`已让 ${labelFor(selectedProfile)} 前往「中央广场」`);
+ const idx=Math.max(0,worldScene.state.actors.findIndex(a=>a.profile.id===selectedProfile.id));
+ const angle=idx*1.15;
+ commandAgentTo(selectedProfile,{cellX:Number((Math.cos(angle)*0.95).toFixed(2)),cellY:Number((0.45+Math.sin(angle)*0.65).toFixed(2)),label:'中央广场'},`已让 ${labelFor(selectedProfile)} 前往「中央广场」`);
 });
 $('name-form').addEventListener('submit',async e=>{
  e.preventDefault();const name=cleanName($('character-name').value),profile=selectedProfile;

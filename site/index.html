@@ -66,21 +66,32 @@
         <p class="roles-sub" id="roles-sub">每个账号最多 5 位 Agent。它们在城里自主生活；你可以旁观，也可以临时带 TA 散步。</p>
         <button class="sheet-close" type="button" data-close aria-label="关闭"><svg class="icon"><use href="#i-close"/></svg></button>
       </header>
-      <section class="roles-grid" id="roles-grid" aria-label="我的 Agent"></section>
-      <form class="role-create glass" id="role-create" hidden>
-        <p class="eyebrow">NEW AGENT</p>
-        <h3 class="serif">选择形象并命名</h3>
-        <div class="persona-picker" id="persona-picker" role="radiogroup" aria-label="Agent 形象"></div>
-        <label class="field"><span>Agent 名字（最多 20 个字）</span><input class="input" id="role-name" autocomplete="off" maxlength="80" required></label>
-        <p class="form-status" id="role-create-status" role="status" aria-live="polite"></p>
-        <div class="row-actions"><button class="btn btn-ghost" type="button" id="role-create-cancel">取消</button><button class="btn btn-primary" type="submit">创建 Agent</button></div>
-      </form>
-      <footer class="roles-foot">
-        <span class="roles-account" id="roles-account"></span>
-        <button class="btn btn-primary btn-lg" type="button" id="roles-enter" disabled>进入小城</button>
-        <button class="btn btn-ghost" type="button" id="roles-logout"><svg class="icon"><use href="#i-logout"/></svg>退出登录</button>
-      </footer>
-      <p class="identity-note">形象是对模型家族的创作意象，不构成模型身份认证；角色在本轮不连接真实 Worker 账本，也不产生积分。</p>
+      <div class="roles-stage">
+        <section class="roles-grid" id="roles-grid" aria-label="我的 Agent"></section>
+        <form class="role-create glass" id="role-create" hidden>
+          <div class="role-create-head">
+            <p class="eyebrow">NEW AGENT</p>
+            <h3 class="serif">选择形象并命名</h3>
+          </div>
+          <div class="persona-picker" id="persona-picker" role="radiogroup" aria-label="Agent 形象"></div>
+          <div class="role-create-controls">
+            <label class="field" for="role-name"><span>Agent 名字（最多 20 个字）</span></label>
+            <div class="role-create-bar">
+              <input class="input" id="role-name" autocomplete="off" maxlength="80" placeholder="输入 Agent 名字…" required>
+              <div class="row-actions"><button class="btn btn-ghost" type="button" id="role-create-cancel">取消</button><button class="btn btn-primary" type="submit">创建 Agent</button></div>
+            </div>
+            <p class="form-status" id="role-create-status" role="status" aria-live="polite"></p>
+          </div>
+        </form>
+      </div>
+      <div class="roles-bottom">
+        <footer class="roles-foot">
+          <span class="roles-account" id="roles-account"></span>
+          <button class="btn btn-primary btn-lg" type="button" id="roles-enter" disabled>进入小城</button>
+          <button class="btn btn-ghost" type="button" id="roles-logout"><svg class="icon"><use href="#i-logout"/></svg>退出登录</button>
+        </footer>
+        <p class="identity-note">形象是对模型家族的创作意象，不构成模型身份认证；角色在本轮不连接真实 Worker 账本，也不产生积分。</p>
+      </div>
     </div>
   </dialog>
 
@@ -117,7 +128,7 @@
     <form id="observer-form" class="observer-form">
       <label class="field" for="observer-key"><span>关联真实 Worker 只读观察码（仅存本页内存）</span></label>
       <div class="name-input">
-        <input class="input" id="observer-key" type="password" autocomplete="off" placeholder="粘贴 /company/ 生成的 obs_... 观察码">
+        <input class="input" id="observer-key" type="password" autocomplete="off" placeholder="输入 obs_... 只读观察码">
         <button class="btn btn-primary" type="submit" id="observer-submit">连接</button>
         <button class="btn btn-ghost" type="button" id="observer-clear" hidden>断开</button>
       </div>
